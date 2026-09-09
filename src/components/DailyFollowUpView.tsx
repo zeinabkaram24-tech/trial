@@ -32,7 +32,8 @@ import {
   TomorrowPreparationItem,
   ClassTimetable,
   PeriodSlot,
-  WeeklyPlanItem
+  WeeklyPlanItem,
+  SchoolMaterialFile
 } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 import { SUBJECTS, INITIAL_TIMETABLES } from '../data/initialData';
@@ -116,6 +117,7 @@ interface DailyFollowUpViewProps {
   onOpenPrint: () => void;
   timetables?: ClassTimetable[];
   weeklyPlans?: WeeklyPlanItem[];
+  materials?: SchoolMaterialFile[];
 }
 
 export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
@@ -130,7 +132,8 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   studentName,
   onOpenPrint,
   timetables,
-  weeklyPlans
+  weeklyPlans,
+  materials
 }) => {
   // Find current follow-up or create one
   const currentRecord = dailyFollowUps.find(
@@ -139,11 +142,16 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
   const defaultTomorrow = NEXT_DAY_MAP[currentRecord.dayNameAr] || 'الخميس';
   const [selectedTomorrowDay, setSelectedTomorrowDay] = useState<string>(defaultTomorrow);
+  const [selectedFollowUpDay, setSelectedFollowUpDay] = useState<string>(currentRecord?.dayNameAr || 'الأحد');
 
   useEffect(() => {
     if (NEXT_DAY_MAP[currentRecord.dayNameAr]) {
       setSelectedTomorrowDay(NEXT_DAY_MAP[currentRecord.dayNameAr]);
     }
+  }, [currentRecord.dayNameAr]);
+
+  useEffect(() => {
+    setSelectedFollowUpDay(currentRecord.dayNameAr);
   }, [currentRecord.dayNameAr]);
 
   const activeTimetable =
@@ -173,6 +181,16 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
   // Homework: Weekly Plan is the source of truth; saved daily homework is only a fallback.
   const homeworkItems = useMemo(() => {
+    const dictations = (materials || [])
+      .filter((material) => material.materialKind === 'dictation' && material.blockId === selectedBlock && material.weekId === selectedWeek)
+      .map((material) => ({
+        id: `material-dictation-${material.id}`,
+        subjectId: material.subjectId,
+        subjectName: getSubjectInfo(material.subjectId).nameEn,
+        homeworkText: `Dictation: ${material.fileName}`,
+        pageNumber: '',
+        rawRecord: null
+      }));
     const planned = weekPlans
       .filter((wp) => (wp.homeworkNote && wp.homeworkNote.trim()) || wp.dictationFileName)
       .map((wp) => {
@@ -190,7 +208,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           rawRecord: null
         };
       });
-    if (planned.length > 0) return planned;
+    if (dictations.length || planned.length) return [...dictations, ...planned];
 
     const legacyPlanned = weekPlans
       .filter((wp) => wp.homeworkNote && wp.homeworkNote.trim().length > 0)
@@ -221,15 +239,15 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         };
       });
     }
-  }, [currentRecord.homework, weekPlans]);
+  }, [currentRecord.homework, weekPlans, materials, selectedBlock, selectedWeek]);
 
   // Today's timetable schedule in the exact order of the selected class.
   const todayDaySchedule = useMemo(() => {
     return (
-      activeTimetable?.days.find((d) => d.dayNameAr === currentRecord.dayNameAr) ||
+      activeTimetable?.days.find((d) => d.dayNameAr === selectedFollowUpDay) ||
       activeTimetable?.days[0]
     );
-  }, [activeTimetable, currentRecord.dayNameAr]);
+  }, [activeTimetable, selectedFollowUpDay]);
 
   const todayPeriodsList = todayDaySchedule?.periods || [];
   // Classwork: one item per subject, preserving the first occurrence in Schedule.
@@ -561,6 +579,20 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
             <span>Print</span>
           </button>
         </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 p-3 flex items-center gap-2 overflow-x-auto">
+        <span className="text-xs font-black text-slate-500 shrink-0">Day:</span>
+        {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => (
+          <button
+            key={day}
+            type="button"
+            onClick={() => { setSelectedFollowUpDay(day); setSelectedTomorrowDay(NEXT_DAY_MAP[day]); }}
+            className={`px-4 py-2 rounded-xl text-xs font-black shrink-0 border transition-colors ${selectedFollowUpDay === day ? 'bg-sky-600 text-white border-sky-700' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-sky-50'}`}
+          >
+            {day}
+          </button>
+        ))}
       </div>
 
       {/* View Mode 1: 3 Separate Distinct Boxes in a Responsive Grid */}

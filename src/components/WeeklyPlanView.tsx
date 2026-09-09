@@ -72,10 +72,6 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
   const [formFileSize, setFormFileSize] = useState('');
   const [formFileDataUrl, setFormFileDataUrl] = useState<string | undefined>(undefined);
 
-  const [dictationOpen, setDictationOpen] = useState(false);
-  const [dictationSubject, setDictationSubject] = useState(SUBJECTS[0].id);
-  const [dictationFile, setDictationFile] = useState<{ name: string; type: 'pdf' | 'word' | 'image'; size: string; dataUrl: string } | null>(null);
-
   // Plan File Preview Modal
   const [previewPlanItem, setPreviewPlanItem] = useState<WeeklyPlanItem | null>(null);
   const [copiedNotification, setCopiedNotification] = useState(false);
@@ -190,27 +186,6 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
       const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
       setFormTheme(cleanName);
     }
-  };
-
-  const handlePickDictationFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    const type: 'pdf' | 'word' | 'image' = file.type.startsWith('image/') ? 'image' : ext === 'doc' || ext === 'docx' ? 'word' : 'pdf';
-    const reader = new FileReader();
-    reader.onload = () => setDictationFile({ name: file.name, type, size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`, dataUrl: reader.result as string });
-    reader.readAsDataURL(file);
-  };
-
-  const handleSaveDictation = () => {
-    if (!dictationFile) return;
-    onUpdateWeeklyPlans(weeklyPlans.map((plan) =>
-      plan.blockId === selectedBlock && plan.weekId === selectedWeek && plan.subjectId === dictationSubject
-        ? { ...plan, dictationFileName: dictationFile.name, dictationFileType: dictationFile.type, dictationFileSize: dictationFile.size, dictationFileDataUrl: dictationFile.dataUrl }
-        : plan
-    ));
-    setDictationFile(null);
-    setDictationOpen(false);
   };
 
   const handleSavePlan = (e: React.FormEvent) => {
@@ -449,16 +424,6 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ إضافة مادة</span>
-                </button>
-                <button
-                  id="btn-admin-dictation"
-                  type="button"
-                  onClick={() => setDictationOpen(true)}
-                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="رفع ورقة Dictation لتظهر في Homework"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>Dictation</span>
                 </button>
               </>
             )}
@@ -736,27 +701,6 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
           })
         )}
       </div>
-
-      {dictationOpen && currentRole === 'admin' && (
-        <div className="fixed inset-0 bg-slate-950/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-black text-slate-900 flex items-center gap-2"><FileText className="w-5 h-5 text-rose-600" /> Dictation</h3>
-              <button type="button" onClick={() => setDictationOpen(false)} className="p-1 rounded-lg hover:bg-slate-100"><X className="w-4 h-4" /></button>
-            </div>
-            <p className="text-xs text-slate-600">ارفع ورقة الإملاء للمادة. ستظهر تلقائيًا في Homework لكل الأيام لهذا الأسبوع.</p>
-            <select value={dictationSubject} onChange={(e) => setDictationSubject(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
-              {SUBJECTS.map((s) => <option key={s.id} value={s.id}>{s.nameEn}</option>)}
-            </select>
-            <input type="file" accept=".pdf,.doc,.docx,image/*" onChange={handlePickDictationFile} className="w-full text-xs" />
-            {dictationFile && <div className="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3">{dictationFile.name} • {dictationFile.size}</div>}
-            <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-              <button type="button" onClick={() => setDictationOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-600 rounded-xl hover:bg-slate-100">إلغاء</button>
-              <button type="button" disabled={!dictationFile} onClick={handleSaveDictation} className="px-4 py-2 text-xs font-bold text-white bg-rose-600 disabled:opacity-50 rounded-xl">حفظ Dictation</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ================= MODAL: PREVIEW PLAN FILE ================= */}
       {previewPlanItem && (

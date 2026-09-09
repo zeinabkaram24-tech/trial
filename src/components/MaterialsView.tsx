@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { SchoolMaterialFile, SchoolClass, UserRole } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
-import { SUBJECTS, BLOCKS } from '../data/initialData';
+import { SUBJECTS, BLOCKS, WEEKS } from '../data/initialData';
 
 interface MaterialsViewProps {
   currentRole: UserRole;
@@ -44,6 +44,7 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
   currentRole,
   selectedClass,
   selectedBlock,
+  selectedWeek,
   materials,
   onUpdateMaterials
 }) => {
@@ -290,6 +291,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
   const [formTitle, setFormTitle] = useState('');
   const [formSubject, setFormSubject] = useState(SUBJECTS[0].id);
   const [formBlock, setFormBlock] = useState(activeBlock);
+  const [formWeek, setFormWeek] = useState('');
   const [formClass, setFormClass] = useState<SchoolClass | 'all'>('all');
   const [formType, setFormType] = useState<'pdf' | 'doc' | 'image' | 'sheet'>('pdf');
   const [formDescription, setFormDescription] = useState('');
@@ -297,14 +299,51 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
   const [formFileName, setFormFileName] = useState('');
   const [formFileSize, setFormFileSize] = useState('1.8 MB');
   const [formFileDataUrl, setFormFileDataUrl] = useState<string | undefined>(undefined);
+  const [dictationOpen, setDictationOpen] = useState(false);
+  const [dictationSubject, setDictationSubject] = useState(SUBJECTS[0].id);
+  const [dictationFile, setDictationFile] = useState<{ name: string; type: 'pdf' | 'doc' | 'image'; size: string; dataUrl: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handlePickDictationFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const type: 'pdf' | 'doc' | 'image' = file.type.startsWith('image/') ? 'image' : ext === 'doc' || ext === 'docx' ? 'doc' : 'pdf';
+    const reader = new FileReader();
+    reader.onload = () => setDictationFile({ name: file.name, type, size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`, dataUrl: reader.result as string });
+    reader.readAsDataURL(file);
+  };
+
+  const saveDictation = () => {
+    if (!dictationFile) return;
+    onUpdateMaterials([{
+      id: `dictation-${Date.now()}`,
+      title: `Dictation - ${getSubjectInfo(dictationSubject).nameEn}`,
+      subjectId: dictationSubject,
+      classId: 'all',
+      blockId: activeBlock,
+      weekId: selectedWeek,
+      materialKind: 'dictation',
+      fileType: dictationFile.type,
+      fileName: dictationFile.name,
+      fileSize: dictationFile.size,
+      uploadDate: new Date().toISOString().slice(0, 10),
+      uploadedBy: 'Admin',
+      fileDataUrl: dictationFile.dataUrl
+    }, ...materials]);
+    setDictationFile(null);
+    setDictationOpen(false);
+  };
 
   // Filter materials for the currently active Block
   const blockMaterials = materials.filter((m) => {
     // Check block
     const matchesBlock = (m.blockId || 'block1') === activeBlock;
     if (!matchesBlock) return false;
+
+    // Main Sheets have no week and remain visible in every week; extra sheets are week-scoped.
+    if (m.weekId && m.weekId !== selectedWeek) return false;
 
     // Check subject filter
     if (selectedSubjectFilter !== 'all' && m.subjectId !== selectedSubjectFilter) {
@@ -531,6 +570,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
     setFormTitle('');
     setFormSubject(presetSubjectId || SUBJECTS[0].id);
     setFormBlock(activeBlock);
+    setFormWeek('');
     setFormClass('all');
     setFormType('pdf');
     setFormDescription('');
@@ -547,6 +587,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
     setFormTitle(file.title);
     setFormSubject(file.subjectId);
     setFormBlock(file.blockId || activeBlock);
+    setFormWeek(file.weekId || '');
     setFormClass(file.classId);
     setFormType(file.fileType);
     setFormDescription(file.description || '');
@@ -603,6 +644,8 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
             title: formTitle.trim(),
             subjectId: formSubject,
             blockId: formBlock,
+            weekId: formWeek || undefined,
+            materialKind: formWeek ? 'week' : 'main',
             classId: formClass,
             fileType: formType,
             fileName: formFileName.trim() || m.fileName,
@@ -623,6 +666,8 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
         subjectId: formSubject,
         classId: formClass,
         blockId: formBlock,
+        weekId: formWeek || undefined,
+        materialKind: formWeek ? 'week' : 'main',
         fileType: formType,
         fileName: formFileName.trim() || `Sheet_${Date.now()}.${formType === 'pdf' ? 'pdf' : 'docx'}`,
         fileSize: formFileSize || '1.8 MB',
@@ -676,15 +721,26 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
           </div>
 
           {currentRole === 'admin' && (
-            <button
-              id="btn-admin-add-sheet-top"
-              type="button"
-              onClick={() => handleOpenAddModal()}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs flex items-center gap-2 transition-all shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ إضافة شيت في {getBlockName(activeBlock)}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                id="btn-admin-add-sheet-top"
+                type="button"
+                onClick={() => handleOpenAddModal()}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs flex items-center gap-2 transition-all shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Add Sheet</span>
+              </button>
+              <button
+                id="btn-admin-dictation-material"
+                type="button"
+                onClick={() => setDictationOpen(true)}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs flex items-center gap-2 transition-all shrink-0"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Dictation</span>
+              </button>
+            </div>
           )}
         </div>
 
@@ -747,6 +803,17 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
               </button>
             );
           })}
+        </div>
+        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 overflow-x-auto">
+          <span className="text-xs font-black text-slate-500 shrink-0">Sheets:</span>
+          <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-100 text-purple-900 border border-purple-200 shrink-0">
+            Main Sheets (Block)
+          </span>
+          {WEEKS.map((week) => (
+            <span key={week.id} className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 ${selectedWeek === week.id ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+              {week.nameAr}
+            </span>
+          ))}
         </div>
       </div>
 
@@ -909,6 +976,27 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
               </div>
             );
           })}
+        </div>
+      )}
+
+      {dictationOpen && currentRole === 'admin' && (
+        <div className="fixed inset-0 bg-slate-950/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-slate-900 flex items-center gap-2"><FileText className="w-5 h-5 text-rose-600" /> Dictation</h3>
+              <button type="button" onClick={() => setDictationOpen(false)} className="p-1 rounded-lg hover:bg-slate-100"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-xs text-slate-600">ارفع ملف الإملاء الأصلي. سيظهر في Homework دون قراءة أو تغيير الملف.</p>
+            <select value={dictationSubject} onChange={(e) => setDictationSubject(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+              {SUBJECTS.map((subject) => <option key={subject.id} value={subject.id}>{subject.nameEn}</option>)}
+            </select>
+            <input type="file" accept=".pdf,.doc,.docx,image/*" onChange={handlePickDictationFile} className="w-full text-xs" />
+            {dictationFile && <div className="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3">{dictationFile.name} • {dictationFile.size}</div>}
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
+              <button type="button" onClick={() => setDictationOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-600 rounded-xl hover:bg-slate-100">Cancel</button>
+              <button type="button" disabled={!dictationFile} onClick={saveDictation} className="px-4 py-2 text-xs font-bold text-white bg-rose-600 disabled:opacity-50 rounded-xl">Save Dictation</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1183,6 +1271,17 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                         {s.nameAr} ({s.nameEn})
                       </option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Sheet Scope</label>
+                  <select
+                    value={formWeek}
+                    onChange={(e) => setFormWeek(e.target.value)}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium"
+                  >
+                    <option value="">Main Sheets (Block)</option>
+                    {WEEKS.map((week) => <option key={week.id} value={week.id}>{week.nameAr}</option>)}
                   </select>
                 </div>
               </div>

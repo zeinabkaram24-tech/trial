@@ -315,12 +315,7 @@ export const PrintModal: React.FC<PrintModalProps> = ({
                         const sub = getSubjectInfo(slot.subjectId);
                         return (
                           <td key={slot.id} className="border border-slate-300 p-1.5">
-                            <div className="font-bold text-slate-900">{sub.nameAr}</div>
-                            {slot.teacher && (
-                              <div className="text-[10px] text-slate-500 truncate max-w-[80px] mx-auto">
-                                {slot.teacher}
-                              </div>
-                            )}
+                            <div className="font-bold text-slate-900">{sub.nameEn}</div>
                           </td>
                         );
                       })}

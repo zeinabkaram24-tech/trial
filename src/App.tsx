@@ -107,7 +107,7 @@ export default function App() {
           setWeeklyPlans(JSON.parse(e.newValue));
         } else if (e.key === 'nile_minya_daily_follow_ups_v1' && e.newValue) {
           setDailyFollowUps(JSON.parse(e.newValue));
-        } else if ((e.key === 'nile_minya_materials_v2' || e.key === 'nile_minya_materials_v1') && e.newValue) {
+        } else if ((e.key === 'nile_minya_materials_v4' || e.key === 'nile_minya_materials_v3' || e.key === 'nile_minya_materials_v2' || e.key === 'nile_minya_materials_v1') && e.newValue) {
           setMaterials(JSON.parse(e.newValue));
         } else if (e.key === 'nile_minya_student_tasks_v1' && e.newValue) {
           setStudentTasks(JSON.parse(e.newValue));
@@ -234,6 +234,7 @@ export default function App() {
             onOpenPrint={() => setIsPrintModalOpen(true)}
             timetables={timetables}
             weeklyPlans={weeklyPlans}
+            materials={materials}
           />
         )}
 

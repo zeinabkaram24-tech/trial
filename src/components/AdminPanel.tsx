@@ -2395,7 +2395,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </label>
                   <input
                     type="text"
-                    placeholder="مثال: Ms. Sarah أو Mr. Ahmed أو أ. فاطمة"
+                    placeholder="اكتب اسمًا عند الحاجة"
                     value={periodTeacher}
                     onChange={(e) => setPeriodTeacher(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs"

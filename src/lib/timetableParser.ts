@@ -28,11 +28,6 @@ const SUBJECT_KEYWORDS: Record<string, string[]> = {
   music: ['music', 'موسيقى', 'موسيقة'],
 };
 
-const TEACHERS: Record<string, string> = {
-  english: 'Ms. Sarah', math: 'Mr. Ahmed', science: 'Ms. Mona', arabic: 'أ. فاطمة',
-  french: 'Mme. Claire', social: 'أ. محمد محمود', ict: 'Eng. Tamer', art: 'Ms. Nour',
-  pe: 'Coach Yasser', ethics: 'أ. فاطمة', music: 'Music Teacher'
-};
 
 function identifySubject(token: string): string | null {
   const value = token.toLowerCase().trim();
@@ -85,7 +80,7 @@ export function parseTimetableFromText(text: string, classId: SchoolClass): Pars
       parsed[currentDay].push({
         id: `pdf-${classId.toLowerCase()}-${currentDay}-${period.periodNum}-${Date.now().toString(36)}`,
         periodNum: period.periodNum, time: period.time, subjectId,
-        teacher: TEACHERS[subjectId] || 'معلم المادة', room: `Class ${classId}`
+        room: `Class ${classId}`
       });
     }
   }

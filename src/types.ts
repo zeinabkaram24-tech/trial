@@ -125,6 +125,7 @@ export interface SchoolMaterialFile {
   classId: SchoolClass | 'all';
   blockId?: string;
   weekId?: string;
+  materialKind?: 'main' | 'week' | 'dictation';
   fileType: 'pdf' | 'doc' | 'image' | 'sheet';
   fileName: string;
   fileSize: string;

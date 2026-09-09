@@ -961,7 +961,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="مثال: Ms. Sarah أو أ. فاطمة"
+                  placeholder="اكتب اسمًا عند الحاجة"
                   value={editTeacher}
                   onChange={(e) => setEditTeacher(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
