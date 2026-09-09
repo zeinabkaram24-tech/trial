@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Calendar,
   Clock,
@@ -11,7 +11,10 @@ import {
   Coffee,
   Eye,
   FileText,
-  X
+  X,
+  Upload,
+  Image as ImageIcon,
+  Trash2
 } from 'lucide-react';
 import { ClassTimetable, SchoolClass, UserRole, PeriodSlot, DaySchedule } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
@@ -38,6 +41,298 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0); // 0 = Sunday
   const [viewMode, setViewMode] = useState<'grid' | 'day'>('grid');
   const [isDocModalOpen, setIsDocModalOpen] = useState<boolean>(false);
+
+  // Bulk Upload / Edit Timetable Modal
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
+  const [uploadClassTarget, setUploadClassTarget] = useState<SchoolClass | 'all'>(selectedClass);
+  const [uploadFileDataUrl, setUploadFileDataUrl] = useState<string>('');
+  const [uploadFileName, setUploadFileName] = useState<string>('');
+  const [uploadFileType, setUploadFileType] = useState<'image' | 'pdf'>('image');
+  const [uploadFileSize, setUploadFileSize] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isPdf = file.type.includes('pdf') || file.name.toLowerCase().endsWith('.pdf');
+    const isImg = file.type.startsWith('image/');
+
+    if (!isPdf && !isImg) {
+      alert('يرجى اختيار ملف صورة (PNG, JPG) أو ملف PDF لجدول الحصص');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setUploadFileDataUrl(dataUrl);
+      setUploadFileName(file.name);
+      setUploadFileType(isPdf ? 'pdf' : 'image');
+      setUploadFileSize(`${(file.size / (1024 * 1024)).toFixed(1)} MB`);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveUploadedTimetable = () => {
+    if (!uploadFileDataUrl) {
+      alert('يرجى اختيار ملف الجدول أولاً');
+      return;
+    }
+
+    const updated = timetables.map((tt) => {
+      if (uploadClassTarget === 'all' || tt.classId === uploadClassTarget) {
+        return {
+          ...tt,
+          fileDataUrl: uploadFileDataUrl,
+          fileName: uploadFileName || `جدول الحصص المعتمد - فصل ${tt.classId}`,
+          fileType: uploadFileType,
+          fileSize: uploadFileSize || '1.5 MB',
+          uploadedAt: new Date().toISOString().split('T')[0]
+        };
+      }
+      return tt;
+    });
+
+    onUpdateTimetables(updated);
+    setIsUploadModalOpen(false);
+    setUploadFileDataUrl('');
+    setUploadFileName('');
+  };
+
+  const handleRemoveUploadedFile = () => {
+    if (!window.confirm('هل ترغب في حذف ملف الجدول المرفوع لهذا الفصل؟')) return;
+    const updated = timetables.map((tt) => {
+      if (tt.classId === selectedClass) {
+        return {
+          ...tt,
+          fileDataUrl: undefined,
+          fileName: undefined,
+          fileType: undefined,
+          fileSize: undefined,
+          uploadedAt: undefined
+        };
+      }
+      return tt;
+    });
+    onUpdateTimetables(updated);
+  };
+
+  // Download Timetable as Image
+  const handleDownloadImage = () => {
+    if (currentTimetable.fileDataUrl && currentTimetable.fileType === 'image') {
+      const link = document.createElement('a');
+      link.href = currentTimetable.fileDataUrl;
+      link.download = currentTimetable.fileName || `Timetable_Grade2_${selectedClass}.png`;
+      link.click();
+      return;
+    }
+
+    // High quality canvas generation for instant image download
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 760;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 1200, 760);
+
+    // Top Header Banner
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, 1200, 90);
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText('Nile Egyptian Schools - Minya Branch', 40, 42);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(`Official Class Timetable: Grade 2 (Class ${selectedClass}) • 2026/2027`, 40, 70);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText('مدارس النيل المصرية الدولية - فرع المنيا', 850, 52);
+
+    // Table parameters
+    const startX = 40;
+    const startY = 110;
+    const colWidth = 145;
+    const rowHeight = 85;
+
+    // Headers
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(startX, startY, 1120, 45);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('اليوم / Day', startX + 25, startY + 28);
+
+    PERIOD_TIMES.forEach((pt, idx) => {
+      const x = startX + 130 + idx * colWidth;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText(`الحصة ${pt.periodNum}`, x + 35, startY + 20);
+      ctx.fillStyle = '#93c5fd';
+      ctx.font = '10px sans-serif';
+      ctx.fillText(pt.time, x + 25, startY + 36);
+    });
+
+    // Rows
+    currentTimetable.days.forEach((day, rIdx) => {
+      const y = startY + 45 + rIdx * rowHeight;
+      // Day column
+      ctx.fillStyle = rIdx % 2 === 0 ? '#f8fafc' : '#f1f5f9';
+      ctx.fillRect(startX, y, 130, rowHeight);
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.strokeRect(startX, y, 130, rowHeight);
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText(day.dayNameAr, startX + 25, y + 36);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px sans-serif';
+      ctx.fillText(day.dayNameEn, startX + 25, y + 58);
+
+      // Period slots
+      day.periods.forEach((slot, pIdx) => {
+        const x = startX + 130 + pIdx * colWidth;
+        const sub = getSubjectInfo(slot.subjectId);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x, y, colWidth, rowHeight);
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.strokeRect(x, y, colWidth, rowHeight);
+
+        // Subject box
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(x + 5, y + 6, colWidth - 10, rowHeight - 12);
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.strokeRect(x + 5, y + 6, colWidth - 10, rowHeight - 12);
+
+        ctx.fillStyle = '#1e3a8a';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText(sub.nameEn, x + 12, y + 28);
+
+        ctx.fillStyle = '#334155';
+        ctx.font = '11px sans-serif';
+        ctx.fillText(sub.nameAr, x + 12, y + 48);
+
+        if (slot.teacher) {
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '9px sans-serif';
+          ctx.fillText(slot.teacher.slice(0, 16), x + 12, y + 66);
+        }
+      });
+    });
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `Timetable_Grade2_${selectedClass}.png`;
+    link.click();
+  };
+
+  // Download Timetable as PDF
+  const handleDownloadPDF = () => {
+    if (currentTimetable.fileDataUrl && currentTimetable.fileType === 'pdf') {
+      const link = document.createElement('a');
+      link.href = currentTimetable.fileDataUrl;
+      link.download = currentTimetable.fileName || `Timetable_Grade2_${selectedClass}.pdf`;
+      link.click();
+      return;
+    }
+
+    // Open print window configured for saving as PDF
+    const printWin = window.open('', '_blank');
+    if (!printWin) return;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html dir="rtl">
+      <head>
+        <meta charset="utf-8">
+        <title>جدول حصص الصف الثاني - فصل ${selectedClass}</title>
+        <style>
+          @page { size: landscape; margin: 12mm; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; color: #1e293b; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
+          .title { font-size: 22px; font-weight: bold; color: #0f172a; }
+          .sub { font-size: 14px; color: #475569; }
+          table { width: 100%; border-collapse: collapse; text-align: center; }
+          th, td { border: 1px solid #cbd5e1; padding: 8px 4px; }
+          th { background-color: #0f172a; color: #ffffff; font-size: 12px; }
+          th .time { font-size: 10px; color: #93c5fd; display: block; font-weight: normal; }
+          .day-col { background-color: #f1f5f9; font-weight: bold; width: 100px; font-size: 13px; }
+          .period-cell { background-color: #ffffff; font-size: 11px; height: 55px; }
+          .sub-en { font-weight: bold; color: #1e40af; }
+          .sub-ar { font-size: 10px; color: #334155; }
+          .teacher { font-size: 9px; color: #64748b; margin-top: 3px; }
+          .footer { margin-top: 20px; display: flex; justify-content: space-between; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="title">مدارس النيل المصرية الدولية - فرع المنيا</div>
+            <div class="sub">جدول الحصص الأسبوعي المعتمد • الصف الثاني الابتدائي (Grade 2 - Class ${selectedClass})</div>
+          </div>
+          <div style="text-align: left;" dir="ltr">
+            <div style="font-weight: bold; font-size: 16px; color: #b45309;">Nile Egyptian Schools</div>
+            <div style="font-size: 12px; color: #64748b;">Minya Branch • Academic Year 2026/2027</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>اليوم / الحصة</th>
+              ${PERIOD_TIMES.map((pt) => `<th>الحصة ${pt.periodNum}<span class="time">${pt.time}</span></th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${currentTimetable.days
+              .map(
+                (day) => `
+              <tr>
+                <td class="day-col">
+                  <div>${day.dayNameAr}</div>
+                  <div style="font-size: 10px; color: #64748b;">${day.dayNameEn}</div>
+                </td>
+                ${day.periods
+                  .map((p) => {
+                    const s = getSubjectInfo(p.subjectId);
+                    return `
+                    <td class="period-cell">
+                      <div class="sub-en">${s.nameEn}</div>
+                      <div class="sub-ar">${s.nameAr}</div>
+                      ${p.teacher ? `<div class="teacher">${p.teacher}</div>` : ''}
+                    </td>
+                  `;
+                  })
+                  .join('')}
+              </tr>
+            `
+              )
+              .join('')}
+          </tbody>
+        </table>
+        <div class="footer">
+          <div>يعتمد: إدارة مدرسة النيل المصرية الدولية - فرع المنيا</div>
+          <div>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')}</div>
+        </div>
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWin.document.write(htmlContent);
+    printWin.document.close();
+  };
 
   // Admin slot edit modal
   const [editingSlot, setEditingSlot] = useState<{
@@ -183,13 +478,53 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
               </button>
             </div>
 
+            {/* Download Timetable: PDF & Image */}
+            <div className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 p-1 rounded-xl">
+              <button
+                id="btn-download-timetable-pdf"
+                type="button"
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-indigo-600 hover:text-white text-indigo-700 rounded-lg text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                title="تحميل جدول الحصص بتنسيق PDF"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>تحميل جدول (PDF)</span>
+              </button>
+
+              <button
+                id="btn-download-timetable-img"
+                type="button"
+                onClick={handleDownloadImage}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-indigo-600 hover:text-white text-indigo-700 rounded-lg text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                title="تحميل جدول الحصص كصورة PNG عالية الدقة"
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>تحميل جدول (صورة)</span>
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={onOpenPrint}
-              className="flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+              className="flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>طباعة الجدول</span>
+              <span>طباعة</span>
+            </button>
+
+            {/* Bulk Upload / Edit Timetable button */}
+            <button
+              id="btn-upload-bulk-timetable"
+              type="button"
+              onClick={() => {
+                setUploadClassTarget(selectedClass);
+                setIsUploadModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
+              title="رفع وتعديل الجدول كاملاً كصورة أو ملف PDF دفعة واحدة"
+            >
+              <Upload className="w-3.5 h-3.5 text-amber-700" />
+              <span>رفع وتعديل الجدول</span>
             </button>
           </div>
         </div>
@@ -621,6 +956,141 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                   </a>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ================= MODAL: BULK UPLOAD & EDIT TIMETABLE ================= */}
+      {isUploadModalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-amber-50 to-indigo-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-xs">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">
+                    رفع وتعديل جدول الحصص دفعة واحدة
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    يمكنك رفع جدول الحصص كصورة (PNG, JPG) أو كملف PDF
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsUploadModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Target Class Selector */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  الفصل المستهدف بالجدول:
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(['2A', '2B', '2C', 'all'] as const).map((cls) => (
+                    <button
+                      key={cls}
+                      type="button"
+                      onClick={() => setUploadClassTarget(cls)}
+                      className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all ${
+                        uploadClassTarget === cls
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {cls === 'all' ? 'جميع الفصول' : `فصل ${cls}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Upload Drop Area */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  ملف جدول الحصص (صورة أو PDF):
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-indigo-300 hover:border-indigo-500 bg-indigo-50/40 hover:bg-indigo-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 mx-auto flex items-center justify-center mb-3">
+                    <Upload className="w-6 h-6" />
+                  </div>
+                  <div className="text-xs font-bold text-indigo-900 mb-1">
+                    انقر هنا لاختيار أو سحب ملف الجدول
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    يدعم ملفات الصور عالية الجودة (PNG, JPG, JPEG) وملفات PDF
+                  </div>
+                </div>
+              </div>
+
+              {/* Selected File Details */}
+              {uploadFileDataUrl && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                      {uploadFileType === 'image' ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-slate-900 truncate">
+                        {uploadFileName}
+                      </div>
+                      <div className="text-[10px] text-emerald-800 font-semibold uppercase">
+                        {uploadFileType} • {uploadFileSize}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUploadFileDataUrl('');
+                      setUploadFileName('');
+                    }}
+                    className="p-1 text-slate-400 hover:text-red-600 rounded-md"
+                    title="إلغاء الملف"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsUploadModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveUploadedTimetable}
+                disabled={!uploadFileDataUrl}
+                className={`px-5 py-2 text-xs font-bold rounded-xl transition-all shadow-xs ${
+                  uploadFileDataUrl
+                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                اعتماد وتطبيق الجدول المرفوع
+              </button>
             </div>
           </div>
         </div>

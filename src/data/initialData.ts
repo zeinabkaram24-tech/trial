@@ -719,7 +719,7 @@ export const INITIAL_MATERIALS: SchoolMaterialFile[] = [
   // ===================== BLOCK 1 SHEETS =====================
   {
     id: 'mat-b1-arab',
-    title: 'شيت مادة اللغة العربية (شيت العربي) - تدريبات قصة "أنا أستطيع" والتاء المربوطة',
+    title: 'شيت اللغة العربية',
     subjectId: 'arabic',
     classId: 'all',
     blockId: 'block1',
@@ -729,7 +729,7 @@ export const INITIAL_MATERIALS: SchoolMaterialFile[] = [
     fileSize: '1.8 MB',
     uploadDate: '2026-09-08',
     uploadedBy: 'أ. فاطمة (معلمة أولى لغة عربية)',
-    description: 'شيت تدريبي وتطبيقي شامل لمهارات القراءة والفهم القرائي وقواعد التاء المربوطة والمفتوحة والهاء مع شبكة المفردات.',
+    description: 'شيت مادة اللغة العربية لبلوك 1',
     previewSummary: `مدارس النيل المصرية الدولية - فرع المنيا
 قسم اللغة العربية - الصف الثاني الابتدائي (Grade 2)
 شيت تدريبات وتطبيقات: بلوك 1 (Block 1 Sheet)
@@ -758,7 +758,7 @@ export const INITIAL_MATERIALS: SchoolMaterialFile[] = [
   },
   {
     id: 'mat-b1-math',
-    title: 'شيت الماث والرياضيات - Math Worksheet: Two-Digit Addition with Regrouping',
+    title: 'Math Worksheet',
     subjectId: 'math',
     classId: 'all',
     blockId: 'block1',
@@ -768,7 +768,7 @@ export const INITIAL_MATERIALS: SchoolMaterialFile[] = [
     fileSize: '2.4 MB',
     uploadDate: '2026-09-08',
     uploadedBy: 'Mr. Ahmed (Math Coordinator)',
-    description: 'شيت الرياضيات والماث لبلوك 1: الجمع بإعادة التسمية، القيمة المكانية Tens & Ones، ومسائل كلامية تفاعلية.',
+    description: 'شيت مادة الرياضيات لبلوك 1',
     previewSummary: `Nile Egyptian Schools - Minya Branch
 Department of Mathematics - Grade 2 (Classes 2A, 2B, 2C)
 Official Worksheet: Block 1 Practice Sheet
@@ -796,7 +796,7 @@ Teacher Signature: Mr. Ahmed & Math Dept - Nile Egyptian Schools Minya`
   },
   {
     id: 'mat-b1-eng',
-    title: 'شيت الإنجليزي - English Practice Sheet: Phonics Long "a" & Community Helpers',
+    title: 'English Worksheet',
     subjectId: 'english',
     classId: 'all',
     blockId: 'block1',
@@ -806,7 +806,7 @@ Teacher Signature: Mr. Ahmed & Math Dept - Nile Egyptian Schools Minya`
     fileSize: '2.1 MB',
     uploadDate: '2026-09-08',
     uploadedBy: 'Ms. Sarah (Head of English)',
-    description: 'شيت مادة اللغة الإنجليزية لبلوك 1: صوتيات الحرف A الممدود، قراءة قصة مجتمعنا، وتمارين القواعد النحوية.',
+    description: 'شيت مادة اللغة الإنجليزية لبلوك 1',
     previewSummary: `Nile Egyptian Schools - Minya Branch
 Department of English - Grade 2 (2A, 2B, 2C)
 Block 1 Worksheet: Phonics & Reading Comprehension
@@ -834,7 +834,7 @@ Grade 2 English Dept - NES Minya Approved`
   },
   {
     id: 'mat-b1-sci',
-    title: 'شيت الساينس والعلوم - Science Lab Sheet: Living Things & Plant Water Transport',
+    title: 'Science Worksheet',
     subjectId: 'science',
     classId: 'all',
     blockId: 'block1',
@@ -844,7 +844,7 @@ Grade 2 English Dept - NES Minya Approved`
     fileSize: '2.8 MB',
     uploadDate: '2026-09-07',
     uploadedBy: 'Ms. Mona (Science Teacher)',
-    description: 'شيت مادة الساينس لبلوك 1: أجزاء النبات، وظائف الجذور والساق، وتجربة تلوين الكرفس لملاحظة حركة الماء.',
+    description: 'شيت مادة العلوم والساينس لبلوك 1',
     previewSummary: `Nile Egyptian Schools - Minya Branch
 Cambridge Primary Science - Grade 2
 Block 1 Worksheet: Plant Structures & Habitats
@@ -868,7 +868,7 @@ Science Department - Nile Egyptian Schools Minya`
   },
   {
     id: 'mat-b1-soc',
-    title: 'شيت الدراسات الاجتماعية - معالم محافظة المنيا ونهر النيل الخالد (بلوك 1)',
+    title: 'شيت الدراسات الاجتماعية',
     subjectId: 'social',
     classId: 'all',
     blockId: 'block1',
@@ -878,7 +878,7 @@ Science Department - Nile Egyptian Schools Minya`
     fileSize: '1.6 MB',
     uploadDate: '2026-09-07',
     uploadedBy: 'أ. محمد محمود (معلم الدراسات)',
-    description: 'شيت مادة الدراسات الاجتماعية لبلوك 1: التعرف على خريطة المنيا، البيئة الزراعية، ومعالم المحافظة وموقع المدرسة.',
+    description: 'شيت مادة الدراسات الاجتماعية لبلوك 1',
     previewSummary: `مدارس النيل المصرية الدولية - فرع المنيا
 مادة الدراسات الاجتماعية - الصف الثاني الابتدائي
 شيت تدريبات بلوك 1: محافظتي عروس الصعيد
@@ -898,7 +898,7 @@ Science Department - Nile Egyptian Schools Minya`
   },
   {
     id: 'mat-b1-ict',
-    title: 'شيت تكنولوجيا المعلومات والكمبيوتر - ICT Computer Basics & Input Devices (بلوك 1)',
+    title: 'ICT Worksheet',
     subjectId: 'ict',
     classId: 'all',
     blockId: 'block1',
@@ -908,7 +908,7 @@ Science Department - Nile Egyptian Schools Minya`
     fileSize: '1.3 MB',
     uploadDate: '2026-09-06',
     uploadedBy: 'Eng. Tamer (ICT Dept)',
-    description: 'شيت مادة الكمبيوتر والتكنولوجيا لبلوك 1: وحدات الإدخال والإخراج، برنامج الرسم Paint، والاستخدام الآمن للشاشات.',
+    description: 'شيت مادة تكنولوجيا المعلومات والكمبيوتر لبلوك 1',
     previewSummary: `Nile Egyptian Schools - Minya Branch
 Department of Information & Communication Technology (ICT)
 Block 1 Worksheet: Computer Hardware Basics
@@ -932,7 +932,7 @@ NES Minya ICT Lab Approved`
   },
   {
     id: 'mat-b1-fre',
-    title: 'شيت اللغة الفرنسية - Fiche de Français: Les Salutations et la Trousse (بلوك 1)',
+    title: 'Fiche de Français',
     subjectId: 'french',
     classId: 'all',
     blockId: 'block1',
@@ -942,7 +942,7 @@ NES Minya ICT Lab Approved`
     fileSize: '1.1 MB',
     uploadDate: '2026-09-06',
     uploadedBy: 'Mme. Claire (Professeur de français)',
-    description: 'شيت تدريبات اللغة الفرنسية لبلوك 1: التحيات، أدوات المقلمة المدرسية، والأرقام من 1 إلى 10.',
+    description: 'شيت مادة اللغة الفرنسية لبلوك 1',
     previewSummary: `Écoles Égyptiennes du Nil - Branche de Minya
 Département de Français - Grade 2 (2A, 2B, 2C)
 Fiche d'activités : Bloc 1

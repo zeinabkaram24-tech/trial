@@ -12,7 +12,8 @@ import {
   Sparkles,
   Printer,
   ChevronDown,
-  CheckSquare
+  CheckSquare,
+  Download
 } from 'lucide-react';
 import { SchoolClass, UserRole, StudentProfile } from '../types';
 import { BLOCKS, WEEKS } from '../data/initialData';
@@ -88,24 +89,24 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Top Banner with Nile Schools Identity */}
       <div className="bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 text-white px-4 py-2.5">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
-          {/* School Name & Badge */}
+          {/* School Name & Badge - LTR order: Nile Egyptian Schools ... Grade 2 ... Minya Branch */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-bold shadow-xs">
-              <GraduationCap className="w-6 h-6" />
+            <div className="w-11 h-11 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-bold shadow-xs shrink-0">
+              <GraduationCap className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-lg sm:text-xl font-black tracking-wide text-amber-300 drop-shadow-xs">
+            <div dir="ltr" className="text-left">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-amber-300 drop-shadow-xs">
                   Nile Egyptian Schools
                 </span>
-                <span className="bg-amber-400/20 text-amber-200 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-400/30">
+                <span className="bg-amber-400/20 text-amber-200 px-3 py-0.5 rounded-full text-xs sm:text-sm font-bold border border-amber-400/30">
                   Grade 2
                 </span>
               </div>
-              <p className="text-slate-300 text-xs flex items-center gap-1.5 mt-0.5">
-                <span>مدارس النيل المصرية الدولية - فرع المنيا</span>
+              <p className="text-slate-300 text-xs flex items-center gap-2 mt-0.5 font-medium">
+                <span className="text-amber-200 font-bold">Minya Branch</span>
                 <span>•</span>
-                <span className="text-slate-400">Minya Branch</span>
+                <span className="text-slate-400" dir="rtl">مدارس النيل المصرية الدولية - فرع المنيا</span>
               </p>
             </div>
           </div>
@@ -352,12 +353,12 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => onChangeTab('timetable')}
             className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
               activeTab === 'timetable'
-                ? 'bg-white text-sky-800 shadow-xs border border-slate-200'
+                ? 'bg-white text-indigo-800 shadow-xs border border-indigo-200'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <Calendar className="w-4 h-4 text-indigo-600" />
-            <span>جدول الحصص (2A / 2B / 2C)</span>
+            <Download className="w-4 h-4 text-indigo-600" />
+            <span>تحميل جدول</span>
           </button>
 
           <button

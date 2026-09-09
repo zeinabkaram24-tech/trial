@@ -771,38 +771,25 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {blockMaterials.map((file) => {
-            const sub = getSubjectInfo(file.subjectId);
-
             return (
               <div
                 key={file.id}
                 id={`material-card-${file.id}`}
-                className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:border-purple-300 hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group"
+                className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:border-purple-300 hover:shadow-md transition-all overflow-hidden group"
               >
-                {/* Top Section */}
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
-                        {renderFileTypeIcon(file.fileType)}
-                      </div>
-                      <div>
-                        <SubjectBadge subjectId={file.subjectId} size="sm" />
-                        <span className="block text-[11px] text-slate-400 mt-0.5">
-                          {file.classId === 'all' ? 'All Classes (Grade 2)' : `Class ${file.classId}`}
-                        </span>
-                      </div>
-                    </div>
+                <div className="p-4">
+                  {/* Row 1: اسم المادة */}
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <SubjectBadge subjectId={file.subjectId} size="md" />
 
-                    {/* Admin Edit/Delete */}
                     {currentRole === 'admin' && (
                       <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                         <button
                           type="button"
                           onClick={() => handleOpenEditModal(file)}
-                          className="p-1.5 text-slate-500 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
                           title="تعديل بيانات الشيت"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -810,7 +797,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                         <button
                           type="button"
                           onClick={() => handleDeleteFile(file.id, file.title)}
-                          className="p-1.5 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                           title="حذف الشيت"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -819,84 +806,56 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                     )}
                   </div>
 
-                  {/* Title & Description */}
-                  <h3 className="font-black text-slate-900 text-sm leading-snug mb-2 line-clamp-2">
-                    {file.title}
-                  </h3>
-                  {file.description && (
-                    <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-3">
-                      {file.description}
-                    </p>
-                  )}
-
-                  {/* Visual Miniature Thumbnail of the Worksheet File */}
-                  <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 mb-3 flex items-center gap-3">
-                    {/* Thumbnail preview sheet miniature icon */}
-                    <div className="w-12 h-14 bg-white border border-slate-300 rounded-md shadow-2xs flex flex-col justify-between p-1 shrink-0">
-                      <div className="h-1 bg-purple-500 rounded-full w-2/3"></div>
-                      <div className="space-y-0.5">
-                        <div className="h-0.5 bg-slate-300 rounded-full w-full"></div>
-                        <div className="h-0.5 bg-slate-300 rounded-full w-4/5"></div>
-                        <div className="h-0.5 bg-slate-200 rounded-full w-3/5"></div>
-                      </div>
-                      <div className="text-[7px] text-center font-bold text-slate-400 uppercase">
-                        {file.fileType}
-                      </div>
+                  {/* Row 2: الشيت اللي تحتيها على طول */}
+                  <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-3 mb-3.5 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-2xs">
+                      {renderFileTypeIcon(file.fileType)}
                     </div>
-
-                    <div className="flex-1 min-w-0 text-xs">
-                      <div className="text-slate-800 font-bold truncate text-[11px]">
-                        {file.fileName}
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-slate-900 text-sm truncate">
+                        {file.title}
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
-                        <span className="font-semibold uppercase bg-slate-200/80 px-1.5 py-0.2 rounded text-slate-700">
-                          {file.fileType}
-                        </span>
-                        <span>•</span>
-                        <span>{file.fileSize}</span>
-                        <span>•</span>
-                        <span>{getBlockName(file.blockId || 'block1').split(' ')[0]}</span>
+                      <div className="text-[11px] text-slate-400 truncate">
+                        {file.fileName}
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* THE STRICTLY THREE BUTTONS REQUESTED BY USER: معاينة، تحميل، طباعة */}
-                <div className="border-t border-slate-100 bg-slate-50/70 p-3">
+                  {/* Row 3: التلات زراير بتوع المعاينة والتحميل والطباعة */}
                   <div className="grid grid-cols-3 gap-2">
-                    {/* 1. زرار معاينة (Preview) */}
+                    {/* 1. معاينة */}
                     <button
                       id={`btn-preview-${file.id}`}
                       type="button"
                       onClick={() => handlePreviewFile(file)}
-                      className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 transition-all text-xs font-bold shadow-2xs group/btn"
-                      title="معاينة محتوى الشيت والصورة المصغرة"
+                      className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 transition-all text-xs font-bold cursor-pointer"
+                      title="معاينة الشيت"
                     >
-                      <Eye className="w-4 h-4 text-purple-600 group-hover/btn:scale-110 transition-transform shrink-0" />
+                      <Eye className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                       <span>معاينة</span>
                     </button>
 
-                    {/* 2. زرار تحميل (Download) */}
+                    {/* 2. تحميل */}
                     <button
                       id={`btn-download-${file.id}`}
                       type="button"
                       onClick={() => handleDownloadFile(file)}
-                      className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-all text-xs font-bold shadow-2xs group/btn"
-                      title="تحميل شيت المادة"
+                      className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition-all text-xs font-bold cursor-pointer"
+                      title="تحميل الشيت"
                     >
-                      <Download className="w-4 h-4 text-emerald-600 group-hover/btn:scale-110 transition-transform shrink-0" />
+                      <Download className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       <span>تحميل</span>
                     </button>
 
-                    {/* 3. زرار طباعة (Print) */}
+                    {/* 3. طباعة */}
                     <button
                       id={`btn-print-${file.id}`}
                       type="button"
                       onClick={() => handlePrintFile(file)}
-                      className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-white border border-amber-200 text-amber-800 hover:bg-amber-50 hover:border-amber-300 transition-all text-xs font-bold shadow-2xs group/btn"
-                      title="طباعة الشيت مباشرة"
+                      className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition-all text-xs font-bold cursor-pointer"
+                      title="طباعة الشيت"
                     >
-                      <Printer className="w-4 h-4 text-amber-600 group-hover/btn:scale-110 transition-transform shrink-0" />
+                      <Printer className="w-3.5 h-3.5 text-amber-700 shrink-0" />
                       <span>طباعة</span>
                     </button>
                   </div>

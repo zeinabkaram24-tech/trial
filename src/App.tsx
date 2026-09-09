@@ -233,6 +233,7 @@ export default function App() {
             studentName={studentProfile?.name}
             onOpenPrint={() => setIsPrintModalOpen(true)}
             timetables={timetables}
+            weeklyPlans={weeklyPlans}
           />
         )}
 
