@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   BookOpen,
   CheckSquare,
@@ -31,7 +31,8 @@ import {
   HomeworkRecord,
   TomorrowPreparationItem,
   ClassTimetable,
-  PeriodSlot
+  PeriodSlot,
+  WeeklyPlanItem
 } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 import { SUBJECTS, INITIAL_TIMETABLES } from '../data/initialData';
@@ -114,6 +115,7 @@ interface DailyFollowUpViewProps {
   studentName?: string;
   onOpenPrint: () => void;
   timetables?: ClassTimetable[];
+  weeklyPlans?: WeeklyPlanItem[];
 }
 
 export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
@@ -127,7 +129,8 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   onToggleHwCompletion,
   studentName,
   onOpenPrint,
-  timetables
+  timetables,
+  weeklyPlans
 }) => {
   // Find current follow-up or create one
   const currentRecord = dailyFollowUps.find(
@@ -148,6 +151,102 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     INITIAL_TIMETABLES.find((t) => t.classId === selectedClass);
   const tomorrowDaySchedule = activeTimetable?.days.find((d) => d.dayNameAr === selectedTomorrowDay);
   const tomorrowPeriods = tomorrowDaySchedule?.periods || [];
+
+  // Weekly plans matching current block and week
+  const weekPlans = useMemo(() => {
+    return (weeklyPlans || []).filter(
+      (wp) =>
+        wp.blockId === selectedBlock &&
+        wp.weekId === selectedWeek &&
+        (wp.classId === 'all' || wp.classId === selectedClass)
+    );
+  }, [weeklyPlans, selectedBlock, selectedWeek, selectedClass]);
+
+  // Clean page extraction helper
+  const extractPageNumber = (str?: string): string => {
+    if (!str) return '24';
+    const match = str.match(/(?:page|pp\.|p\.|صفحة|ص)\s*[:.]?\s*([\d\s\-,–]+)/i);
+    if (match) return match[1].trim();
+    const numMatch = str.match(/\b\d+(?:[-–]\d+)?\b/);
+    return numMatch ? numMatch[0] : str.replace(/[^0-9\-–]/g, '') || '24';
+  };
+
+  // Homework: Only subjects with homework from Weekly Plan or currentRecord
+  // Format strictly: [اسم المادة] - Homework Page: [رقم الصفحة] without extra descriptions
+  const homeworkItems = useMemo(() => {
+    if (currentRecord.homework && currentRecord.homework.length > 0) {
+      return currentRecord.homework.map((hw) => {
+        const sub = getSubjectInfo(hw.subjectId);
+        const pageNum = hw.pages ? extractPageNumber(hw.pages) : extractPageNumber(hw.assignment);
+        return {
+          id: hw.id,
+          subjectId: hw.subjectId,
+          subjectName: sub.nameAr || sub.nameEn,
+          pageNumber: pageNum || '25',
+          rawRecord: hw
+        };
+      });
+    }
+
+    return weekPlans
+      .filter((wp) => wp.resourcesNote || wp.assessmentNote)
+      .map((wp) => {
+        const sub = getSubjectInfo(wp.subjectId);
+        const pageNum = extractPageNumber(wp.resourcesNote) || '24';
+        return {
+          id: wp.id,
+          subjectId: wp.subjectId,
+          subjectName: sub.nameAr || sub.nameEn,
+          pageNumber: pageNum,
+          rawRecord: null
+        };
+      });
+  }, [currentRecord.homework, weekPlans]);
+
+  // Today's timetable schedule & unique subjects
+  const todayDaySchedule = useMemo(() => {
+    return (
+      activeTimetable?.days.find((d) => d.dayNameAr === currentRecord.dayNameAr) ||
+      activeTimetable?.days[0]
+    );
+  }, [activeTimetable, currentRecord.dayNameAr]);
+
+  const todayPeriodsList = todayDaySchedule?.periods || [];
+  const todayUniqueSubjectIds = useMemo(() => {
+    return Array.from(new Set(todayPeriodsList.map((p) => p.subjectId)));
+  }, [todayPeriodsList]);
+
+  // Classwork: Subjects from TODAY's schedule only with lesson topic from Weekly Plan
+  const classworkItems = useMemo(() => {
+    return todayUniqueSubjectIds.map((subId) => {
+      const sub = getSubjectInfo(subId);
+      const wp = weekPlans.find((p) => p.subjectId === subId);
+      const existingCw = currentRecord.classwork?.find((c) => c.subjectId === subId);
+      const lessonTopic = wp?.unitOrTheme || existingCw?.lessonTitle || 'موضوع الدرس المقرر بالخطة';
+      return {
+        id: existingCw?.id || `cw-${subId}`,
+        subjectId: subId,
+        subjectName: sub.nameAr || sub.nameEn,
+        lessonTopic,
+        existingCw
+      };
+    });
+  }, [todayUniqueSubjectIds, weekPlans, currentRecord.classwork]);
+
+  // Weekly plan notes for tomorrow's box bottom
+  const weeklyPlanNotes = useMemo(() => {
+    return weekPlans
+      .filter((wp) => wp.assessmentNote && wp.assessmentNote.trim().length > 0)
+      .map((wp) => {
+        const sub = getSubjectInfo(wp.subjectId);
+        return {
+          id: wp.id,
+          subjectId: wp.subjectId,
+          subjectName: sub.nameAr || sub.nameEn,
+          note: wp.assessmentNote!
+        };
+      });
+  }, [weekPlans]);
 
   const [packedPeriods, setPackedPeriods] = useState<Record<string, boolean>>(() => {
     try {
@@ -376,12 +475,12 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   };
 
   // Metrics
-  const cwCount = currentRecord.classwork?.length || 0;
-  const hwCount = currentRecord.homework?.length || 0;
-  const prepCount = currentRecord.tomorrowPreparations?.length || 0;
+  const cwCount = classworkItems.length;
+  const hwCount = homeworkItems.length;
+  const prepCount = tomorrowPeriods.length;
 
   // Calculate completed homework for the student
-  const completedHwCount = currentRecord.homework?.filter((h) => completedHwMap[h.id])?.length || 0;
+  const completedHwCount = homeworkItems.filter((h) => completedHwMap[h.id]).length;
 
   return (
     <div className="space-y-6">
@@ -459,7 +558,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         {followUpLayoutMode === 'columns' ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x lg:divide-x-reverse divide-slate-200 bg-slate-50/20">
             
-            {/* ================= COLUMN 1: جزء خاص بـ Homework ================= */}
+            {/* ================= COLUMN 1: فريم الواجبات الموحد (Homework Unified Frame) ================= */}
             <div className="flex flex-col h-full bg-white">
               <div className="bg-red-700 text-white p-4 flex items-center justify-between border-b border-red-800">
                 <div className="flex items-center gap-2.5">
@@ -483,7 +582,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                       setHwPages('');
                       setHwInstructions('');
                     }}
-                    className="flex items-center gap-1 bg-red-800 hover:bg-red-900 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors border border-red-600"
+                    className="flex items-center gap-1 bg-red-800 hover:bg-red-900 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors border border-red-600 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>إضافة واجب</span>
@@ -493,53 +592,77 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
               {/* Homework Items List extending down */}
               <div className="p-4 space-y-3 flex-1 bg-slate-50/30">
-                {currentRecord.homework?.length === 0 ? (
+                {homeworkItems.length === 0 ? (
                   <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
-                    لا توجد واجبات منزلية مسجلة اليوم.
+                    لا توجد مواد بها واجبات مسجلة اليوم.
                   </div>
                 ) : (
-                  currentRecord.homework?.map((hw) => {
-                    const isDone = completedHwMap[hw.id];
+                  homeworkItems.map((item) => {
+                    const isDone = !!completedHwMap[item.id];
                     return (
                       <div
-                        key={hw.id}
+                        key={item.id}
                         className={`bg-white rounded-xl p-3.5 border transition-all shadow-xs ${
                           isDone
                             ? 'border-emerald-300 bg-emerald-50/20'
                             : 'border-slate-200 hover:border-red-300'
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <SubjectBadge subjectId={hw.subjectId} size="sm" />
-
-                          <div className="flex items-center gap-1.5">
-                            {hw.dueDate && (
-                              <span className="text-[10px] font-bold bg-amber-50 text-amber-900 px-2 py-0.5 rounded border border-amber-200">
-                                {hw.dueDate}
+                        <div className="flex items-center justify-between gap-2">
+                          {/* الصيغة المطلوبة: [اسم المادة] - Homework Page: [رقم الصفحة] بدون تفاصيل إضافية */}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <SubjectBadge subjectId={item.subjectId} size="sm" />
+                            <div
+                              className={`text-xs font-black tracking-tight ${
+                                isDone ? 'line-through text-slate-400' : 'text-slate-900'
+                              }`}
+                            >
+                              <span>{item.subjectName}</span>
+                              <span className="text-slate-400 mx-1.5">-</span>
+                              <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-200 font-bold font-mono">
+                                Homework Page: {item.pageNumber}
                               </span>
+                            </div>
+                          </div>
+
+                          {/* Student Checkbox or Admin Actions */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {currentRole === 'student' && (
+                              <button
+                                type="button"
+                                onClick={() => onToggleHwCompletion(item.id)}
+                                className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                                  isDone
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800'
+                                }`}
+                              >
+                                {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                                <span>{isDone ? 'تم الحل ✓' : 'تأشير'}</span>
+                              </button>
                             )}
 
-                            {currentRole === 'admin' && (
+                            {currentRole === 'admin' && item.rawRecord && (
                               <div className="flex items-center gap-1">
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setEditingHw({ isOpen: true, item: hw });
-                                    setHwSubject(hw.subjectId);
-                                    setHwAssignment(hw.assignment);
-                                    setHwDueDate(hw.dueDate || 'غداً');
-                                    setHwPages(hw.pages || '');
-                                    setHwInstructions(hw.instructions || '');
+                                    setEditingHw({ isOpen: true, item: item.rawRecord! });
+                                    setHwSubject(item.rawRecord!.subjectId);
+                                    setHwAssignment(item.rawRecord!.assignment);
+                                    setHwDueDate(item.rawRecord!.dueDate || 'غداً');
+                                    setHwPages(item.rawRecord!.pages || item.pageNumber);
+                                    setHwInstructions(item.rawRecord!.instructions || '');
                                   }}
-                                  className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded"
+                                  className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded cursor-pointer"
                                   title="تعديل الواجب"
                                 >
                                   <Edit2 className="w-3 h-3" />
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteHw(hw.id)}
-                                  className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded"
+                                  onClick={() => handleDeleteHw(item.id)}
+                                  className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer"
                                   title="حذف الواجب"
                                 >
                                   <Trash2 className="w-3 h-3" />
@@ -548,37 +671,6 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                             )}
                           </div>
                         </div>
-
-                        {/* Homework description from weekly plan */}
-                        <p className={`text-xs font-semibold leading-relaxed ${isDone ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                          {hw.assignment}
-                        </p>
-
-                        {hw.pages && hw.pages !== hw.assignment && (
-                          <div className="mt-1.5">
-                            <span className="text-[11px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-100">
-                              {hw.pages}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Interactive Student Checkbox */}
-                        {currentRole === 'student' && (
-                          <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-end">
-                            <button
-                              type="button"
-                              onClick={() => onToggleHwCompletion(hw.id)}
-                              className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors ${
-                                isDone
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800'
-                              }`}
-                            >
-                              {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
-                              <span>{isDone ? 'تم الحل ✓' : 'تأشير الإنجاز'}</span>
-                            </button>
-                          </div>
-                        )}
                       </div>
                     );
                   })
@@ -586,7 +678,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
               </div>
             </div>
 
-            {/* ================= COLUMN 2: الكلاس ورك (Classwork) ================= */}
+            {/* ================= COLUMN 2: فريم أعمال الصف الموحد (Classwork Unified Frame) ================= */}
             <div className="flex flex-col h-full bg-white">
               <div className="bg-sky-800 text-white p-4 flex items-center justify-between border-b border-sky-900">
                 <div className="flex items-center gap-2.5">
@@ -609,7 +701,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                       setCwDetails('');
                       setCwPages('');
                     }}
-                    className="flex items-center gap-1 bg-sky-900 hover:bg-sky-950 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors border border-sky-700"
+                    className="flex items-center gap-1 bg-sky-900 hover:bg-sky-950 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors border border-sky-700 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>إضافة درس</span>
@@ -617,40 +709,40 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                 )}
               </div>
 
-              {/* Classwork Items List extending down */}
+              {/* Classwork Items List: المواد من جدول اليوم فقط مع موضوع الدرس من Weekly Plan */}
               <div className="p-4 space-y-3 flex-1 bg-slate-50/30">
-                {currentRecord.classwork?.length === 0 ? (
+                {classworkItems.length === 0 ? (
                   <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
-                    لم يتم رصد دروس اليوم بعد.
+                    لا توجد حصص مجدولة لهذا اليوم.
                   </div>
                 ) : (
-                  currentRecord.classwork?.map((cw) => (
+                  classworkItems.map((cw) => (
                     <div
                       key={cw.id}
                       className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-xs hover:border-sky-300 transition-all group"
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <SubjectBadge subjectId={cw.subjectId} size="sm" />
-                        {currentRole === 'admin' && (
+                        {currentRole === 'admin' && cw.existingCw && (
                           <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                             <button
                               type="button"
                               onClick={() => {
-                                setEditingCw({ isOpen: true, item: cw });
-                                setCwSubject(cw.subjectId);
-                                setCwTitle(cw.lessonTitle);
-                                setCwDetails(cw.details);
-                                setCwPages(cw.pages || '');
+                                setEditingCw({ isOpen: true, item: cw.existingCw });
+                                setCwSubject(cw.existingCw.subjectId);
+                                setCwTitle(cw.existingCw.lessonTitle);
+                                setCwDetails(cw.existingCw.details);
+                                setCwPages(cw.existingCw.pages || '');
                               }}
-                              className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md"
+                              className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md cursor-pointer"
                               title="تعديل الدرس"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleDeleteCw(cw.id)}
-                              className="p-1 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-md"
+                              onClick={() => handleDeleteCw(cw.existingCw.id)}
+                              className="p-1 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-md cursor-pointer"
                               title="حذف الدرس"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -659,22 +751,17 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                         )}
                       </div>
 
-                      <h4 className="font-bold text-slate-900 text-xs mb-1">{cw.lessonTitle}</h4>
-                      {cw.details && <p className="text-[11px] text-slate-600 leading-relaxed mb-1.5">{cw.details}</p>}
-
-                      {cw.pages && (
-                        <div className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-md">
-                          <span>الصفحات:</span>
-                          <span className="text-slate-900 font-bold">{cw.pages}</span>
-                        </div>
-                      )}
+                      <div className="text-xs font-bold text-slate-800 flex items-baseline gap-1.5">
+                        <span className="text-sky-800 font-black text-[11px] shrink-0">موضوع الدرس:</span>
+                        <span className="text-slate-900 leading-snug">{cw.lessonTopic}</span>
+                      </div>
                     </div>
                   ))
                 )}
               </div>
             </div>
 
-            {/* ================= COLUMN 3: تجهيزات ومستلزمات الغد ================= */}
+            {/* ================= COLUMN 3: بوكس كبير لجدول الغد والملاحظات (Tomorrow Prep & Notes) ================= */}
             <div className="flex flex-col h-full bg-white">
               {/* Header with Day Selector */}
               <div className="bg-emerald-800 text-white p-4 flex flex-wrap items-center justify-between gap-2 border-b border-emerald-900">
@@ -694,7 +781,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                       key={day}
                       type="button"
                       onClick={() => setSelectedTomorrowDay(day)}
-                      className={`px-2 py-0.5 text-[11px] font-bold rounded-lg transition-colors ${
+                      className={`px-2 py-0.5 text-[11px] font-bold rounded-lg transition-colors cursor-pointer ${
                         selectedTomorrowDay === day
                           ? 'bg-amber-400 text-slate-950 shadow-xs'
                           : 'text-emerald-200 hover:text-white hover:bg-emerald-800/60'
@@ -706,307 +793,125 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                 </div>
               </div>
 
-            {/* Content area stretching down */}
-            <div className="p-4 space-y-4 flex-1 bg-slate-50/30">
-
-            {/* Bag Readiness Progress & Quick Batch Actions */}
-            <div className="bg-white rounded-2xl p-4 border border-emerald-200 shadow-xs">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-xs">
-                    🎒
-                  </span>
-                  <div>
-                    <h4 className="font-extrabold text-xs text-slate-900">
-                      جدول حصص يوم ({selectedTomorrowDay}) - Class {selectedClass}
-                    </h4>
-                    <p className="text-[11px] text-slate-500">
-                      ترتيب الحقيبة المدرسية الليلة: تم تجهيز {packedTomorrowCount} من {tomorrowPeriods.length} حصص ({bagReadyPercent}%)
-                    </p>
+              {/* Large Tomorrow Schedule Box with Notes at bottom */}
+              <div className="p-4 space-y-4 flex-1 bg-slate-50/30 flex flex-col justify-between">
+                <div className="space-y-3">
+                  {/* Quick Bag Actions Bar */}
+                  <div className="bg-white rounded-xl p-3 border border-emerald-200 flex items-center justify-between gap-2 flex-wrap text-xs shadow-xs">
+                    <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <span>🎒</span>
+                      <span>جدول حصص يوم ({selectedTomorrowDay}) - الحقيبة ({packedTomorrowCount} من {tomorrowPeriods.length})</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={packAllTomorrowPeriods}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Check className="w-3 h-3" />
+                        <span>تجهيز الكل ✓</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={resetTomorrowBag}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>إعادة ضبط</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={packAllTomorrowPeriods}
-                    className="flex items-center gap-1 px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-[11px] rounded-lg transition-colors"
-                    title="تأكيد وضع جميع حصص الغد في الحقيبة"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>تجهيز كل الحصص ✓</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={resetTomorrowBag}
-                    className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition-colors"
-                    title="إعادة ضبط علامات الحقيبة"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    <span>إعادة ضبط</span>
-                  </button>
-
-                  {currentRole === 'admin' && (
-                    <button
-                      id="admin-add-prep-btn"
-                      type="button"
-                      onClick={() => {
-                        setEditingPrep({ isOpen: true });
-                        setPrepItem('');
-                        setPrepSubject('');
-                        setPrepCategory('books');
-                        setPrepImportant(false);
-                      }}
-                      className="flex items-center gap-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-2.5 py-1 rounded-lg text-[11px] shadow-xs transition-colors"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>إضافة طلب خاص</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-emerald-600 h-full rounded-full transition-all duration-300"
-                  style={{ width: `${bagReadyPercent}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Periods Schedule & Kit List */}
-            <div className="space-y-3">
-              {tomorrowPeriods.length === 0 ? (
-                <div className="bg-white rounded-2xl p-6 text-center text-xs text-slate-400 border border-slate-200">
-                  لا توجد حصص مسجلة لهذا اليوم.
-                </div>
-              ) : (
-                tomorrowPeriods.map((period) => {
-                  const isPeriodPacked = !!packedPeriods[period.id];
-                  const kit = SUBJECT_PACKING_KIT[period.subjectId] || {
-                    book: 'الكتاب المدرسي المعتمد',
-                    notebook: 'كشكول المادة',
-                    tools: 'الأدوات والمقلمة المدرسية'
-                  };
-
-                  return (
-                    <div
-                      key={period.id}
-                      className={`bg-white rounded-2xl p-4 border transition-all shadow-xs ${
-                        isPeriodPacked
-                          ? 'border-emerald-300 bg-emerald-50/20'
-                          : 'border-slate-200 hover:border-emerald-300'
-                      }`}
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        {/* Period & Subject Info */}
-                        <div className="flex items-start gap-3">
+                  {/* Tomorrow Periods Cards */}
+                  <div className="space-y-2">
+                    {tomorrowPeriods.length === 0 ? (
+                      <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
+                        لا توجد حصص مسجلة لهذا اليوم.
+                      </div>
+                    ) : (
+                      tomorrowPeriods.map((period) => {
+                        const isPeriodPacked = !!packedPeriods[period.id];
+                        return (
                           <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+                            key={period.id}
+                            className={`bg-white rounded-xl p-2.5 sm:p-3 border transition-all shadow-xs flex items-center justify-between gap-3 ${
                               isPeriodPacked
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-slate-100 text-slate-700'
+                                ? 'border-emerald-300 bg-emerald-50/25'
+                                : 'border-slate-200 hover:border-emerald-300'
                             }`}
                           >
-                            {period.periodNum}
-                          </div>
-
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <SubjectBadge subjectId={period.subjectId} size="sm" />
-                              <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1 font-mono">
-                                <Clock className="w-3 h-3 text-slate-400" />
-                                <span>{period.time}</span>
-                              </span>
-                              {period.teacher && (
-                                <span className="text-[11px] text-slate-400">
-                                  • {period.teacher}
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Kit Supplies Breakdown */}
-                            <div className="mt-2 space-y-1 text-xs">
-                              <div className="flex items-center gap-1.5 text-slate-800">
-                                <span className="text-emerald-700 font-bold shrink-0">📚 الكتاب:</span>
-                                <span className={isPeriodPacked ? 'line-through text-slate-400' : 'font-medium'}>
-                                  {kit.book}
-                                </span>
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div
+                                className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
+                                  isPeriodPacked ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'
+                                }`}
+                              >
+                                {period.periodNum}
                               </div>
-
-                              <div className="flex items-center gap-1.5 text-slate-800">
-                                <span className="text-sky-700 font-bold shrink-0">📓 الكشكول:</span>
-                                <span className={isPeriodPacked ? 'line-through text-slate-400' : 'font-medium'}>
-                                  {kit.notebook}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 text-slate-600 text-[11px]">
-                                <span className="text-amber-700 font-bold shrink-0">✏️ الأدوات:</span>
-                                <span className={isPeriodPacked ? 'line-through text-slate-400' : ''}>
-                                  {kit.tools}
-                                </span>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <SubjectBadge subjectId={period.subjectId} size="sm" />
+                                  <span className="text-[10px] text-slate-400 font-mono">
+                                    {period.time}
+                                  </span>
+                                </div>
+                                {period.teacher && (
+                                  <div className="text-[10px] text-slate-500 mt-0.5 truncate">
+                                    {period.teacher}
+                                  </div>
+                                )}
                               </div>
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Interactive Packed Checkbox Button */}
-                        <button
-                          type="button"
-                          onClick={() => togglePeriodPacked(period.id)}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                            isPeriodPacked
-                              ? 'bg-emerald-600 text-white shadow-xs'
-                              : 'bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 border border-slate-200'
-                          }`}
-                        >
-                          {isPeriodPacked ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-200" />
-                          ) : (
-                            <Circle className="w-4 h-4 text-slate-400" />
-                          )}
-                          <span>
-                            {isPeriodPacked ? 'تم وضعها في الحقيبة ✓' : 'وضع في الحقيبة'}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Special Additional Items / Alerts (زي رياضي، أدوات خاصة، تسليمات) */}
-            <div className="mt-6 pt-5 border-t border-slate-200">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
-                  <AlertCircle className="w-4 h-4 text-amber-600" />
-                  <span>تنبيهات ومستلزمات خاصة إضافية للغد ({currentRecord.tomorrowPreparations?.length || 0})</span>
-                </h4>
-                {currentRole === 'admin' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingPrep({ isOpen: true });
-                      setPrepItem('');
-                      setPrepSubject('');
-                      setPrepCategory('clothes');
-                      setPrepImportant(false);
-                    }}
-                    className="text-[11px] font-bold text-emerald-700 hover:underline"
-                  >
-                    + إضافة تنبيه خاص
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-2.5">
-                {currentRecord.tomorrowPreparations?.length === 0 ? (
-                  <div className="bg-slate-50 rounded-xl p-4 text-center text-xs text-slate-400 border border-slate-200">
-                    لا توجد تنبيهات استثنائية للغد. فقط التزم بجدول الحصص الموضح بالأعلى.
-                  </div>
-                ) : (
-                  currentRecord.tomorrowPreparations?.map((prep) => {
-                    const isPacked = packedItems[prep.id];
-                    return (
-                      <div
-                        key={prep.id}
-                        className={`bg-white rounded-xl p-3.5 border transition-all shadow-xs ${
-                          prep.isImportant ? 'border-amber-300 bg-amber-50/20' : 'border-slate-200'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {prep.subjectId && <SubjectBadge subjectId={prep.subjectId} size="sm" />}
-                            <span
-                              className={`text-[10px] px-2 py-0.5 rounded-md font-semibold ${
-                                prep.category === 'clothes'
-                                  ? 'bg-orange-100 text-orange-800'
-                                  : prep.category === 'tools'
-                                  ? 'bg-purple-100 text-purple-800'
-                                  : 'bg-slate-100 text-slate-700'
+                            <button
+                              type="button"
+                              onClick={() => togglePeriodPacked(period.id)}
+                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 cursor-pointer ${
+                                isPeriodPacked
+                                  ? 'bg-emerald-600 text-white shadow-2xs'
+                                  : 'bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 border border-slate-200'
                               }`}
                             >
-                              {prep.category === 'clothes'
-                                ? 'زي مدرسي/رياضي'
-                                : prep.category === 'tools'
-                                ? 'أدوات ومقلمة'
-                                : 'كتب وكشاكيل'}
-                            </span>
-
-                            {prep.isImportant && (
-                              <span className="bg-red-100 text-red-800 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" />
-                                <span>مهم جداً</span>
-                              </span>
-                            )}
+                              {isPeriodPacked ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" />
+                              ) : (
+                                <Circle className="w-3.5 h-3.5 text-slate-400" />
+                              )}
+                              <span>{isPeriodPacked ? 'في الحقيبة ✓' : 'وضع في الحقيبة'}</span>
+                            </button>
                           </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
 
-                          {currentRole === 'admin' && (
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingPrep({ isOpen: true, item: prep });
-                                  setPrepItem(prep.item);
-                                  setPrepSubject(prep.subjectId || '');
-                                  setPrepCategory(prep.category);
-                                  setPrepImportant(!!prep.isImportant);
-                                }}
-                                className="p-1 text-slate-500 hover:text-emerald-700 rounded-md"
-                                title="تعديل"
-                              >
-                                <Edit2 className="w-3 h-3" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeletePrep(prep.id)}
-                                className="p-1 text-slate-500 hover:text-red-700 rounded-md"
-                                title="حذف"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-start gap-2.5 mt-1.5">
-                          <button
-                            type="button"
-                            onClick={() => togglePacked(prep.id)}
-                            className={`mt-0.5 transition-colors ${
-                              isPacked ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'
-                            }`}
-                          >
-                            {isPacked ? (
-                              <CheckCircle2 className="w-4 h-4 fill-emerald-100" />
-                            ) : (
-                              <Circle className="w-4 h-4" />
-                            )}
-                          </button>
-
-                          <p
-                            className={`text-xs font-semibold cursor-pointer ${
-                              isPacked ? 'text-slate-400 line-through' : 'text-slate-800'
-                            }`}
-                            onClick={() => togglePacked(prep.id)}
-                          >
-                            {prep.item}
+                {/* وضع الملاحظات (Notes) المأخوذة من الـ Weekly Plan في أسفل البوكس إن وجدت */}
+                {weeklyPlanNotes.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-emerald-200 bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-amber-950">
+                      <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+                      <span>ملاحظات الخطة الأسبوعية (Weekly Plan Notes):</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {weeklyPlanNotes.map((noteItem) => (
+                        <div
+                          key={noteItem.id}
+                          className="bg-white/90 rounded-lg p-2 border border-amber-200/80 text-[11px] text-slate-800 flex items-start gap-2"
+                        >
+                          <SubjectBadge subjectId={noteItem.subjectId} size="xs" />
+                          <p className="leading-relaxed font-medium flex-1">
+                            {noteItem.note}
                           </p>
                         </div>
-                      </div>
-                    );
-                  })
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    ) : (
+        ) : (
     /* ================= VIEW MODE 2: EXACT OFFICIAL SHEET TABLE FORMAT ================= */
     <div className="p-4 sm:p-6 bg-white overflow-x-auto">
       <div className="text-center mb-4 pb-3 border-b border-slate-200">

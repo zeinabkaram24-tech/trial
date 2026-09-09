@@ -800,7 +800,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
               >
                 <div className="p-4">
                   {/* Row 1: اسم المادة */}
-                  <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
                     <SubjectBadge subjectId={file.subjectId} size="md" />
 
                     {currentRole === 'admin' && (
@@ -825,22 +825,20 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                     )}
                   </div>
 
-                  {/* Row 2: الشيت اللي تحتيها على طول */}
-                  <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-3 mb-3.5 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-2xs">
-                      {renderFileTypeIcon(file.fileType)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-bold text-slate-900 text-sm truncate">
-                        {file.title}
-                      </div>
-                      <div className="text-[11px] text-slate-400 truncate">
-                        {file.fileName}
-                      </div>
-                    </div>
+                  {/* Row 2: رابط اسم الشيت مباشرة تحت اسم المادة */}
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={() => handlePreviewFile(file)}
+                      className="text-right w-full font-bold text-sky-800 hover:text-sky-950 hover:underline text-sm flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-slate-50 hover:bg-sky-50/60 border border-slate-200 transition-colors"
+                      title="انقر لفتح واستعراض الشيت"
+                    >
+                      <FileText className="w-4 h-4 text-sky-600 shrink-0" />
+                      <span className="truncate">{file.title || file.fileName}</span>
+                    </button>
                   </div>
 
-                  {/* Row 3: التلات زراير بتوع المعاينة والتحميل والطباعة */}
+                  {/* Row 3: أزرار العمليات الثلاث فقط: [معاينة | تحميل | طباعة] */}
                   <div className="grid grid-cols-3 gap-2">
                     {/* 1. معاينة */}
                     <button

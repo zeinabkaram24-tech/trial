@@ -95,19 +95,18 @@ export const Header: React.FC<HeaderProps> = ({
               <GraduationCap className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
             <div dir="ltr" className="text-left">
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-xl sm:text-2xl font-black tracking-tight text-amber-300 drop-shadow-xs">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-2xl sm:text-3xl font-black tracking-tight text-amber-300 drop-shadow-xs">
                   Nile Egyptian Schools
                 </span>
-                <span className="bg-amber-400/20 text-amber-200 px-3 py-0.5 rounded-full text-xs sm:text-sm font-bold border border-amber-400/30">
+                <span className="text-slate-400 font-bold text-xl sm:text-2xl">|</span>
+                <span className="text-amber-200 text-base sm:text-xl font-extrabold">
                   Grade 2
                 </span>
               </div>
-              <p className="text-slate-300 text-xs flex items-center gap-2 mt-0.5 font-medium">
-                <span className="text-amber-200 font-bold">Minya Branch</span>
-                <span>•</span>
-                <span className="text-slate-400" dir="rtl">مدارس النيل المصرية الدولية - فرع المنيا</span>
-              </p>
+              <div className="text-amber-300/90 text-xs sm:text-sm font-bold tracking-wide mt-0.5">
+                Minya Branch
+              </div>
             </div>
           </div>
 
