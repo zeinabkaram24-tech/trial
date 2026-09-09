@@ -11,7 +11,8 @@ import {
   Music2,
   Activity,
   Heart,
-  Bookmark
+  Bookmark,
+  FileText
 } from 'lucide-react';
 import { SUBJECTS } from '../data/initialData';
 import { SubjectInfo } from '../types';
@@ -57,6 +58,8 @@ export const RenderSubjectIcon: React.FC<{ iconName: string; className?: string 
       return <Activity className={className} />;
     case 'Heart':
       return <Heart className={className} />;
+    case 'FileText':
+      return <FileText className={className} />;
     default:
       return <Bookmark className={className} />;
   }

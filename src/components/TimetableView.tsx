@@ -20,7 +20,7 @@ import {
   Save
 } from 'lucide-react';
 import { ClassTimetable, SchoolClass, UserRole, PeriodSlot, DaySchedule } from '../types';
-import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
+import { SubjectBadge, getSubjectInfo, RenderSubjectIcon } from './SubjectBadge';
 import { SUBJECTS, PERIOD_TIMES } from '../data/initialData';
 import { parseUploadedTimetable } from '../lib/timetableParser';
 
@@ -773,7 +773,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
       {viewMode === 'grid' && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse text-xs min-w-[760px]">
+            <table className="w-full text-right border-collapse text-sm min-w-[900px]">
               <thead>
                 <tr className="bg-slate-900 text-white">
                   <th className="p-3.5 font-bold border-b border-slate-800 text-center w-28">
@@ -782,7 +782,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                   {PERIOD_TIMES.map((pt, idx) => (
                     <th
                       key={pt.periodNum}
-                      className="p-3 font-bold border-b border-slate-800 text-center"
+                      className="p-4 font-bold border-b border-slate-800 text-center"
                     >
                       <div>الحصة {pt.periodNum}</div>
                       <div className="text-[10px] font-normal text-slate-300 tracking-tighter">
@@ -805,7 +805,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                       return (
                         <td
                           key={slot.id}
-                          className="p-2 align-top text-center border-l border-slate-100"
+                          className="p-3 align-top text-center border-l border-slate-100"
                         >
                           <div
                             onClick={() => handleOpenEditSlot(day.dayNameAr, slot)}
@@ -817,7 +817,10 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                           >
                             <div>
                               <div className="font-black text-xs text-slate-900 mb-0.5">
-                                {sub.nameEn}
+                                <span className="inline-flex items-center gap-2 text-sm">
+                                  <RenderSubjectIcon iconName={sub.iconName} className="w-5 h-5" />
+                                  {sub.nameEn}
+                                </span>
                               </div>
                             </div>
 

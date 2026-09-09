@@ -107,6 +107,15 @@ export const SUBJECTS: SubjectInfo[] = [
     borderColor: 'border-lime-200',
     iconName: 'Heart'
   }
+  ,{
+    id: 'dictation',
+    nameAr: 'Dictation',
+    nameEn: 'Dictation',
+    color: 'bg-rose-50 text-rose-800',
+    textColor: 'text-rose-700',
+    borderColor: 'border-rose-200',
+    iconName: 'FileText'
+  }
 ];
 
 export const BLOCKS = [

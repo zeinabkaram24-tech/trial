@@ -50,6 +50,7 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 }) => {
   // Block selector state (defaults to selectedBlock or block1)
   const [activeBlock, setActiveBlock] = useState<string>(selectedBlock || 'block1');
+  const [activeMaterialScope, setActiveMaterialScope] = useState<string>('main');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
   const [copiedNotification, setCopiedNotification] = useState(false);
@@ -320,10 +321,10 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
     onUpdateMaterials([{
       id: `dictation-${Date.now()}`,
       title: `Dictation - ${getSubjectInfo(dictationSubject).nameEn}`,
-      subjectId: dictationSubject,
+      subjectId: 'dictation',
       classId: 'all',
       blockId: activeBlock,
-      weekId: selectedWeek,
+      weekId: activeMaterialScope === 'main' ? selectedWeek : activeMaterialScope,
       materialKind: 'dictation',
       fileType: dictationFile.type,
       fileName: dictationFile.name,
@@ -343,7 +344,8 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
     if (!matchesBlock) return false;
 
     // Main Sheets have no week and remain visible in every week; extra sheets are week-scoped.
-    if (m.weekId && m.weekId !== selectedWeek) return false;
+    const matchesScope = activeMaterialScope === 'main' ? !m.weekId : m.weekId === activeMaterialScope;
+    if (!matchesScope) return false;
 
     // Check subject filter
     if (selectedSubjectFilter !== 'all' && m.subjectId !== selectedSubjectFilter) {
@@ -806,13 +808,13 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
         </div>
         <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 overflow-x-auto">
           <span className="text-xs font-black text-slate-500 shrink-0">Sheets:</span>
-          <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-100 text-purple-900 border border-purple-200 shrink-0">
+          <button type="button" onClick={() => setActiveMaterialScope('main')} className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 border ${activeMaterialScope === 'main' ? 'bg-purple-100 text-purple-900 border-purple-300' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
             Main Sheets (Block)
-          </span>
+          </button>
           {WEEKS.map((week) => (
-            <span key={week.id} className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 ${selectedWeek === week.id ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+            <button key={week.id} type="button" onClick={() => setActiveMaterialScope(week.id)} className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 border ${activeMaterialScope === week.id ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
               {week.nameAr}
-            </span>
+            </button>
           ))}
         </div>
       </div>
@@ -899,56 +901,17 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                   <div className="flex items-center justify-between gap-2 mb-2.5">
                     <SubjectBadge subjectId={file.subjectId} size="md" />
 
-                    {currentRole === 'admin' && (
-                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditModal(file)}
-                          className="p-1.5 text-slate-400 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
-                          title="تعديل بيانات الشيت"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteFile(file.id, file.title)}
-                          className="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                          title="حذف الشيت"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
                   </div>
 
                   {/* Row 2: رابط اسم الشيت مباشرة تحت اسم المادة */}
                   <div className="mb-4">
-                    <button
-                      type="button"
-                      onClick={() => handlePreviewFile(file)}
-                      className="text-right w-full font-bold text-sky-800 hover:text-sky-950 hover:underline text-sm flex items-center gap-2 cursor-pointer p-2 rounded-xl bg-slate-50 hover:bg-sky-50/60 border border-slate-200 transition-colors"
-                      title="انقر لفتح واستعراض الشيت"
-                    >
+                    <div className="text-right w-full font-bold text-sky-800 text-sm flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200">
                       <FileText className="w-4 h-4 text-sky-600 shrink-0" />
                       <span className="truncate">{file.title || file.fileName}</span>
-                    </button>
+                    </div>
                   </div>
 
-                  {/* Row 3: أزرار العمليات الثلاث فقط: [معاينة | تحميل | طباعة] */}
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* 1. معاينة */}
-                    <button
-                      id={`btn-preview-${file.id}`}
-                      type="button"
-                      onClick={() => handlePreviewFile(file)}
-                      className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 transition-all text-xs font-bold cursor-pointer"
-                      title="معاينة الشيت"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                      <span>معاينة</span>
-                    </button>
-
-                    {/* 2. تحميل */}
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       id={`btn-download-${file.id}`}
                       type="button"
@@ -960,7 +923,6 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                       <span>تحميل</span>
                     </button>
 
-                    {/* 3. طباعة */}
                     <button
                       id={`btn-print-${file.id}`}
                       type="button"
@@ -987,9 +949,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
               <button type="button" onClick={() => setDictationOpen(false)} className="p-1 rounded-lg hover:bg-slate-100"><X className="w-4 h-4" /></button>
             </div>
             <p className="text-xs text-slate-600">ارفع ملف الإملاء الأصلي. سيظهر في Homework دون قراءة أو تغيير الملف.</p>
-            <select value={dictationSubject} onChange={(e) => setDictationSubject(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
-              {SUBJECTS.map((subject) => <option key={subject.id} value={subject.id}>{subject.nameEn}</option>)}
-            </select>
+            <div className="w-full px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-800 text-xs font-black">Material: Dictation</div>
             <input type="file" accept=".pdf,.doc,.docx,image/*" onChange={handlePickDictationFile} className="w-full text-xs" />
             {dictationFile && <div className="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3">{dictationFile.name} • {dictationFile.size}</div>}
             <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
