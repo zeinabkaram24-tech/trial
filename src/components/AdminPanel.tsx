@@ -19,10 +19,7 @@ import {
   CheckCircle2,
   X,
   Eye,
-  Filter,
-  CheckSquare,
-  Square,
-  Check
+  Filter
 } from 'lucide-react';
 import {
   SchoolClass,
@@ -105,14 +102,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [planVocabText, setPlanVocabText] = useState('');
   const [planResources, setPlanResources] = useState('');
   const [planAssessment, setPlanAssessment] = useState('');
-
-  // ================= ADD & DELETE QUICK MECHANISM STATES =================
-  const [isAddChoiceModalOpen, setIsAddChoiceModalOpen] = useState(false);
-  const [isDeleteManagerModalOpen, setIsDeleteManagerModalOpen] = useState(false);
-  const [deleteManagerTab, setDeleteManagerTab] = useState<'materials' | 'plans'>('materials');
-  const [selectedMaterialIdsToDelete, setSelectedMaterialIdsToDelete] = useState<string[]>([]);
-  const [selectedPlanIdsToDelete, setSelectedPlanIdsToDelete] = useState<string[]>([]);
-  const [deleteManagerSearch, setDeleteManagerSearch] = useState('');
 
   // Import JSON handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -271,37 +260,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
-  // ================= BULK & DIRECT DELETION ACTIONS =================
-  const handleBulkDeleteMaterials = () => {
-    if (selectedMaterialIdsToDelete.length === 0) return;
-    if (window.confirm(`هل أنت متأكد من حذف ${selectedMaterialIdsToDelete.length} من المذكرات والملفات المحددة نهائياً؟`)) {
-      const updated = materials.filter((m) => !selectedMaterialIdsToDelete.includes(m.id));
-      onUpdateMaterials(updated);
-      setSelectedMaterialIdsToDelete([]);
-    }
-  };
-
-  const handleBulkDeletePlans = () => {
-    if (selectedPlanIdsToDelete.length === 0) return;
-    if (window.confirm(`هل أنت متأكد من حذف ${selectedPlanIdsToDelete.length} من الخطط الأسبوعية المحددة نهائياً؟`)) {
-      const updated = weeklyPlans.filter((p) => !selectedPlanIdsToDelete.includes(p.id));
-      onUpdateWeeklyPlans(updated);
-      setSelectedPlanIdsToDelete([]);
-    }
-  };
-
-  const toggleMaterialSelectForDelete = (id: string) => {
-    setSelectedMaterialIdsToDelete((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const togglePlanSelectForDelete = (id: string) => {
-    setSelectedPlanIdsToDelete((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
   const handleSavePlan = (e: React.FormEvent) => {
     e.preventDefault();
     if (!planUnitTitle.trim()) {
@@ -406,58 +364,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
 
-          {/* Main Requested Action Buttons: زر الإضافة وزر الحذف */}
+          {/* Quick Direct Add Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* 1. Primary ADD Button (زر الإضافة الرئيسي) */}
             <button
-              id="admin-btn-primary-add"
+              id="admin-btn-add-material"
               type="button"
-              onClick={() => setIsAddChoiceModalOpen(true)}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition-all hover:scale-102 border border-emerald-400 cursor-pointer"
-              title="اضغط للاختيار بين إضافة خطة أسبوعية أو رفع مادة/مذكرة جديدة"
+              onClick={handleOpenAddMaterial}
+              className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition-all hover:scale-102"
             >
-              <Plus className="w-4 h-4 text-white stroke-[3]" />
-              <span>إضافة (خطة أو ماتيريال)</span>
+              <Plus className="w-4 h-4" />
+              <span>+ إضافة مادة / مذكرة جديدة</span>
             </button>
 
-            {/* 2. Primary DELETE Button (زر الحذف الرئيسي) */}
             <button
-              id="admin-btn-primary-delete"
+              id="admin-btn-add-plan"
               type="button"
-              onClick={() => {
-                setSelectedMaterialIdsToDelete([]);
-                setSelectedPlanIdsToDelete([]);
-                setIsDeleteManagerModalOpen(true);
-              }}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-black px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition-all hover:scale-102 border border-red-400 cursor-pointer"
-              title="اضغط لحذف المذكرات والماتيريال أو الخطط الأسبوعية"
+              onClick={handleOpenAddPlan}
+              className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition-all hover:scale-102"
             >
-              <Trash2 className="w-4 h-4 text-white stroke-[2.5]" />
-              <span>حذف (ماتيريال أو خطط)</span>
+              <Plus className="w-4 h-4" />
+              <span>+ إضافة خطة أسبوعية جديدة</span>
             </button>
 
-            {/* Backup & Import Tools */}
-            <div className="flex items-center gap-1.5 bg-slate-950/40 p-1 rounded-xl">
-              <button
-                type="button"
-                onClick={exportAllDataToJSON}
-                className="flex items-center gap-1 bg-slate-950/80 hover:bg-slate-950 text-amber-300 font-bold px-2.5 py-1.5 rounded-lg text-xs transition-colors"
-                title="تصدير نسخة احتياطية من كل البيانات"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>نسخة</span>
-              </button>
+            <button
+              type="button"
+              onClick={exportAllDataToJSON}
+              className="flex items-center gap-1 bg-slate-950/80 hover:bg-slate-950 text-amber-300 font-bold px-3 py-2 rounded-xl text-xs transition-colors"
+              title="تصدير نسخة احتياطية من كل البيانات"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>نسخة احتياطية</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1 bg-white/90 hover:bg-white text-slate-900 font-bold px-2.5 py-1.5 rounded-lg text-xs transition-colors"
-                title="استيراد نسخة احتياطية"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <span>استيراد</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1 bg-white/80 hover:bg-white text-slate-900 font-bold px-3 py-2 rounded-xl text-xs transition-colors"
+              title="استيراد نسخة احتياطية"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>استيراد</span>
+            </button>
             <input
               type="file"
               ref={fileInputRef}
@@ -465,103 +412,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               accept=".json"
               className="hidden"
             />
-          </div>
-        </div>
-      </div>
-
-      {/* ================= DEDICATED ADD & DELETE MECHANISM CARDS ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* ADD MECHANISM CARD */}
-        <div className="bg-gradient-to-br from-emerald-50 to-white border-2 border-emerald-300 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="bg-emerald-600 text-white font-black text-xs px-3 py-1 rounded-lg flex items-center gap-1.5 shadow-xs">
-                <Plus className="w-4 h-4" />
-                <span>زر الإضافة (Add)</span>
-              </span>
-              <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2.5 py-0.5 rounded-md">
-                إضافة عناصر جديدة
-              </span>
-            </div>
-            <h3 className="font-black text-base text-slate-900 mb-1">
-              إضافة خطة أسبوعية أو رفع مادة ومذكرة
-            </h3>
-            <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              يمكنك بسهولة إضافة وتحديث المناهج: اختر إضافة خطة توزيع المنهج الأسبوعي، أو رفع ملزمة ومذكرة دراسية جديدة لطلاب Grade 2.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-emerald-200">
-            <button
-              id="card-btn-add-plan"
-              type="button"
-              onClick={handleOpenAddPlan}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-xs transition-colors cursor-pointer"
-            >
-              <Layers className="w-4 h-4" />
-              <span>+ إضافة خطة أسبوعية</span>
-            </button>
-
-            <button
-              id="card-btn-add-material"
-              type="button"
-              onClick={handleOpenAddMaterial}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 bg-purple-700 hover:bg-purple-800 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-xs transition-colors cursor-pointer"
-            >
-              <FolderOpen className="w-4 h-4" />
-              <span>+ رفع مادة / مذكرة</span>
-            </button>
-          </div>
-        </div>
-
-        {/* DELETE MECHANISM CARD */}
-        <div className="bg-gradient-to-br from-red-50 to-white border-2 border-red-300 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="bg-red-600 text-white font-black text-xs px-3 py-1 rounded-lg flex items-center gap-1.5 shadow-xs">
-                <Trash2 className="w-4 h-4" />
-                <span>زر الحذف (Delete)</span>
-              </span>
-              <span className="text-[11px] font-bold text-red-800 bg-red-100/70 px-2.5 py-0.5 rounded-md">
-                إدارة وحذف المحتوى
-              </span>
-            </div>
-            <h3 className="font-black text-base text-slate-900 mb-1">
-              حذف المذكرات والماتيريال أو الخطط الأسبوعية
-            </h3>
-            <p className="text-xs text-slate-600 leading-relaxed mb-4">
-              إدارة الإزالة السريعة: افتح نافذة الحذف لتحديد وحذف المذكرات أو الخطط الأسبوعية نهائياً بنقرة واحدة أو تحديد جماعي.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-red-200">
-            <button
-              id="card-btn-delete-materials"
-              type="button"
-              onClick={() => {
-                setDeleteManagerTab('materials');
-                setSelectedMaterialIdsToDelete([]);
-                setIsDeleteManagerModalOpen(true);
-              }}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-xs transition-colors cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>حذف من الماتيريال ({materials.length})</span>
-            </button>
-
-            <button
-              id="card-btn-delete-plans"
-              type="button"
-              onClick={() => {
-                setDeleteManagerTab('plans');
-                setSelectedPlanIdsToDelete([]);
-                setIsDeleteManagerModalOpen(true);
-              }}
-              className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 bg-rose-700 hover:bg-rose-800 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-xs transition-colors cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>حذف من الخطط ({weeklyPlans.length})</span>
-            </button>
           </div>
         </div>
       </div>
@@ -1429,441 +1279,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL 3: CHOICE MODAL FOR ADD (ماذا تريد أن تضيف؟) ================= */}
-      {isAddChoiceModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black">
-                  <Plus className="w-6 h-6 stroke-[3]" />
-                </div>
-                <div>
-                  <h3 className="font-black text-lg text-slate-900">زر الإضافة: ماذا ترغب في إضافته؟</h3>
-                  <p className="text-xs text-slate-500">اختر نوع العنصر لبدء إدخاله مباشرة في النظام</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsAddChoiceModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
-              {/* Option 1: Add Weekly Plan */}
-              <button
-                id="choice-add-weekly-plan"
-                type="button"
-                onClick={() => {
-                  setIsAddChoiceModalOpen(false);
-                  handleOpenAddPlan();
-                }}
-                className="group text-right p-5 rounded-2xl border-2 border-emerald-200 hover:border-emerald-500 bg-emerald-50/40 hover:bg-emerald-50 transition-all hover:shadow-md cursor-pointer flex flex-col justify-between"
-              >
-                <div>
-                  <div className="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-3 shadow-xs group-hover:scale-105 transition-transform">
-                    <Layers className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-black text-sm text-slate-900 group-hover:text-emerald-800">
-                    خطة أسبوعية جديدة
-                  </h4>
-                  <p className="text-[11px] text-slate-600 mt-1.5 leading-relaxed">
-                    إدخال خطة توزيع المنهج، الأهداف التعليمية، الكلمات الجديدة، والمصادر لكل مادة وبلوك وأسبوع.
-                  </p>
-                </div>
-                <div className="mt-4 pt-3 border-t border-emerald-200 text-xs font-bold text-emerald-700 flex items-center gap-1">
-                  <span>+ بدء إضافة خطة أسبوعية</span>
-                </div>
-              </button>
-
-              {/* Option 2: Add Material */}
-              <button
-                id="choice-add-material"
-                type="button"
-                onClick={() => {
-                  setIsAddChoiceModalOpen(false);
-                  handleOpenAddMaterial();
-                }}
-                className="group text-right p-5 rounded-2xl border-2 border-purple-200 hover:border-purple-500 bg-purple-50/40 hover:bg-purple-50 transition-all hover:shadow-md cursor-pointer flex flex-col justify-between"
-              >
-                <div>
-                  <div className="w-11 h-11 rounded-xl bg-purple-700 text-white flex items-center justify-center mb-3 shadow-xs group-hover:scale-105 transition-transform">
-                    <FolderOpen className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-black text-sm text-slate-900 group-hover:text-purple-800">
-                    مذكرة / ماتيريال جديد
-                  </h4>
-                  <p className="text-[11px] text-slate-600 mt-1.5 leading-relaxed">
-                    رفع ملف ملزمة، شيت مراجعة، أوراق عمل PDF/Word، مع تحديد المادة وفصول Grade 2 المستهدفة.
-                  </p>
-                </div>
-                <div className="mt-4 pt-3 border-t border-purple-200 text-xs font-bold text-purple-700 flex items-center gap-1">
-                  <span>+ بدء رفع الماتيريال</span>
-                </div>
-              </button>
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setIsAddChoiceModalOpen(false)}
-                className="px-5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
-              >
-                إغلاق
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL 4: DELETE MANAGER MODAL (نافذة حذف الماتيريال والخطط) ================= */}
-      {isDeleteManagerModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-red-50/50 rounded-t-3xl">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black shadow-xs">
-                  <Trash2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
-                    <span>نافذة الحذف والإزالة (Delete Manager)</span>
-                    <span className="bg-red-100 text-red-800 text-[10px] font-black px-2 py-0.5 rounded-md">
-                      أدوات المسؤول
-                    </span>
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    احذف المذكرات والملفات أو الخطط الأسبوعية نهائياً من النظام بشكل فردي أو تحديد متعدد
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsDeleteManagerModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Sub-tabs: Materials vs Plans */}
-            <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDeleteManagerTab('materials');
-                    setDeleteManagerSearch('');
-                  }}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                    deleteManagerTab === 'materials'
-                      ? 'bg-purple-700 text-white shadow-xs'
-                      : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-                  }`}
-                >
-                  <FolderOpen className="w-4 h-4" />
-                  <span>المذكرات والماتيريال</span>
-                  <span className="bg-black/20 px-1.5 py-0.2 rounded-full text-[10px]">
-                    {materials.length}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDeleteManagerTab('plans');
-                    setDeleteManagerSearch('');
-                  }}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                    deleteManagerTab === 'plans'
-                      ? 'bg-emerald-700 text-white shadow-xs'
-                      : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-                  }`}
-                >
-                  <Layers className="w-4 h-4" />
-                  <span>الخطط الأسبوعية</span>
-                  <span className="bg-black/20 px-1.5 py-0.2 rounded-full text-[10px]">
-                    {weeklyPlans.length}
-                  </span>
-                </button>
-              </div>
-
-              {/* Real-time search inside delete modal */}
-              <div className="relative min-w-[220px]">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-2.5" />
-                <input
-                  type="text"
-                  placeholder="بحث سريع للعثور على ما تريد حذفه..."
-                  value={deleteManagerSearch}
-                  onChange={(e) => setDeleteManagerSearch(e.target.value)}
-                  className="w-full pr-8 pl-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-hidden focus:ring-2 focus:ring-red-500"
-                />
-              </div>
-            </div>
-
-            {/* List & Bulk Action Area */}
-            <div className="p-4 flex-1 overflow-y-auto space-y-3">
-              {/* TAB 1: DELETE MATERIALS */}
-              {deleteManagerTab === 'materials' && (
-                <div>
-                  {/* Select All & Bulk Delete Bar */}
-                  {materials.length > 0 && (
-                    <div className="flex items-center justify-between bg-purple-50/50 p-2.5 rounded-xl border border-purple-200 mb-3">
-                      <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                        <input
-                          type="checkbox"
-                          checked={
-                            materials.length > 0 &&
-                            materials.every((m) => selectedMaterialIdsToDelete.includes(m.id))
-                          }
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedMaterialIdsToDelete(materials.map((m) => m.id));
-                            } else {
-                              setSelectedMaterialIdsToDelete([]);
-                            }
-                          }}
-                          className="w-4 h-4 rounded-sm text-purple-600 border-slate-300 focus:ring-purple-500"
-                        />
-                        <span>تحديد جميع المذكرات ({materials.length})</span>
-                      </label>
-
-                      {selectedMaterialIdsToDelete.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={handleBulkDeleteMaterials}
-                          className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white font-black px-3 py-1.5 rounded-xl text-xs shadow-xs transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>حذف المذكرات المحددة ({selectedMaterialIdsToDelete.length})</span>
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {materials.length === 0 ? (
-                    <div className="text-center py-12 text-slate-400">
-                      <FolderOpen className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-                      <p className="text-sm font-bold">لا توجد أي مذكرات دراسية حالياً في النظام</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {materials
-                        .filter((m) => {
-                          const q = deleteManagerSearch.toLowerCase();
-                          return (
-                            m.title.toLowerCase().includes(q) ||
-                            m.fileName.toLowerCase().includes(q) ||
-                            m.subjectId.toLowerCase().includes(q)
-                          );
-                        })
-                        .map((m) => {
-                          const isSelected = selectedMaterialIdsToDelete.includes(m.id);
-                          return (
-                            <div
-                              key={m.id}
-                              className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
-                                isSelected
-                                  ? 'bg-red-50/40 border-red-300'
-                                  : 'bg-white border-slate-200 hover:border-purple-300'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
-                                  onChange={() => toggleMaterialSelectForDelete(m.id)}
-                                  className="w-4 h-4 rounded-sm text-red-600 border-slate-300 focus:ring-red-500 shrink-0 cursor-pointer"
-                                />
-
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                                    <SubjectBadge subjectId={m.subjectId} size="sm" />
-                                    <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md">
-                                      {m.classId === 'all' ? 'كل فصول Grade 2' : `فصل ${m.classId}`}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 font-mono">
-                                      {m.fileType} • {m.fileSize}
-                                    </span>
-                                  </div>
-                                  <h4 className="text-xs font-black text-slate-900 truncate">
-                                    {m.title}
-                                  </h4>
-                                  <p className="text-[11px] text-slate-400 font-mono truncate">
-                                    {m.fileName}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Single Direct Delete Button */}
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteMaterial(m.id, m.title)}
-                                className="shrink-0 flex items-center gap-1 bg-red-100 hover:bg-red-600 text-red-700 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer"
-                                title="حذف هذا الملف فوراً"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>حذف</span>
-                              </button>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* TAB 2: DELETE WEEKLY PLANS */}
-              {deleteManagerTab === 'plans' && (
-                <div>
-                  {/* Select All & Bulk Delete Bar */}
-                  {weeklyPlans.length > 0 && (
-                    <div className="flex items-center justify-between bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200 mb-3">
-                      <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
-                        <input
-                          type="checkbox"
-                          checked={
-                            weeklyPlans.length > 0 &&
-                            weeklyPlans.every((p) => selectedPlanIdsToDelete.includes(p.id))
-                          }
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedPlanIdsToDelete(weeklyPlans.map((p) => p.id));
-                            } else {
-                              setSelectedPlanIdsToDelete([]);
-                            }
-                          }}
-                          className="w-4 h-4 rounded-sm text-emerald-600 border-slate-300 focus:ring-emerald-500"
-                        />
-                        <span>تحديد جميع الخطط الأسبوعية ({weeklyPlans.length})</span>
-                      </label>
-
-                      {selectedPlanIdsToDelete.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={handleBulkDeletePlans}
-                          className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white font-black px-3 py-1.5 rounded-xl text-xs shadow-xs transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>حذف الخطط المحددة ({selectedPlanIdsToDelete.length})</span>
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {weeklyPlans.length === 0 ? (
-                    <div className="text-center py-12 text-slate-400">
-                      <Layers className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-                      <p className="text-sm font-bold">لا توجد أي خطط أسبوعية مسجلة حالياً</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {weeklyPlans
-                        .filter((p) => {
-                          const q = deleteManagerSearch.toLowerCase();
-                          return (
-                            p.unitOrTheme.toLowerCase().includes(q) ||
-                            p.subjectId.toLowerCase().includes(q) ||
-                            p.blockId.toLowerCase().includes(q) ||
-                            p.weekId.toLowerCase().includes(q)
-                          );
-                        })
-                        .map((p) => {
-                          const isSelected = selectedPlanIdsToDelete.includes(p.id);
-                          const blockObj = BLOCKS.find((b) => b.id === p.blockId);
-                          const weekObj = WEEKS.find((w) => w.id === p.weekId);
-
-                          return (
-                            <div
-                              key={p.id}
-                              className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
-                                isSelected
-                                  ? 'bg-red-50/40 border-red-300'
-                                  : 'bg-white border-slate-200 hover:border-emerald-300'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
-                                  onChange={() => togglePlanSelectForDelete(p.id)}
-                                  className="w-4 h-4 rounded-sm text-red-600 border-slate-300 focus:ring-red-500 shrink-0 cursor-pointer"
-                                />
-
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                                    <SubjectBadge subjectId={p.subjectId} size="sm" />
-                                    <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md">
-                                      {p.classId === 'all' ? 'جميع فصول 2' : `فصل ${p.classId}`}
-                                    </span>
-                                    <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded-md border border-emerald-200">
-                                      {blockObj?.nameAr || p.blockId} • {weekObj?.nameAr || p.weekId}
-                                    </span>
-                                  </div>
-                                  <h4 className="text-xs font-black text-slate-900 truncate">
-                                    {p.unitOrTheme}
-                                  </h4>
-                                  <p className="text-[11px] text-slate-500">
-                                    عدد الأهداف التعليمية: {p.learningObjectives.length}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Single Direct Delete Button */}
-                              <button
-                                type="button"
-                                onClick={() => handleDeletePlan(p.id, p.unitOrTheme)}
-                                className="shrink-0 flex items-center gap-1 bg-red-100 hover:bg-red-600 text-red-700 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer"
-                                title="حذف هذه الخطة الأسبوعية فوراً"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>حذف</span>
-                              </button>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between rounded-b-3xl">
-              <div className="text-xs text-slate-500">
-                {deleteManagerTab === 'materials' ? (
-                  <span>
-                    تم تحديد{' '}
-                    <strong className="text-red-600">{selectedMaterialIdsToDelete.length}</strong>{' '}
-                    مذكرة من أصل {materials.length}
-                  </span>
-                ) : (
-                  <span>
-                    تم تحديد{' '}
-                    <strong className="text-red-600">{selectedPlanIdsToDelete.length}</strong> خطة من
-                    أصل {weeklyPlans.length}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsDeleteManagerModalOpen(false)}
-                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
-                >
-                  تم والانتهاء
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
