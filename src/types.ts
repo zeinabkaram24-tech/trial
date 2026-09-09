@@ -50,6 +50,10 @@ export interface WeeklyPlanItem {
   resourcesNote?: string;
   assessmentNote?: string;
   homeworkNote?: string;
+  dictationFileName?: string;
+  dictationFileType?: 'pdf' | 'word' | 'image';
+  dictationFileSize?: string;
+  dictationFileDataUrl?: string;
   // File attachments for PDF or Word or image
   fileName?: string;
   fileType?: 'pdf' | 'word' | 'doc' | 'image';

@@ -174,6 +174,25 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   // Homework: Weekly Plan is the source of truth; saved daily homework is only a fallback.
   const homeworkItems = useMemo(() => {
     const planned = weekPlans
+      .filter((wp) => (wp.homeworkNote && wp.homeworkNote.trim()) || wp.dictationFileName)
+      .map((wp) => {
+        const sub = getSubjectInfo(wp.subjectId);
+        const parts = [
+          wp.homeworkNote?.trim(),
+          wp.dictationFileName ? `Dictation: ${wp.dictationFileName}` : undefined
+        ].filter(Boolean);
+        return {
+          id: `weekly-homework-${wp.id}`,
+          subjectId: wp.subjectId,
+          subjectName: sub.nameEn,
+          homeworkText: parts.join(' • '),
+          pageNumber: extractPageNumber(parts.join(' ')),
+          rawRecord: null
+        };
+      });
+    if (planned.length > 0) return planned;
+
+    const legacyPlanned = weekPlans
       .filter((wp) => wp.homeworkNote && wp.homeworkNote.trim().length > 0)
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
@@ -186,7 +205,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           rawRecord: null
         };
       });
-    if (planned.length > 0) return planned;
+    if (legacyPlanned.length > 0) return legacyPlanned;
 
     if (currentRecord.homework?.length > 0) {
       return currentRecord.homework.map((hw) => {
@@ -219,7 +238,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
       const sub = getSubjectInfo(period.subjectId);
       const wp = weekPlans.find((p) => p.subjectId === period.subjectId);
       const existingCw = currentRecord.classwork?.find((c) => c.subjectId === period.subjectId);
-      const lessonTopic = wp?.unitOrTheme || existingCw?.lessonTitle || 'موضوع الدرس المقرر بالخطة';
+      const lessonTopic = wp?.unitOrTheme || '';
       return {
         id: `${period.id}-${existingCw?.id || 'lesson'}`,
         periodNum: period.periodNum,
