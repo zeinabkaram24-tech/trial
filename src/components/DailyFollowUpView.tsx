@@ -484,436 +484,432 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* ================= UNIFIED FRAME (الفريم الموحد للهوم ورك والكلاس ورك وتجهيزات الغد) ================= */}
-      <div id="unified-daily-frame" className="bg-white rounded-3xl border-2 border-slate-300 shadow-md overflow-hidden">
-        
-        {/* Frame Master Header Bar */}
-        <div className="bg-slate-900 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 border-b-2 border-slate-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-xs">
-              <Layers className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base sm:text-lg font-black text-white">
-                  الفريم الموحد لسجل المتابعة اليومية
-                </h3>
-                <span className="bg-sky-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
-                  Class {selectedClass}
-                </span>
-                <span className="bg-slate-800 text-amber-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-700">
-                  {currentRecord.dayNameAr} ({currentRecord.date})
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* View Mode Switcher: 3-Column Frame vs Official Table Sheet */}
-            <div className="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center gap-1 text-xs">
-              <button
-                id="view-mode-columns-btn"
-                type="button"
-                onClick={() => setFollowUpLayoutMode('columns')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  followUpLayoutMode === 'columns'
-                    ? 'bg-amber-400 text-slate-950 shadow-xs'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-                title="عرض الفريم الثلاثي المتكامل"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>الفريم الثلاثي الموحد</span>
-              </button>
-              <button
-                id="view-mode-table-btn"
-                type="button"
-                onClick={() => setFollowUpLayoutMode('table')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  followUpLayoutMode === 'table'
-                    ? 'bg-amber-400 text-slate-950 shadow-xs'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-                title="عرض شيت الجدول المنسق كما في الملف المعتمد"
-              >
-                <Table className="w-3.5 h-3.5" />
-                <span>شيت الجدول المنسق</span>
-              </button>
-            </div>
-
-            <button
-              id="frame-print-btn"
-              type="button"
-              onClick={onOpenPrint}
-              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-600 transition-colors"
-              title="طباعة الفريم الموحد"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">طباعة الفريم</span>
-            </button>
-          </div>
+      {/* Subheader: Class, Date, Layout Selector, and Print */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <span className="bg-sky-600 text-white text-xs font-bold px-3 py-1 rounded-xl">
+            Class {selectedClass}
+          </span>
+          <span className="bg-slate-100 text-slate-800 text-xs font-bold px-3 py-1 rounded-xl border border-slate-200">
+            {currentRecord.dayNameAr} ({currentRecord.date})
+          </span>
         </div>
 
-        {/* View Mode 1: 3 Columns sharing the same frame container down to the bottom */}
-        {followUpLayoutMode === 'columns' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x lg:divide-x-reverse divide-slate-200 bg-slate-50/20">
-            
-            {/* ================= COLUMN 1: فريم الواجبات الموحد (Homework Unified Frame) ================= */}
-            <div className="flex flex-col h-full bg-white">
-              <div className="bg-red-700 text-white p-4 flex items-center justify-between border-b border-red-800">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-red-800 text-white flex items-center justify-center font-bold shadow-xs">
-                    <CheckSquare className="w-4 h-4" />
-                  </div>
-                  <h3 className="font-black text-sm text-white">
-                    الهوم ورك ({hwCount})
-                  </h3>
+        <div className="flex items-center gap-2">
+          {/* View Mode Switcher: Cards View vs Table Sheet */}
+          <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 text-xs">
+            <button
+              id="view-mode-columns-btn"
+              type="button"
+              onClick={() => setFollowUpLayoutMode('columns')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                followUpLayoutMode === 'columns'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Cards View"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Cards View</span>
+            </button>
+            <button
+              id="view-mode-table-btn"
+              type="button"
+              onClick={() => setFollowUpLayoutMode('table')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                followUpLayoutMode === 'table'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Table Sheet"
+            >
+              <Table className="w-3.5 h-3.5" />
+              <span>Table Sheet</span>
+            </button>
+          </div>
+
+          <button
+            id="frame-print-btn"
+            type="button"
+            onClick={onOpenPrint}
+            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer border border-slate-200"
+            title="Print"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print</span>
+          </button>
+        </div>
+      </div>
+
+      {/* View Mode 1: 3 Separate Distinct Boxes in a Responsive Grid */}
+      {followUpLayoutMode === 'columns' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          
+          {/* ================= BOX 1: Homework ================= */}
+          <div className="bg-white rounded-3xl border-2 border-rose-200/90 shadow-xs flex flex-col overflow-hidden">
+            <div className="bg-rose-50/80 p-4 border-b border-rose-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
+                  <CheckSquare className="w-4 h-4" />
                 </div>
-
-                {currentRole === 'admin' && (
-                  <button
-                    id="admin-add-hw-btn"
-                    type="button"
-                    onClick={() => {
-                      setEditingHw({ isOpen: true });
-                      setHwSubject(SUBJECTS[0].id);
-                      setHwAssignment('');
-                      setHwDueDate('غداً');
-                      setHwPages('');
-                      setHwInstructions('');
-                    }}
-                    className="flex items-center gap-1 bg-red-800 hover:bg-red-900 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors border border-red-600 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>إضافة واجب</span>
-                  </button>
-                )}
+                <h3 className="font-black text-sm text-rose-950 flex items-center gap-1.5">
+                  <span>Homework</span>
+                  <span className="text-xs font-bold text-rose-600 bg-rose-100/80 px-2 py-0.5 rounded-full">
+                    {hwCount}
+                  </span>
+                </h3>
               </div>
 
-              {/* Homework Items List extending down */}
-              <div className="p-4 space-y-3 flex-1 bg-slate-50/30">
-                {homeworkItems.length === 0 ? (
-                  <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
-                    لا توجد مواد بها واجبات مسجلة اليوم.
-                  </div>
-                ) : (
-                  homeworkItems.map((item) => {
-                    const isDone = !!completedHwMap[item.id];
-                    return (
-                      <div
-                        key={item.id}
-                        className={`bg-white rounded-xl p-3.5 border transition-all shadow-xs ${
-                          isDone
-                            ? 'border-emerald-300 bg-emerald-50/20'
-                            : 'border-slate-200 hover:border-red-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          {/* الصيغة المطلوبة: [اسم المادة] - Homework Page: [رقم الصفحة] بدون تفاصيل إضافية */}
-                          <div className="flex items-center gap-2 min-w-0">
-                            <SubjectBadge subjectId={item.subjectId} size="sm" />
-                            <div
-                              className={`text-xs font-black tracking-tight ${
-                                isDone ? 'line-through text-slate-400' : 'text-slate-900'
-                              }`}
-                            >
-                              <span>{item.subjectName}</span>
-                              <span className="text-slate-400 mx-1.5">-</span>
-                              <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-200 font-bold font-mono">
-                                Homework Page: {item.pageNumber}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Student Checkbox or Admin Actions */}
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {currentRole === 'student' && (
-                              <button
-                                type="button"
-                                onClick={() => onToggleHwCompletion(item.id)}
-                                className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
-                                  isDone
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800'
-                                }`}
-                              >
-                                {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
-                                <span>{isDone ? 'تم الحل ✓' : 'تأشير'}</span>
-                              </button>
-                            )}
-
-                            {currentRole === 'admin' && item.rawRecord && (
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingHw({ isOpen: true, item: item.rawRecord! });
-                                    setHwSubject(item.rawRecord!.subjectId);
-                                    setHwAssignment(item.rawRecord!.assignment);
-                                    setHwDueDate(item.rawRecord!.dueDate || 'غداً');
-                                    setHwPages(item.rawRecord!.pages || item.pageNumber);
-                                    setHwInstructions(item.rawRecord!.instructions || '');
-                                  }}
-                                  className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded cursor-pointer"
-                                  title="تعديل الواجب"
-                                >
-                                  <Edit2 className="w-3 h-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteHw(item.id)}
-                                  className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer"
-                                  title="حذف الواجب"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+              {currentRole === 'admin' && (
+                <button
+                  id="admin-add-hw-btn"
+                  type="button"
+                  onClick={() => {
+                    setEditingHw({ isOpen: true });
+                    setHwSubject(SUBJECTS[0].id);
+                    setHwAssignment('');
+                    setHwDueDate('غداً');
+                    setHwPages('');
+                    setHwInstructions('');
+                  }}
+                  className="flex items-center gap-1 bg-white hover:bg-rose-100 text-rose-800 font-bold px-2.5 py-1 rounded-lg text-xs shadow-2xs transition-colors border border-rose-200 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Homework</span>
+                </button>
+              )}
             </div>
 
-            {/* ================= COLUMN 2: فريم أعمال الصف الموحد (Classwork Unified Frame) ================= */}
-            <div className="flex flex-col h-full bg-white">
-              <div className="bg-sky-800 text-white p-4 flex items-center justify-between border-b border-sky-900">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-sky-900 text-sky-200 flex items-center justify-center font-bold shadow-xs">
-                    <BookOpen className="w-4 h-4" />
-                  </div>
-                  <h3 className="font-black text-sm text-white">
-                    الكلاس ورك ({cwCount})
-                  </h3>
+            {/* Homework Items List */}
+            <div className="p-4 space-y-3 flex-1 bg-rose-50/10 min-h-[220px]">
+              {homeworkItems.length === 0 ? (
+                <div className="bg-white rounded-2xl p-6 text-center text-xs text-slate-400 border border-slate-100">
+                  No homework assignments recorded today.
                 </div>
-
-                {currentRole === 'admin' && (
-                  <button
-                    id="admin-add-cw-btn"
-                    type="button"
-                    onClick={() => {
-                      setEditingCw({ isOpen: true });
-                      setCwSubject(SUBJECTS[0].id);
-                      setCwTitle('');
-                      setCwDetails('');
-                      setCwPages('');
-                    }}
-                    className="flex items-center gap-1 bg-sky-900 hover:bg-sky-950 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors border border-sky-700 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>إضافة درس</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Classwork Items List: المواد من جدول اليوم فقط مع موضوع الدرس من Weekly Plan */}
-              <div className="p-4 space-y-3 flex-1 bg-slate-50/30">
-                {classworkItems.length === 0 ? (
-                  <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
-                    لا توجد حصص مجدولة لهذا اليوم.
-                  </div>
-                ) : (
-                  classworkItems.map((cw) => (
+              ) : (
+                homeworkItems.map((item) => {
+                  const isDone = !!completedHwMap[item.id];
+                  return (
                     <div
-                      key={cw.id}
-                      className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-xs hover:border-sky-300 transition-all group"
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <SubjectBadge subjectId={cw.subjectId} size="sm" />
-                        {currentRole === 'admin' && cw.existingCw && (
-                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingCw({ isOpen: true, item: cw.existingCw });
-                                setCwSubject(cw.existingCw.subjectId);
-                                setCwTitle(cw.existingCw.lessonTitle);
-                                setCwDetails(cw.existingCw.details);
-                                setCwPages(cw.existingCw.pages || '');
-                              }}
-                              className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md cursor-pointer"
-                              title="تعديل الدرس"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCw(cw.existingCw.id)}
-                              className="p-1 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-md cursor-pointer"
-                              title="حذف الدرس"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="text-xs font-bold text-slate-800 flex items-baseline gap-1.5">
-                        <span className="text-sky-800 font-black text-[11px] shrink-0">موضوع الدرس:</span>
-                        <span className="text-slate-900 leading-snug">{cw.lessonTopic}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* ================= COLUMN 3: بوكس كبير لجدول الغد والملاحظات (Tomorrow Prep & Notes) ================= */}
-            <div className="flex flex-col h-full bg-white">
-              {/* Header with Day Selector */}
-              <div className="bg-emerald-800 text-white p-4 flex flex-wrap items-center justify-between gap-2 border-b border-emerald-900">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-900 text-emerald-200 flex items-center justify-center font-bold shadow-xs">
-                    <Package className="w-4 h-4" />
-                  </div>
-                  <h3 className="font-black text-sm text-white">
-                    تجهيزات الغد ({tomorrowPeriods.length})
-                  </h3>
-                </div>
-
-                {/* Day Selector for Tomorrow's Schedule */}
-                <div className="flex items-center gap-1 bg-emerald-950/60 p-1 rounded-xl">
-                  {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => setSelectedTomorrowDay(day)}
-                      className={`px-2 py-0.5 text-[11px] font-bold rounded-lg transition-colors cursor-pointer ${
-                        selectedTomorrowDay === day
-                          ? 'bg-amber-400 text-slate-950 shadow-xs'
-                          : 'text-emerald-200 hover:text-white hover:bg-emerald-800/60'
+                      key={item.id}
+                      className={`bg-white rounded-2xl p-3.5 border transition-all shadow-2xs ${
+                        isDone
+                          ? 'border-emerald-300 bg-emerald-50/20'
+                          : 'border-slate-200/80 hover:border-rose-300'
                       }`}
                     >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Large Tomorrow Schedule Box with Notes at bottom */}
-              <div className="p-4 space-y-4 flex-1 bg-slate-50/30 flex flex-col justify-between">
-                <div className="space-y-3">
-                  {/* Quick Bag Actions Bar */}
-                  <div className="bg-white rounded-xl p-3 border border-emerald-200 flex items-center justify-between gap-2 flex-wrap text-xs shadow-xs">
-                    <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                      <span>🎒</span>
-                      <span>جدول حصص يوم ({selectedTomorrowDay}) - الحقيبة ({packedTomorrowCount} من {tomorrowPeriods.length})</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={packAllTomorrowPeriods}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-[11px] rounded-lg transition-colors cursor-pointer"
-                      >
-                        <Check className="w-3 h-3" />
-                        <span>تجهيز الكل ✓</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={resetTomorrowBag}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition-colors cursor-pointer"
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                        <span>إعادة ضبط</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Tomorrow Periods Cards */}
-                  <div className="space-y-2">
-                    {tomorrowPeriods.length === 0 ? (
-                      <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
-                        لا توجد حصص مسجلة لهذا اليوم.
-                      </div>
-                    ) : (
-                      tomorrowPeriods.map((period) => {
-                        const isPeriodPacked = !!packedPeriods[period.id];
-                        return (
+                      <div className="flex items-center justify-between gap-2">
+                        {/* الصيغة المطلوبة: [اسم المادة] - Homework Page: [رقم الصفحة] بدون تفاصيل إضافية */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <SubjectBadge subjectId={item.subjectId} size="sm" />
                           <div
-                            key={period.id}
-                            className={`bg-white rounded-xl p-2.5 sm:p-3 border transition-all shadow-xs flex items-center justify-between gap-3 ${
-                              isPeriodPacked
-                                ? 'border-emerald-300 bg-emerald-50/25'
-                                : 'border-slate-200 hover:border-emerald-300'
+                            className={`text-xs font-black tracking-tight ${
+                              isDone ? 'line-through text-slate-400' : 'text-slate-900'
                             }`}
                           >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div
-                                className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
-                                  isPeriodPacked ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'
-                                }`}
-                              >
-                                {period.periodNum}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <SubjectBadge subjectId={period.subjectId} size="sm" />
-                                  <span className="text-[10px] text-slate-400 font-mono">
-                                    {period.time}
-                                  </span>
-                                </div>
-                                {period.teacher && (
-                                  <div className="text-[10px] text-slate-500 mt-0.5 truncate">
-                                    {period.teacher}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                            <span>{item.subjectName}</span>
+                            <span className="text-slate-400 mx-1.5">-</span>
+                            <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 font-bold font-mono">
+                              Homework Page: {item.pageNumber}
+                            </span>
+                          </div>
+                        </div>
 
+                        {/* Student Checkbox or Admin Actions */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {currentRole === 'student' && (
                             <button
                               type="button"
-                              onClick={() => togglePeriodPacked(period.id)}
-                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 cursor-pointer ${
-                                isPeriodPacked
-                                  ? 'bg-emerald-600 text-white shadow-2xs'
-                                  : 'bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-900 border border-slate-200'
+                              onClick={() => onToggleHwCompletion(item.id)}
+                              className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                                isDone
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800'
                               }`}
                             >
-                              {isPeriodPacked ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" />
-                              ) : (
-                                <Circle className="w-3.5 h-3.5 text-slate-400" />
-                              )}
-                              <span>{isPeriodPacked ? 'في الحقيبة ✓' : 'وضع في الحقيبة'}</span>
+                              {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                              <span>{isDone ? 'Done ✓' : 'Mark'}</span>
                             </button>
-                          </div>
-                        );
-                      })
-                    )}
+                          )}
+
+                          {currentRole === 'admin' && item.rawRecord && (
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingHw({ isOpen: true, item: item.rawRecord! });
+                                  setHwSubject(item.rawRecord!.subjectId);
+                                  setHwAssignment(item.rawRecord!.assignment);
+                                  setHwDueDate(item.rawRecord!.dueDate || 'غداً');
+                                  setHwPages(item.rawRecord!.pages || item.pageNumber);
+                                  setHwInstructions(item.rawRecord!.instructions || '');
+                                }}
+                                className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded cursor-pointer"
+                                title="Edit Homework"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteHw(item.id)}
+                                className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded cursor-pointer"
+                                title="Delete Homework"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* ================= BOX 2: Classwork ================= */}
+          <div className="bg-white rounded-3xl border-2 border-sky-200/90 shadow-xs flex flex-col overflow-hidden">
+            <div className="bg-sky-50/80 p-4 border-b border-sky-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <h3 className="font-black text-sm text-sky-950 flex items-center gap-1.5">
+                  <span>Classwork</span>
+                  <span className="text-xs font-bold text-sky-600 bg-sky-100/80 px-2 py-0.5 rounded-full">
+                    {cwCount}
+                  </span>
+                </h3>
+              </div>
+
+              {currentRole === 'admin' && (
+                <button
+                  id="admin-add-cw-btn"
+                  type="button"
+                  onClick={() => {
+                    setEditingCw({ isOpen: true });
+                    setCwSubject(SUBJECTS[0].id);
+                    setCwTitle('');
+                    setCwDetails('');
+                    setCwPages('');
+                  }}
+                  className="flex items-center gap-1 bg-white hover:bg-sky-100 text-sky-800 font-bold px-2.5 py-1 rounded-lg text-xs shadow-2xs transition-colors border border-sky-200 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Classwork</span>
+                </button>
+              )}
+            </div>
+
+            {/* Classwork Items List */}
+            <div className="p-4 space-y-3 flex-1 bg-sky-50/10 min-h-[220px]">
+              {classworkItems.length === 0 ? (
+                <div className="bg-white rounded-2xl p-6 text-center text-xs text-slate-400 border border-slate-100">
+                  No periods scheduled for today.
+                </div>
+              ) : (
+                classworkItems.map((cw) => (
+                  <div
+                    key={cw.id}
+                    className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-2xs hover:border-sky-300 transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <SubjectBadge subjectId={cw.subjectId} size="sm" />
+                      {currentRole === 'admin' && cw.existingCw && (
+                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCw({ isOpen: true, item: cw.existingCw });
+                              setCwSubject(cw.existingCw.subjectId);
+                              setCwTitle(cw.existingCw.lessonTitle);
+                              setCwDetails(cw.existingCw.details);
+                              setCwPages(cw.existingCw.pages || '');
+                            }}
+                            className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md cursor-pointer"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCw(cw.existingCw.id)}
+                            className="p-1 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-md cursor-pointer"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-xs font-bold text-slate-800 flex items-baseline gap-1.5">
+                      <span className="text-sky-800 font-black text-[11px] shrink-0">Lesson:</span>
+                      <span className="text-slate-900 leading-snug">{cw.lessonTopic}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* ================= BOX 3: Tomorrow (المربع الكبير بإطار خارجي أخضر هادئ يحوي كل تجهيزات الغد) ================= */}
+          <div className="bg-emerald-50/25 rounded-3xl border-2 border-emerald-400 shadow-sm flex flex-col overflow-hidden">
+            {/* Header with Tomorrow English Title and Day Selector */}
+            <div className="bg-emerald-100/70 p-4 border-b border-emerald-200 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-2xs">
+                  <Package className="w-4 h-4" />
+                </div>
+                <h3 className="font-black text-sm text-emerald-950 flex items-center gap-1.5">
+                  <span>Tomorrow</span>
+                  <span className="text-xs font-bold text-emerald-800 bg-white/80 px-2 py-0.5 rounded-full border border-emerald-300">
+                    {tomorrowPeriods.length}
+                  </span>
+                </h3>
+              </div>
+
+              {/* Day Selector for Tomorrow */}
+              <div className="flex items-center gap-1 bg-white/80 p-1 rounded-xl border border-emerald-200">
+                {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => setSelectedTomorrowDay(day)}
+                    className={`px-2 py-0.5 text-[11px] font-bold rounded-lg transition-colors cursor-pointer ${
+                      selectedTomorrowDay === day
+                        ? 'bg-emerald-600 text-white shadow-2xs'
+                        : 'text-emerald-800 hover:bg-emerald-100'
+                    }`}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Everything for Tomorrow is inside this calm green frame */}
+            <div className="p-4 space-y-4 flex-1 flex flex-col justify-between">
+              <div className="space-y-3">
+                {/* Bag Progress & Quick Actions */}
+                <div className="bg-white/90 rounded-2xl p-3 border border-emerald-200 flex items-center justify-between gap-2 flex-wrap text-xs shadow-2xs">
+                  <div className="font-bold text-emerald-950 flex items-center gap-1.5">
+                    <span>🎒</span>
+                    <span>School Bag ({packedTomorrowCount}/{tomorrowPeriods.length})</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={packAllTomorrowPeriods}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <Check className="w-3 h-3" />
+                      <span>Pack All ✓</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetTomorrowBag}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition-colors cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Reset</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* وضع الملاحظات (Notes) المأخوذة من الـ Weekly Plan في أسفل البوكس إن وجدت */}
-                {weeklyPlanNotes.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-emerald-200 bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-amber-950">
-                      <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
-                      <span>ملاحظات الخطة الأسبوعية (Weekly Plan Notes):</span>
+                {/* Tomorrow Periods Matrix */}
+                <div className="space-y-2">
+                  {tomorrowPeriods.length === 0 ? (
+                    <div className="bg-white rounded-2xl p-6 text-center text-xs text-slate-400 border border-emerald-100">
+                      No periods scheduled for this day.
                     </div>
-                    <div className="space-y-1.5">
-                      {weeklyPlanNotes.map((noteItem) => (
+                  ) : (
+                    tomorrowPeriods.map((period) => {
+                      const isPeriodPacked = !!packedPeriods[period.id];
+                      return (
                         <div
-                          key={noteItem.id}
-                          className="bg-white/90 rounded-lg p-2 border border-amber-200/80 text-[11px] text-slate-800 flex items-start gap-2"
+                          key={period.id}
+                          className={`bg-white rounded-2xl p-2.5 sm:p-3 border transition-all shadow-2xs flex items-center justify-between gap-3 ${
+                            isPeriodPacked
+                              ? 'border-emerald-400 bg-emerald-50/40'
+                              : 'border-emerald-200/70 hover:border-emerald-400'
+                          }`}
                         >
-                          <SubjectBadge subjectId={noteItem.subjectId} size="xs" />
-                          <p className="leading-relaxed font-medium flex-1">
-                            {noteItem.note}
-                          </p>
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
+                                isPeriodPacked ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'
+                              }`}
+                            >
+                              {period.periodNum}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <SubjectBadge subjectId={period.subjectId} size="sm" />
+                                <span className="text-[10px] text-slate-500 font-mono">
+                                  {period.time}
+                                </span>
+                              </div>
+                              {period.teacher && (
+                                <div className="text-[10px] text-slate-500 mt-0.5 truncate">
+                                  {period.teacher}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => togglePeriodPacked(period.id)}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 cursor-pointer ${
+                              isPeriodPacked
+                                ? 'bg-emerald-600 text-white shadow-2xs'
+                                : 'bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            }`}
+                          >
+                            {isPeriodPacked ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" />
+                            ) : (
+                              <Circle className="w-3.5 h-3.5 text-slate-400" />
+                            )}
+                            <span>{isPeriodPacked ? 'Packed ✓' : 'Pack'}</span>
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      );
+                    })
+                  )}
+                </div>
               </div>
+
+              {/* Weekly Plan Notes at bottom of Tomorrow Box */}
+              {weeklyPlanNotes.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-emerald-200/80 bg-white/90 border border-emerald-200 rounded-2xl p-3 space-y-2 shadow-2xs">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
+                    <AlertCircle className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <span>Weekly Plan Notes:</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {weeklyPlanNotes.map((noteItem) => (
+                      <div
+                        key={noteItem.id}
+                        className="bg-emerald-50/60 rounded-xl p-2 border border-emerald-200/70 text-[11px] text-slate-800 flex items-start gap-2"
+                      >
+                        <SubjectBadge subjectId={noteItem.subjectId} size="xs" />
+                        <p className="leading-relaxed font-medium flex-1">
+                          {noteItem.note}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        ) : (
+        </div>
+      ) : (
     /* ================= VIEW MODE 2: EXACT OFFICIAL SHEET TABLE FORMAT ================= */
-    <div className="p-4 sm:p-6 bg-white overflow-x-auto">
+    <div className="p-4 sm:p-6 bg-white overflow-x-auto rounded-3xl border-2 border-slate-200 shadow-xs">
       <div className="text-center mb-4 pb-3 border-b border-slate-200">
         <h4 className="font-black text-slate-900 text-base">
           مدارس النيل المصرية الدولية - فرع المنيا (Nile Egyptian Schools)
@@ -1049,26 +1045,6 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
       </table>
     </div>
   )}
-
-  {/* Frame Master Footer Bar */}
-  <div className="bg-slate-100 px-5 py-3 border-t-2 border-slate-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-3">
-    <div className="flex items-center gap-2">
-      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-      <span className="font-bold text-slate-800">
-        سجل المتابعة اليومي معتمد ومحدث لفرع المنيا
-      </span>
-      <span className="text-slate-400">|</span>
-      <span>
-        إجمالي: {cwCount} كلاس ورك • {hwCount} واجبات • {tomorrowPeriods.length} حصص غداً
-      </span>
-    </div>
-
-    <div className="text-[11px] font-semibold text-slate-500">
-      فصل {selectedClass} • نظام المتابعة الإلكترونية الموحدة لمدارس النيل
-    </div>
-  </div>
-
-</div>
 
       {/* ================= ADMIN MODALS ================= */}
 

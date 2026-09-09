@@ -375,6 +375,31 @@ ${file.previewSummary || file.description || 'محتوى معتمد من إدا�
 
   // Action 3: Print (طباعة)
   const handlePrintFile = (file: SchoolMaterialFile) => {
+    if (file.fileDataUrl) {
+      if (file.fileType === 'image') {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+              <head><title>${file.title}</title></head>
+              <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff;">
+                <img src="${file.fileDataUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" onload="window.print();" />
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+        }
+      } else {
+        // Direct print / view of original PDF
+        const printWindow = window.open(file.fileDataUrl, '_blank');
+        if (printWindow) {
+          printWindow.focus();
+        }
+      }
+      return;
+    }
+
     const sub = getSubjectInfo(file.subjectId);
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
