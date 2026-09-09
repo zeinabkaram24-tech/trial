@@ -203,7 +203,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
       });
   }, [currentRecord.homework, weekPlans]);
 
-  // Today's timetable schedule & unique subjects
+  // Today's timetable schedule in the exact order of the selected class.
   const todayDaySchedule = useMemo(() => {
     return (
       activeTimetable?.days.find((d) => d.dayNameAr === currentRecord.dayNameAr) ||
@@ -212,26 +212,25 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   }, [activeTimetable, currentRecord.dayNameAr]);
 
   const todayPeriodsList = todayDaySchedule?.periods || [];
-  const todayUniqueSubjectIds = useMemo(() => {
-    return Array.from(new Set(todayPeriodsList.map((p) => p.subjectId)));
-  }, [todayPeriodsList]);
-
-  // Classwork: Subjects from TODAY's schedule only with lesson topic from Weekly Plan
+  // Classwork: one item per period, preserving duplicates and the timetable order.
   const classworkItems = useMemo(() => {
-    return todayUniqueSubjectIds.map((subId) => {
-      const sub = getSubjectInfo(subId);
-      const wp = weekPlans.find((p) => p.subjectId === subId);
-      const existingCw = currentRecord.classwork?.find((c) => c.subjectId === subId);
+    return todayPeriodsList.map((period) => {
+      const sub = getSubjectInfo(period.subjectId);
+      const wp = weekPlans.find((p) => p.subjectId === period.subjectId);
+      const existingCw = currentRecord.classwork?.find((c) => c.subjectId === period.subjectId);
       const lessonTopic = wp?.unitOrTheme || existingCw?.lessonTitle || 'موضوع الدرس المقرر بالخطة';
       return {
-        id: existingCw?.id || `cw-${subId}`,
-        subjectId: subId,
+        id: `${period.id}-${existingCw?.id || 'lesson'}`,
+        periodNum: period.periodNum,
+        time: period.time,
+        teacher: period.teacher,
+        subjectId: period.subjectId,
         subjectName: sub.nameAr || sub.nameEn,
         lessonTopic,
         existingCw
       };
     });
-  }, [todayUniqueSubjectIds, weekPlans, currentRecord.classwork]);
+  }, [todayPeriodsList, weekPlans, currentRecord.classwork]);
 
   // Weekly plan notes for tomorrow's box bottom
   const weeklyPlanNotes = useMemo(() => {
@@ -715,7 +714,15 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                     className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-2xs hover:border-sky-300 transition-all group"
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <SubjectBadge subjectId={cw.subjectId} size="sm" />
+                      <div className="flex items-center gap-2">
+                        <span className="bg-sky-100 text-sky-900 border border-sky-200 rounded-lg px-2 py-1 text-[11px] font-black">
+                          الحصة {cw.periodNum}
+                        </span>
+                        <div>
+                          <div className="text-xs font-black text-slate-900">{cw.subjectName}</div>
+                          <div className="text-[10px] text-slate-500">{cw.time}</div>
+                        </div>
+                      </div>
                       {currentRole === 'admin' && cw.existingCw && (
                         <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                           <button
@@ -744,9 +751,16 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                       )}
                     </div>
 
-                    <div className="text-xs font-bold text-slate-800 flex items-baseline gap-1.5">
-                      <span className="text-sky-800 font-black text-[11px] shrink-0">Lesson:</span>
-                      <span className="text-slate-900 leading-snug">{cw.lessonTopic}</span>
+                    <div className="text-xs font-bold text-slate-800 space-y-1.5">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-sky-800 font-black text-[11px] shrink-0">Lesson Plan:</span>
+                        <span className="text-slate-900 leading-snug">{cw.lessonTopic}</span>
+                      </div>
+                      {cw.teacher && (
+                        <div className="text-[10px] text-slate-500 border-t border-slate-100 pt-1">
+                          المعلم: {cw.teacher}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))

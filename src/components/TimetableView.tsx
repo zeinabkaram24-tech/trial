@@ -828,16 +828,16 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                           >
                             <div>
                               <div className="font-black text-xs text-slate-900 mb-0.5">
-                                {sub.nameEn}
+                                {sub.nameAr}
                               </div>
                               <div className="text-[10px] opacity-75 font-medium">
-                                {sub.nameAr}
+                                {sub.nameEn}
                               </div>
                             </div>
 
                             {slot.teacher && (
                               <div className="mt-2 pt-1 border-t border-black/5 text-[10px] text-slate-600 font-semibold truncate">
-                                {slot.teacher}
+                                المعلم: {slot.teacher}
                               </div>
                             )}
 

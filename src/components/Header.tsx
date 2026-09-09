@@ -344,8 +344,8 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <Download className="w-4 h-4 text-indigo-600" />
-            <span>تحميل جدول</span>
+            <Calendar className="w-4 h-4 text-indigo-600" />
+            <span>Schedule</span>
           </button>
 
           <button
