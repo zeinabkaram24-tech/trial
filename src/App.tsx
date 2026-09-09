@@ -61,7 +61,7 @@ export default function App() {
     }
   });
 
-  const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'timetable' | 'materials' | 'student' | 'admin'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'timetable' | 'materials' | 'student' | 'admin' | 'tasks'>('daily');
 
   const [timetables, setTimetables] = useState<ClassTimetable[]>(getStoredTimetables);
   const [weeklyPlans, setWeeklyPlans] = useState<WeeklyPlanItem[]>(getStoredWeeklyPlans);
@@ -220,7 +220,7 @@ export default function App() {
         )}
 
         {/* Tab 1: Daily Follow-up */}
-        {activeTab === 'daily' && (
+        {(activeTab === 'daily' || activeTab === 'tasks') && (
           <DailyFollowUpView
             currentRole={currentRole}
             selectedClass={selectedClass}
