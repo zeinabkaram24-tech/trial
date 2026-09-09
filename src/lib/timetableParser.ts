@@ -2,6 +2,7 @@ import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { PeriodSlot, DaySchedule, SchoolClass } from '../types';
 import { PERIOD_TIMES } from '../data/initialData';
+import { createWorker } from 'tesseract.js';
 
 GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -54,7 +55,7 @@ export async function extractTextFromPdf(dataUrl: string): Promise<string> {
 }
 
 function classSection(text: string, classId: SchoolClass): string {
-  const pattern = /(?:class|فصل)\s*([2][agc])/gi;
+  const pattern = /(?:class|فصل)\s*([2][abc])/gi;
   const matches = [...text.matchAll(pattern)];
   if (matches.length < 2) return text;
   const index = matches.findIndex((match) => match[1].toUpperCase() === classId);
@@ -94,8 +95,16 @@ export function parseTimetableFromText(text: string, classId: SchoolClass): Pars
 }
 
 export async function parseUploadedTimetable(dataUrl: string, classId: SchoolClass, fileType: string): Promise<ParseTimetableResult> {
-  if (fileType !== 'pdf') return { days: [], slotsCount: 0 };
-  return parseTimetableFromText(await extractTextFromPdf(dataUrl), classId);
+  if (fileType === 'pdf') return parseTimetableFromText(await extractTextFromPdf(dataUrl), classId);
+  if (fileType !== 'image') return { days: [], slotsCount: 0 };
+
+  const worker = await createWorker('eng+ara');
+  try {
+    const result = await worker.recognize(dataUrl);
+    return parseTimetableFromText(result.data.text, classId);
+  } finally {
+    await worker.terminate();
+  }
 }
 
 export function createDefaultScheduleFromSubjects(): DaySchedule[] { return []; }

@@ -157,7 +157,7 @@ export const exportAllDataToJSON = (): void => {
   const exportPayload = {
     version: '1.0',
     schoolName: 'مدرسة النيل المصرية الدولية - فرع المنيا',
-    grade: 'Grade 2 (2A, 2G, 2C)',
+    grade: 'Grade 2 (2A, 2B, 2C)',
     exportDate: new Date().toISOString(),
     timetables: getStoredTimetables(),
     weeklyPlans: getStoredWeeklyPlans(),

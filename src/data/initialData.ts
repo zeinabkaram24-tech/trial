@@ -196,71 +196,71 @@ export const INITIAL_TIMETABLES: ClassTimetable[] = [
     ]
   },
   {
-    classId: '2G',
+    classId: '2B',
     days: [
       {
         dayNameAr: 'الأحد',
         dayNameEn: 'Sunday',
         periods: [
-          { id: 'p-2g-sun-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'arabic', teacher: 'أ. مريم' },
-          { id: 'p-2g-sun-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'english', teacher: 'Mr. David' },
-          { id: 'p-2g-sun-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'math', teacher: 'Ms. Hoda' },
-          { id: 'p-2g-sun-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'ict', teacher: 'Eng. Tamer' },
-          { id: 'p-2g-sun-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'science', teacher: 'Mr. Bassem' },
-          { id: 'p-2g-sun-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'social', teacher: 'أ. دعاء' },
-          { id: 'p-2g-sun-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'ethics', teacher: 'أ. مريم' }
+          { id: 'p-2b-sun-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'arabic', teacher: 'أ. مريم' },
+          { id: 'p-2b-sun-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'english', teacher: 'Mr. David' },
+          { id: 'p-2b-sun-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'math', teacher: 'Ms. Hoda' },
+          { id: 'p-2b-sun-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'ict', teacher: 'Eng. Tamer' },
+          { id: 'p-2b-sun-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'science', teacher: 'Mr. Bassem' },
+          { id: 'p-2b-sun-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'social', teacher: 'أ. دعاء' },
+          { id: 'p-2b-sun-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'ethics', teacher: 'أ. مريم' }
         ]
       },
       {
         dayNameAr: 'الإثنين',
         dayNameEn: 'Monday',
         periods: [
-          { id: 'p-2g-mon-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'english', teacher: 'Mr. David' },
-          { id: 'p-2g-mon-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'math', teacher: 'Ms. Hoda' },
-          { id: 'p-2g-mon-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'arabic', teacher: 'أ. مريم' },
-          { id: 'p-2g-mon-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'french', teacher: 'Mme. Claire' },
-          { id: 'p-2g-mon-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'science', teacher: 'Mr. Bassem' },
-          { id: 'p-2g-mon-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'pe', teacher: 'Coach Yasser' },
-          { id: 'p-2g-mon-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'art', teacher: 'Ms. Nour' }
+          { id: 'p-2b-mon-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'english', teacher: 'Mr. David' },
+          { id: 'p-2b-mon-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'math', teacher: 'Ms. Hoda' },
+          { id: 'p-2b-mon-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'arabic', teacher: 'أ. مريم' },
+          { id: 'p-2b-mon-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'french', teacher: 'Mme. Claire' },
+          { id: 'p-2b-mon-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'science', teacher: 'Mr. Bassem' },
+          { id: 'p-2b-mon-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'pe', teacher: 'Coach Yasser' },
+          { id: 'p-2b-mon-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'art', teacher: 'Ms. Nour' }
         ]
       },
       {
         dayNameAr: 'الثلاثاء',
         dayNameEn: 'Tuesday',
         periods: [
-          { id: 'p-2g-tue-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'science', teacher: 'Mr. Bassem' },
-          { id: 'p-2g-tue-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'arabic', teacher: 'أ. مريم' },
-          { id: 'p-2g-tue-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'english', teacher: 'Mr. David' },
-          { id: 'p-2g-tue-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'math', teacher: 'Ms. Hoda' },
-          { id: 'p-2g-tue-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'french', teacher: 'Mme. Claire' },
-          { id: 'p-2g-tue-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'ict', teacher: 'Eng. Tamer' },
-          { id: 'p-2g-tue-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'social', teacher: 'أ. دعاء' }
+          { id: 'p-2b-tue-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'science', teacher: 'Mr. Bassem' },
+          { id: 'p-2b-tue-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'arabic', teacher: 'أ. مريم' },
+          { id: 'p-2b-tue-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'english', teacher: 'Mr. David' },
+          { id: 'p-2b-tue-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'math', teacher: 'Ms. Hoda' },
+          { id: 'p-2b-tue-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'french', teacher: 'Mme. Claire' },
+          { id: 'p-2b-tue-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'ict', teacher: 'Eng. Tamer' },
+          { id: 'p-2b-tue-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'social', teacher: 'أ. دعاء' }
         ]
       },
       {
         dayNameAr: 'الأربعاء',
         dayNameEn: 'Wednesday',
         periods: [
-          { id: 'p-2g-wed-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'math', teacher: 'Ms. Hoda' },
-          { id: 'p-2g-wed-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'science', teacher: 'Mr. Bassem' },
-          { id: 'p-2g-wed-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'arabic', teacher: 'أ. مريم' },
-          { id: 'p-2g-wed-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'english', teacher: 'Mr. David' },
-          { id: 'p-2g-wed-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'art', teacher: 'Ms. Nour' },
-          { id: 'p-2g-wed-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'english', teacher: 'Mr. David' },
-          { id: 'p-2g-wed-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'math', teacher: 'Ms. Hoda' }
+          { id: 'p-2b-wed-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'math', teacher: 'Ms. Hoda' },
+          { id: 'p-2b-wed-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'science', teacher: 'Mr. Bassem' },
+          { id: 'p-2b-wed-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'arabic', teacher: 'أ. مريم' },
+          { id: 'p-2b-wed-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'english', teacher: 'Mr. David' },
+          { id: 'p-2b-wed-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'art', teacher: 'Ms. Nour' },
+          { id: 'p-2b-wed-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'english', teacher: 'Mr. David' },
+          { id: 'p-2b-wed-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'math', teacher: 'Ms. Hoda' }
         ]
       },
       {
         dayNameAr: 'الخميس',
         dayNameEn: 'Thursday',
         periods: [
-          { id: 'p-2g-thu-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'arabic', teacher: 'أ. مريم' },
-          { id: 'p-2g-thu-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'english', teacher: 'Mr. David' },
-          { id: 'p-2g-thu-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'science', teacher: 'Mr. Bassem' },
-          { id: 'p-2g-thu-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'math', teacher: 'Ms. Hoda' },
-          { id: 'p-2g-thu-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'social', teacher: 'أ. دعاء' },
-          { id: 'p-2g-thu-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'pe', teacher: 'Coach Yasser' },
-          { id: 'p-2g-thu-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'french', teacher: 'Mme. Claire' }
+          { id: 'p-2b-thu-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'arabic', teacher: 'أ. مريم' },
+          { id: 'p-2b-thu-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'english', teacher: 'Mr. David' },
+          { id: 'p-2b-thu-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'science', teacher: 'Mr. Bassem' },
+          { id: 'p-2b-thu-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'math', teacher: 'Ms. Hoda' },
+          { id: 'p-2b-thu-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'social', teacher: 'أ. دعاء' },
+          { id: 'p-2b-thu-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'pe', teacher: 'Coach Yasser' },
+          { id: 'p-2b-thu-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'french', teacher: 'Mme. Claire' }
         ]
       }
     ]
@@ -566,29 +566,29 @@ export const INITIAL_DAILY_FOLLOW_UPS: DailyFollowUp[] = [
     ]
   },
   {
-    id: 'dfu-2g-today',
+    id: 'dfu-2b-today',
     date: '2026-09-09',
-    classId: '2G',
+    classId: '2B',
     blockId: 'block1',
     weekId: 'week2',
     dayNameAr: 'الأربعاء',
     classwork: [
       {
-        id: 'cw-2g-1',
+        id: 'cw-2b-1',
         subjectId: 'math',
         lessonTitle: 'Two-Digit Addition Regrouping Practice',
         details: 'Solving problems on board and practice in workbooks with partner check.',
         pages: 'Workbook pp. 35-36'
       },
       {
-        id: 'cw-2g-2',
+        id: 'cw-2b-2',
         subjectId: 'english',
         lessonTitle: 'Reading & Vocabulary - Helpers in town',
         details: 'Matched community helpers with their vehicles and tools. Practiced dialogs.',
         pages: 'Student Book pp. 25-26'
       },
       {
-        id: 'cw-2g-3',
+        id: 'cw-2b-3',
         subjectId: 'arabic',
         lessonTitle: 'التاء المفتوحة والتاء المربوطة',
         details: 'شرح الفرق الصوتي عند الوقف وعند الوصل مع تدريبات تطبيقية.',
@@ -597,13 +597,13 @@ export const INITIAL_DAILY_FOLLOW_UPS: DailyFollowUp[] = [
     ],
     homework: [
       {
-        id: 'hw-2g-1',
+        id: 'hw-2b-1',
         subjectId: 'math',
         assignment: 'Solve page 37 in Math Activity Book (Questions 1 to 5).',
         dueDate: 'غداً الخميس'
       },
       {
-        id: 'hw-2g-2',
+        id: 'hw-2b-2',
         subjectId: 'arabic',
         assignment: 'كتابة 3 كلمات بها تاء مربوطة و3 كلمات بها تاء مفتوحة في كشكول الحصة.',
         dueDate: 'غداً الخميس'
@@ -611,14 +611,14 @@ export const INITIAL_DAILY_FOLLOW_UPS: DailyFollowUp[] = [
     ],
     tomorrowPreparations: [
       {
-        id: 'prep-2g-1',
+        id: 'prep-2b-1',
         subjectId: 'pe',
         item: 'الالتزام بارتداء الزي الرياضي المدرسي لحصة التربية البدنية.',
         category: 'clothes',
         isImportant: true
       },
       {
-        id: 'prep-2g-2',
+        id: 'prep-2b-2',
         subjectId: 'science',
         item: 'إحضار كشكول الساينس وقلم رصاص وممحاة لمتابعة تجربة النبات.',
         category: 'books',
@@ -770,7 +770,7 @@ export const INITIAL_MATERIALS: SchoolMaterialFile[] = [
     uploadedBy: 'Mr. Ahmed (Math Coordinator)',
     description: 'شيت مادة الرياضيات لبلوك 1',
     previewSummary: `Nile Egyptian Schools - Minya Branch
-Department of Mathematics - Grade 2 (Classes 2A, 2G, 2C)
+Department of Mathematics - Grade 2 (Classes 2A, 2B, 2C)
 Official Worksheet: Block 1 Practice Sheet
 
 Student Name: __________________________ Class: 2 [    ]
@@ -808,7 +808,7 @@ Teacher Signature: Mr. Ahmed & Math Dept - Nile Egyptian Schools Minya`
     uploadedBy: 'Ms. Sarah (Head of English)',
     description: 'شيت مادة اللغة الإنجليزية لبلوك 1',
     previewSummary: `Nile Egyptian Schools - Minya Branch
-Department of English - Grade 2 (2A, 2G, 2C)
+Department of English - Grade 2 (2A, 2B, 2C)
 Block 1 Worksheet: Phonics & Reading Comprehension
 
 Student Name: _________________________ Date: ________________
@@ -944,7 +944,7 @@ NES Minya ICT Lab Approved`
     uploadedBy: 'Mme. Claire (Professeur de français)',
     description: 'شيت مادة اللغة الفرنسية لبلوك 1',
     previewSummary: `Écoles Égyptiennes du Nil - Branche de Minya
-Département de Français - Grade 2 (2A, 2G, 2C)
+Département de Français - Grade 2 (2A, 2B, 2C)
 Fiche d'activités : Bloc 1
 
 Nom de l'élève : _______________________ Classe : 2 [    ]

@@ -43,9 +43,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
 }) => {
   const currentTimetable = timetables.find((t) => t.classId === selectedClass) || timetables[0];
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0); // 0 = Sunday
-  const [viewMode, setViewMode] = useState<'grid' | 'day' | 'document'>(
-    currentTimetable.fileDataUrl ? 'document' : 'grid'
-  );
+  const [viewMode, setViewMode] = useState<'grid' | 'day' | 'document'>('grid');
   const [isDocModalOpen, setIsDocModalOpen] = useState<boolean>(false);
 
   // Bulk Upload / Edit Timetable Modal
@@ -136,9 +134,9 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
     }
 
     let parsedByClass: Record<string, Awaited<ReturnType<typeof parseUploadedTimetable>>> = {};
-    if (uploadFileType === 'pdf') {
+    if (uploadFileType === 'pdf' || uploadFileType === 'image') {
       try {
-        const targets = uploadClassTarget === 'all' ? (['2A', '2G', '2C'] as SchoolClass[]) : [uploadClassTarget];
+        const targets = uploadClassTarget === 'all' ? (['2A', '2B', '2C'] as SchoolClass[]) : [uploadClassTarget];
         const results = await Promise.all(targets.map(async (classId) => [classId, await parseUploadedTimetable(uploadFileDataUrl, classId, uploadFileType)] as const));
         parsedByClass = Object.fromEntries(results);
       } catch (error) {
@@ -165,7 +163,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
     });
 
     onUpdateTimetables(updated);
-    setViewMode('document');
+    setViewMode('grid');
     setIsUploadModalOpen(false);
     setUploadFileDataUrl('');
     setUploadFileName('');
@@ -517,7 +515,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             {/* Class Toggle Buttons */}
             <div className="flex items-center bg-slate-100 p-1 rounded-xl">
-              {(['2A', '2G', '2C'] as SchoolClass[]).map((c) => (
+              {(['2A', '2B', '2C'] as SchoolClass[]).map((c) => (
                 <button
                   key={c}
                   type="button"
@@ -535,7 +533,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
 
             {/* View Mode Toggle */}
             <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-semibold gap-1">
-              {currentTimetable.fileDataUrl && (
+              {false && currentTimetable.fileDataUrl && (
                 <button
                   type="button"
                   onClick={() => setViewMode('document')}
@@ -655,7 +653,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
       </div>
 
       {/* Active Uploaded Document Banner */}
-      {currentTimetable.fileDataUrl && (
+      {false && currentTimetable.fileDataUrl && (
         <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 border-2 border-emerald-300 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black shadow-md shrink-0">
@@ -1170,7 +1168,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                   الفصل المستهدف بالجدول:
                 </label>
                 <div className="grid grid-cols-4 gap-2">
-                  {(['2A', '2G', '2C', 'all'] as const).map((cls) => (
+                  {(['2A', '2B', '2C', 'all'] as const).map((cls) => (
                     <button
                       key={cls}
                       type="button"
