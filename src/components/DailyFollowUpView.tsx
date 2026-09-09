@@ -182,7 +182,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   // Homework: Weekly Plan is the source of truth; saved daily homework is only a fallback.
   const homeworkItems = useMemo(() => {
     const dictations = (materials || [])
-      .filter((material) => material.materialKind === 'dictation' && material.blockId === selectedBlock && material.weekId === selectedWeek)
+      .filter((material) => (material.materialKind === 'dictation' || material.subjectId === 'dictation') && material.blockId === selectedBlock && material.weekId === selectedWeek)
       .map((material) => ({
         id: `material-dictation-${material.id}`,
         subjectId: material.subjectId,

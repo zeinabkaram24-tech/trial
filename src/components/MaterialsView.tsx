@@ -240,7 +240,7 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 
       <div class="sheet-title-box">
         <h2>${file.title}</h2>
-        <div class="sheet-meta">${file.fileName} • ${file.fileSize} • ${file.uploadedBy || 'معلم المادة'}</div>
+        <div class="sheet-meta">${file.fileName} • ${file.fileSize}</div>
       </div>
 
       <div class="content-box">
@@ -249,7 +249,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
     </div>
 
     <div class="footer">
-      <div>توقيع المعلم: ................................</div>
+      <div>اعتماد الإدارة: ................................</div>
       <div class="seal">معتمد ✓ مدرسة النيل بالمنيا</div>
       <div>الصفحة 1 من 1</div>
     </div>
@@ -643,11 +643,11 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
         if (m.id === editingFileId) {
           return {
             ...m,
-            title: formTitle.trim(),
+            title: formSubject === 'dictation' ? 'Dictation' : formTitle.trim(),
             subjectId: formSubject,
             blockId: formBlock,
-            weekId: formWeek || undefined,
-            materialKind: formWeek ? 'week' : 'main',
+            weekId: formSubject === 'dictation' ? (formWeek || selectedWeek) : formWeek || undefined,
+            materialKind: formSubject === 'dictation' ? 'dictation' : formWeek ? 'week' : 'main',
             classId: formClass,
             fileType: formType,
             fileName: formFileName.trim() || m.fileName,
@@ -664,12 +664,12 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
       // Add
       const newFile: SchoolMaterialFile = {
         id: `mat-${Date.now()}`,
-        title: formTitle.trim(),
+        title: formSubject === 'dictation' ? 'Dictation' : formTitle.trim(),
         subjectId: formSubject,
         classId: formClass,
         blockId: formBlock,
-        weekId: formWeek || undefined,
-        materialKind: formWeek ? 'week' : 'main',
+        weekId: formSubject === 'dictation' ? (formWeek || selectedWeek) : formWeek || undefined,
+        materialKind: formSubject === 'dictation' ? 'dictation' : formWeek ? 'week' : 'main',
         fileType: formType,
         fileName: formFileName.trim() || `Sheet_${Date.now()}.${formType === 'pdf' ? 'pdf' : 'docx'}`,
         fileSize: formFileSize || '1.8 MB',
@@ -732,15 +732,6 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
               >
                 <Plus className="w-4 h-4" />
                 <span>+ Add Sheet</span>
-              </button>
-              <button
-                id="btn-admin-dictation-material"
-                type="button"
-                onClick={() => setDictationOpen(true)}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs flex items-center gap-2 transition-all shrink-0"
-              >
-                <FileText className="w-4 h-4" />
-                <span>Dictation</span>
               </button>
             </div>
           )}
@@ -911,7 +902,17 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      id={`btn-preview-${file.id}`}
+                      type="button"
+                      onClick={() => handlePreviewFile(file)}
+                      className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 transition-all text-xs font-bold cursor-pointer"
+                      title="معاينة الشيت"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                      <span>معاينة</span>
+                    </button>
                     <button
                       id={`btn-download-${file.id}`}
                       type="button"
