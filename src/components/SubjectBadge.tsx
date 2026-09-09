@@ -8,6 +8,7 @@ import {
   Languages,
   Laptop,
   Palette,
+  Music2,
   Activity,
   Heart,
   Bookmark
@@ -50,6 +51,8 @@ export const RenderSubjectIcon: React.FC<{ iconName: string; className?: string 
       return <Laptop className={className} />;
     case 'Palette':
       return <Palette className={className} />;
+    case 'Music2':
+      return <Music2 className={className} />;
     case 'Activity':
       return <Activity className={className} />;
     case 'Heart':

@@ -557,22 +557,24 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
               >
                 الجدول التفاعلي
               </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('day')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'day' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-                }`}
-              >
-                يوم بيوم
-              </button>
+              {currentRole === 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => setViewMode('day')}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    viewMode === 'day' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+                  }`}
+                >
+                  يوم بيوم
+                </button>
+              )}
             </div>
 
             {/* زر تحميل الجدول (Download Table): صورة (Image) أو PDF */}
-            <div className="flex items-center rounded-xl bg-indigo-50 border border-indigo-200 p-1">
+            {currentRole === 'admin' && <div className="flex items-center rounded-xl bg-indigo-50 border border-indigo-200 p-1">
               <span className="text-xs font-bold text-indigo-900 px-2 flex items-center gap-1">
                 <Download className="w-3.5 h-3.5 text-indigo-700" />
-                <span className="hidden sm:inline">تحميل الجدول:</span>
+                <span className="hidden sm:inline">Schedule</span>
               </span>
               <button
                 id="btn-download-timetable-img"
@@ -595,10 +597,10 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                 <FileText className="w-3.5 h-3.5 text-indigo-600" />
                 <span>ملف (PDF)</span>
               </button>
-            </div>
+            </div>}
 
             {/* أيقونة وزر تعديل الجدول (Edit Schedule) دفعة واحدة بسهولة */}
-            <button
+            {currentRole === 'admin' && <button
               id="btn-edit-full-schedule"
               type="button"
               onClick={handleOpenFullScheduleEditor}
@@ -607,19 +609,19 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
             >
               <Edit3 className="w-4 h-4 text-slate-950" />
               <span>تعديل الجدول (Edit Schedule)</span>
-            </button>
+            </button>}
 
-            <button
+            {currentRole === 'admin' && <button
               type="button"
               onClick={onOpenPrint}
               className="flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>طباعة</span>
-            </button>
+            </button>}
 
             {/* Bulk Upload Timetable file button */}
-            <button
+            {currentRole === 'admin' && <button
               id="btn-upload-bulk-timetable"
               type="button"
               onClick={() => {
@@ -631,7 +633,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
             >
               <Upload className="w-3.5 h-3.5 text-slate-500" />
               <span>رفع ملف الجدول</span>
-            </button>
+            </button>}
           </div>
         </div>
 

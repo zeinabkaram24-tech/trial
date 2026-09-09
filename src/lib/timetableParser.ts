@@ -25,12 +25,13 @@ const SUBJECT_KEYWORDS: Record<string, string[]> = {
   art: ['art', 'رسم', 'تربية فنية', 'فنية'],
   pe: ['pe', 'رياضة', 'تربية بدنية', 'العاب', 'ألعاب', 'gym'],
   ethics: ['ethics', 'دين', 'تربية دينية', 'قيم', 'religion'],
+  music: ['music', 'موسيقى', 'موسيقة'],
 };
 
 const TEACHERS: Record<string, string> = {
   english: 'Ms. Sarah', math: 'Mr. Ahmed', science: 'Ms. Mona', arabic: 'أ. فاطمة',
   french: 'Mme. Claire', social: 'أ. محمد محمود', ict: 'Eng. Tamer', art: 'Ms. Nour',
-  pe: 'Coach Yasser', ethics: 'أ. فاطمة'
+  pe: 'Coach Yasser', ethics: 'أ. فاطمة', music: 'Music Teacher'
 };
 
 function identifySubject(token: string): string | null {

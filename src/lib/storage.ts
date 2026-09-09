@@ -15,7 +15,7 @@ import {
 } from '../data/initialData';
 
 const STORAGE_KEYS = {
-  TIMETABLES: 'nile_minya_timetables_v1',
+  TIMETABLES: 'nile_minya_timetables_v2',
   WEEKLY_PLANS: 'nile_minya_weekly_plans_v1',
   DAILY_FOLLOW_UPS: 'nile_minya_daily_follow_ups_v1',
   STUDENT_TASKS: 'nile_minya_student_tasks_v1',
