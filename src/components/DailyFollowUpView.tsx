@@ -171,36 +171,37 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     return numMatch ? numMatch[0] : str.replace(/[^0-9\-–]/g, '') || '24';
   };
 
-  // Homework: Only subjects with homework from Weekly Plan or currentRecord
-  // Format strictly: [اسم المادة] - Homework Page: [رقم الصفحة] without extra descriptions
+  // Homework: Weekly Plan is the source of truth; saved daily homework is only a fallback.
   const homeworkItems = useMemo(() => {
-    if (currentRecord.homework && currentRecord.homework.length > 0) {
+    const planned = weekPlans
+      .filter((wp) => wp.homeworkNote && wp.homeworkNote.trim().length > 0)
+      .map((wp) => {
+        const sub = getSubjectInfo(wp.subjectId);
+        return {
+          id: `weekly-homework-${wp.id}`,
+          subjectId: wp.subjectId,
+          subjectName: sub.nameEn,
+          homeworkText: wp.homeworkNote!,
+          pageNumber: extractPageNumber(wp.homeworkNote),
+          rawRecord: null
+        };
+      });
+    if (planned.length > 0) return planned;
+
+    if (currentRecord.homework?.length > 0) {
       return currentRecord.homework.map((hw) => {
         const sub = getSubjectInfo(hw.subjectId);
         const pageNum = hw.pages ? extractPageNumber(hw.pages) : extractPageNumber(hw.assignment);
         return {
           id: hw.id,
           subjectId: hw.subjectId,
-          subjectName: sub.nameAr || sub.nameEn,
+          subjectName: sub.nameEn,
+          homeworkText: hw.assignment,
           pageNumber: pageNum || '25',
           rawRecord: hw
         };
       });
     }
-
-    return weekPlans
-      .filter((wp) => wp.resourcesNote || wp.assessmentNote)
-      .map((wp) => {
-        const sub = getSubjectInfo(wp.subjectId);
-        const pageNum = extractPageNumber(wp.resourcesNote) || '24';
-        return {
-          id: wp.id,
-          subjectId: wp.subjectId,
-          subjectName: sub.nameAr || sub.nameEn,
-          pageNumber: pageNum,
-          rawRecord: null
-        };
-      });
   }, [currentRecord.homework, weekPlans]);
 
   // Today's timetable schedule in the exact order of the selected class.
@@ -222,27 +223,25 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
       return {
         id: `${period.id}-${existingCw?.id || 'lesson'}`,
         periodNum: period.periodNum,
-        time: period.time,
-        teacher: period.teacher,
         subjectId: period.subjectId,
-        subjectName: sub.nameAr || sub.nameEn,
+        subjectName: sub.nameEn,
         lessonTopic,
         existingCw
       };
     });
   }, [todayPeriodsList, weekPlans, currentRecord.classwork]);
 
-  // Weekly plan notes for tomorrow's box bottom
+  // Weekly Plan notes for Tomorrow: resources and assessment notes are both actionable.
   const weeklyPlanNotes = useMemo(() => {
     return weekPlans
-      .filter((wp) => wp.assessmentNote && wp.assessmentNote.trim().length > 0)
+      .filter((wp) => (wp.resourcesNote && wp.resourcesNote.trim()) || (wp.assessmentNote && wp.assessmentNote.trim()))
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
         return {
           id: wp.id,
           subjectId: wp.subjectId,
-          subjectName: sub.nameAr || sub.nameEn,
-          note: wp.assessmentNote!
+          subjectName: sub.nameEn,
+          note: [wp.resourcesNote, wp.assessmentNote].filter(Boolean).join(' • ')
         };
       });
   }, [weekPlans]);
@@ -608,8 +607,8 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                           >
                             <span>{item.subjectName}</span>
                             <span className="text-slate-400 mx-1.5">-</span>
-                            <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 font-bold font-mono">
-                              Homework Page: {item.pageNumber}
+                            <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 font-bold">
+                              {item.homeworkText}
                             </span>
                           </div>
                         </div>
@@ -756,11 +755,6 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                         <span className="text-sky-800 font-black text-[11px] shrink-0">Lesson Plan:</span>
                         <span className="text-slate-900 leading-snug">{cw.lessonTopic}</span>
                       </div>
-                      {cw.teacher && (
-                        <div className="text-[10px] text-slate-500 border-t border-slate-100 pt-1">
-                          المعلم: {cw.teacher}
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))
@@ -861,15 +855,16 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <SubjectBadge subjectId={period.subjectId} size="sm" />
-                                <span className="text-[10px] text-slate-500 font-mono">
-                                  {period.time}
-                                </span>
                               </div>
-                              {period.teacher && (
-                                <div className="text-[10px] text-slate-500 mt-0.5 truncate">
-                                  {period.teacher}
-                                </div>
-                              )}
+                              {(() => {
+                                const plan = weekPlans.find((wp) => wp.subjectId === period.subjectId);
+                                const notes = [plan?.resourcesNote, plan?.assessmentNote]
+                                  .filter((note): note is string => Boolean(note && note.trim()))
+                                  .join(' • ');
+                                return notes ? (
+                                  <div className="text-[10px] text-slate-600 mt-1 leading-relaxed">{notes}</div>
+                                ) : null;
+                              })()}
                             </div>
                           </div>
 

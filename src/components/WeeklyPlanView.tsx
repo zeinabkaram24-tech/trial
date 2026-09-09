@@ -59,6 +59,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
   const [formVocabulary, setFormVocabulary] = useState('');
   const [formResources, setFormResources] = useState('');
   const [formAssessment, setFormAssessment] = useState('');
+  const [formHomework, setFormHomework] = useState('');
 
   // File Attachment States for Weekly Plan (PDF / Word)
   const [formFileName, setFormFileName] = useState('');
@@ -89,6 +90,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
     setFormVocabulary('');
     setFormResources('');
     setFormAssessment('');
+    setFormHomework('');
     setFormFileName('');
     setFormFileType('pdf');
     setFormFileSize('');
@@ -109,6 +111,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
     setFormVocabulary((item.vocabulary || []).join(', '));
     setFormResources(item.resourcesNote || '');
     setFormAssessment(item.assessmentNote || '');
+    setFormHomework(item.homeworkNote || '');
     setFormFileName(item.fileName || '');
     setFormFileType(item.fileType || 'pdf');
     setFormFileSize(item.fileSize || '');
@@ -169,6 +172,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
       vocabulary: vocabList.length > 0 ? vocabList : undefined,
       resourcesNote: formResources.trim() || undefined,
       assessmentNote: formAssessment.trim() || undefined,
+      homeworkNote: formHomework.trim() || undefined,
       fileName: formFileName.trim() || `${formSubject}_Plan_${selectedBlock}_${selectedWeek}.${formFileType === 'word' ? 'docx' : 'pdf'}`,
       fileType: formFileType,
       fileSize: formFileSize || '1.5 MB',
@@ -926,7 +930,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     المصادر والكتب:
@@ -949,6 +953,19 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                     placeholder="مثال: كويز يوم الأربعاء"
                     value={formAssessment}
                     onChange={(e) => setFormAssessment(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Homework:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="مثال: حل صفحة 25"
+                    value={formHomework}
+                    onChange={(e) => setFormHomework(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs"
                   />
                 </div>

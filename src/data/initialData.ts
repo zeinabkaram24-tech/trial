@@ -386,7 +386,8 @@ export const INITIAL_WEEKLY_PLANS: WeeklyPlanItem[] = [
     ],
     vocabulary: ['Community', 'Helper', 'Firefighter', 'Clinic', 'Neighborhood', 'Safe'],
     resourcesNote: 'Student Book pp. 24-31 + Activity Workbook pp. 18-22',
-    assessmentNote: 'Spelling dictation on Thursday & short reading comprehension check.'
+    assessmentNote: 'Spelling dictation on Thursday & short reading comprehension check.',
+    homeworkNote: 'Complete the Phonics worksheet: circle the words with (ai) and (ay). Workbook p. 20.'
   },
   {
     id: 'wp-b1-w2-arab',
@@ -403,7 +404,8 @@ export const INITIAL_WEEKLY_PLANS: WeeklyPlanItem[] = [
     ],
     vocabulary: ['واثق', 'يستطيع', 'ماهر', 'فوز', 'استعداد'],
     resourcesNote: 'كتاب اللغة العربية من صفحة 22 إلى 29 + كشكول الحصة',
-    assessmentNote: 'إملاء الكلمات التي تنتهي بتاء مربوطة ومفتوحة يوم الأربعاء.'
+    assessmentNote: 'إملاء الكلمات التي تنتهي بتاء مربوطة ومفتوحة يوم الأربعاء.',
+    homeworkNote: 'Copy the first paragraph of the lesson in the homework notebook.'
   },
   {
     id: 'wp-b1-w2-math',
@@ -420,7 +422,8 @@ export const INITIAL_WEEKLY_PLANS: WeeklyPlanItem[] = [
     ],
     vocabulary: ['Regrouping', 'Place Value', 'Tens', 'Ones', 'Sum', 'Addition'],
     resourcesNote: 'Cambridge Primary Math Learner Book 2, pp. 34-42',
-    assessmentNote: 'Weekly Math Quiz on Thursday covering 2-digit regrouping.'
+    assessmentNote: 'Weekly Math Quiz on Thursday covering 2-digit regrouping.',
+    homeworkNote: 'Solve exercises 1–6 on page 38 in the activity notebook.'
   },
   {
     id: 'wp-b1-w2-sci',
@@ -452,7 +455,8 @@ export const INITIAL_WEEKLY_PLANS: WeeklyPlanItem[] = [
     ],
     vocabulary: ['محافظة المنيا', 'نهر النيل', 'عروس الصعيد', 'معالم', 'خريطة'],
     resourcesNote: 'كتاب الدراسات الاجتماعية + كشكول الأنشطة صفحة 15-18',
-    assessmentNote: 'نشاط تلوين خريطة المنيا ومشاركتها في الفصل.'
+    assessmentNote: 'نشاط تلوين خريطة المنيا ومشاركتها في الفصل.',
+    homeworkNote: 'Color the Minya map and bring it to class.'
   },
   {
     id: 'wp-b1-w2-fre',
@@ -468,7 +472,8 @@ export const INITIAL_WEEKLY_PLANS: WeeklyPlanItem[] = [
     ],
     vocabulary: ['Bonjour', 'Le stylo', 'Le crayon', 'La gomme', 'La règle'],
     resourcesNote: 'Livre de français "Alex et Zoé 2" pp. 12-15',
-    assessmentNote: 'Évaluation orale de prononciation jeudi.'
+    assessmentNote: 'Évaluation orale de prononciation jeudi.',
+    homeworkNote: 'Memorize the pencil-case words: le stylo, le crayon, la gomme.'
   },
   {
     id: 'wp-b1-w2-ict',

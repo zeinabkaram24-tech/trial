@@ -49,6 +49,7 @@ export interface WeeklyPlanItem {
   vocabulary?: string[];
   resourcesNote?: string;
   assessmentNote?: string;
+  homeworkNote?: string;
   // File attachments for PDF or Word or image
   fileName?: string;
   fileType?: 'pdf' | 'word' | 'doc' | 'image';

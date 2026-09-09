@@ -292,13 +292,6 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
 
         ctx.fillStyle = '#334155';
         ctx.font = '11px sans-serif';
-        ctx.fillText(sub.nameAr, x + 12, y + 48);
-
-        if (slot.teacher) {
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = '9px sans-serif';
-          ctx.fillText(slot.teacher.slice(0, 16), x + 12, y + 66);
-        }
       });
     });
 
@@ -342,8 +335,6 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
           .day-col { background-color: #f1f5f9; font-weight: bold; width: 100px; font-size: 13px; }
           .period-cell { background-color: #ffffff; font-size: 11px; height: 55px; }
           .sub-en { font-weight: bold; color: #1e40af; }
-          .sub-ar { font-size: 10px; color: #334155; }
-          .teacher { font-size: 9px; color: #64748b; margin-top: 3px; }
           .footer { margin-top: 20px; display: flex; justify-content: space-between; font-size: 11px; color: #64748b; }
         </style>
       </head>
@@ -380,8 +371,6 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                     return `
                     <td class="period-cell">
                       <div class="sub-en">${s.nameEn}</div>
-                      <div class="sub-ar">${s.nameAr}</div>
-                      ${p.teacher ? `<div class="teacher">${p.teacher}</div>` : ''}
                     </td>
                   `;
                   })
@@ -828,18 +817,10 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                           >
                             <div>
                               <div className="font-black text-xs text-slate-900 mb-0.5">
-                                {sub.nameAr}
-                              </div>
-                              <div className="text-[10px] opacity-75 font-medium">
                                 {sub.nameEn}
                               </div>
                             </div>
 
-                            {slot.teacher && (
-                              <div className="mt-2 pt-1 border-t border-black/5 text-[10px] text-slate-600 font-semibold truncate">
-                                المعلم: {slot.teacher}
-                              </div>
-                            )}
 
                             {currentRole === 'admin' && (
                               <div className="mt-1 text-[9px] text-amber-900 font-bold opacity-0 group-hover:opacity-100">
@@ -924,25 +905,10 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                         <div className="font-black text-sm text-slate-900">
                           {sub.nameEn}
                         </div>
-                        <div className="text-xs text-slate-600 font-medium">
-                          {sub.nameAr}
-                        </div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4 text-xs">
-                      <div className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-lg text-slate-700 font-semibold">
-                        <Clock className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{slot.time}</span>
-                      </div>
-
-                      {slot.teacher && (
-                        <div className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-lg text-slate-700 font-semibold">
-                          <UserCheck className="w-3.5 h-3.5 text-slate-500" />
-                          <span>المعلم: {slot.teacher}</span>
-                        </div>
-                      )}
-
                       {currentRole === 'admin' && (
                         <button
                           type="button"

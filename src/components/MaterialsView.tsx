@@ -329,6 +329,10 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
 
   // Action 1: Preview (معاينة) - Opens the file itself + thumbnail preview
   const handlePreviewFile = (file: SchoolMaterialFile) => {
+    if (file.fileType === 'pdf' && file.fileDataUrl) {
+      const opened = window.open(file.fileDataUrl, '_blank', 'noopener,noreferrer');
+      if (opened) return;
+    }
     setPreviewFile(file);
   };
 
