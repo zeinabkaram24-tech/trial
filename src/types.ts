@@ -34,7 +34,7 @@ export interface ClassTimetable {
 
 export interface WeeklyPlanItem {
   id: string;
-  blockId: string; // 'block1' | 'block2' | 'block3'
+  blockId: string; // 'block1' | 'block2' | 'block3' | 'block4'
   weekId: string;  // 'week1' | 'week2' | 'week3' | ...
   classId: SchoolClass | 'all';
   subjectId: string;
@@ -43,6 +43,11 @@ export interface WeeklyPlanItem {
   vocabulary?: string[];
   resourcesNote?: string;
   assessmentNote?: string;
+  // File attachments for PDF or Word
+  fileName?: string;
+  fileType?: 'pdf' | 'word' | 'doc';
+  fileSize?: string;
+  fileDataUrl?: string;
 }
 
 export interface ClassworkRecord {

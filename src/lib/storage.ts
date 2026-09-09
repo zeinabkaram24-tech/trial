@@ -20,7 +20,7 @@ const STORAGE_KEYS = {
   DAILY_FOLLOW_UPS: 'nile_minya_daily_follow_ups_v1',
   STUDENT_TASKS: 'nile_minya_student_tasks_v1',
   COMPLETED_HW: 'nile_minya_completed_hw_v1',
-  MATERIALS: 'nile_minya_materials_v1',
+  MATERIALS: 'nile_minya_materials_v2',
   CURRENT_BLOCK: 'nile_minya_cur_block',
   CURRENT_WEEK: 'nile_minya_cur_week',
   SELECTED_CLASS: 'nile_minya_cur_class',

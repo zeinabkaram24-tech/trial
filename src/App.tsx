@@ -97,6 +97,31 @@ export default function App() {
     saveStoredMaterials(materials);
   }, [materials]);
 
+  // Instant multi-tab and cross-window sync listener
+  useEffect(() => {
+    const handleStorageEvent = (e: StorageEvent) => {
+      try {
+        if (e.key === 'nile_minya_timetables_v1' && e.newValue) {
+          setTimetables(JSON.parse(e.newValue));
+        } else if (e.key === 'nile_minya_weekly_plans_v1' && e.newValue) {
+          setWeeklyPlans(JSON.parse(e.newValue));
+        } else if (e.key === 'nile_minya_daily_follow_ups_v1' && e.newValue) {
+          setDailyFollowUps(JSON.parse(e.newValue));
+        } else if ((e.key === 'nile_minya_materials_v2' || e.key === 'nile_minya_materials_v1') && e.newValue) {
+          setMaterials(JSON.parse(e.newValue));
+        } else if (e.key === 'nile_minya_student_tasks_v1' && e.newValue) {
+          setStudentTasks(JSON.parse(e.newValue));
+        } else if (e.key === 'nile_minya_completed_hw_v1' && e.newValue) {
+          setCompletedHwMap(JSON.parse(e.newValue));
+        }
+      } catch (err) {
+        console.error('Storage sync error', err);
+      }
+    };
+    window.addEventListener('storage', handleStorageEvent);
+    return () => window.removeEventListener('storage', handleStorageEvent);
+  }, []);
+
   useEffect(() => {
     if (studentProfile) {
       localStorage.setItem('nile_minya_cur_student', JSON.stringify(studentProfile));
@@ -279,6 +304,7 @@ export default function App() {
             weeklyPlans={weeklyPlans}
             onUpdateWeeklyPlans={setWeeklyPlans}
             timetables={timetables}
+            onUpdateTimetables={setTimetables}
             materials={materials}
             onUpdateMaterials={setMaterials}
           />

@@ -336,7 +336,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <FolderOpen className="w-4 h-4 text-purple-600" />
-            <span>الماتيريال والمذكرات (Materials)</span>
+            <span>Materials</span>
           </button>
 
           <button
@@ -356,7 +356,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <User className="w-4 h-4 text-emerald-600" />
-            <span>مساحة وتاسكات الطالب</span>
+            <span>Tasks</span>
             {studentProfile && (
               <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">
                 {studentProfile.name.split(' ')[0]}

@@ -104,6 +104,7 @@ export const BLOCKS = [
   { id: 'block1', nameAr: 'بلوك 1 (Block 1)', weeksCount: 4, current: true },
   { id: 'block2', nameAr: 'بلوك 2 (Block 2)', weeksCount: 4, current: false },
   { id: 'block3', nameAr: 'بلوك 3 (Block 3)', weeksCount: 4, current: false },
+  { id: 'block4', nameAr: 'بلوك 4 (Block 4)', weeksCount: 4, current: false },
 ];
 
 export const WEEKS = [
@@ -715,179 +716,459 @@ export const INITIAL_STUDENT_TASKS: StudentPersonalTask[] = [
 ];
 
 export const INITIAL_MATERIALS: SchoolMaterialFile[] = [
+  // ===================== BLOCK 1 SHEETS =====================
   {
-    id: 'mat-1',
-    title: 'English - Unit 2 Phonics & Community Helpers Activity Sheet',
-    subjectId: 'english',
-    classId: 'all',
-    blockId: 'block1',
-    weekId: 'week2',
-    fileType: 'pdf',
-    fileName: 'English_Grade2_Unit2_CommunityHelpers_Phonics.pdf',
-    fileSize: '1.8 MB',
-    uploadDate: '2026-09-08',
-    uploadedBy: 'Ms. Sarah (Head of English)',
-    description: 'ورقة عمل تدريبية تفاعلية تتضمن تدريبات الصوتيات (Long a: ai, ay) ومفردات المهن والمجتمع وتدريب القراءة لقصة A Day in Our Town.',
-    previewSummary: `Nile Egyptian Schools - Minya Branch
-Department of English Language - Grade 2 (2A, 2B, 2C)
-Academic Year: 2026 / 2027
-
-Unit 2: My Wonderful Community & Helpers
-Phonics Focus: The Long 'a' vowel sound (ai, ay patterns)
-
-Section 1: Phonics Detective!
-Circle the words that have the long 'a' sound:
-[ rain , train , cat , day , play , map , wait , say ]
-
-Section 2: Vocabulary & Helpers
-Match the community worker to their workplace and tool:
-1. Firefighter  --> Fire Station  --> Water Hose
-2. Doctor       --> Hospital      --> Stethoscope
-3. Teacher      --> School        --> Books and Whiteboard
-4. Police       --> Police Post   --> Patrol Car
-
-Section 3: Reading Comprehension Practice
-Read short story "A Day in Our Town" and answer true/false questions.`
-  },
-  {
-    id: 'mat-2',
-    title: 'Math - 2-Digit Addition with Regrouping Practice Booklets',
-    subjectId: 'math',
-    classId: 'all',
-    blockId: 'block1',
-    weekId: 'week2',
-    fileType: 'pdf',
-    fileName: 'Math_Grade2_Addition_Regrouping_Chapter2.pdf',
-    fileSize: '2.4 MB',
-    uploadDate: '2026-09-08',
-    uploadedBy: 'Mr. Ahmed (Math Coordinator)',
-    description: 'كتيب تدريبات الجمع بإعادة التسمية (Carrying Over) مع مسائل لفظية ونماذج رسومية لمكعبات العشرات والآحاد.',
-    previewSummary: `Nile Egyptian Schools - Minya Branch
-Cambridge Primary Mathematics - Grade 2
-Chapter 2: Two-Digit Addition with Regrouping (Tens & Ones)
-
-Rule to Remember:
-"When the ones column adds up to 10 or more, carry 1 ten over to the tens door!"
-
-Sample Practice Problems:
-1)  27 + 15 = ___  (7 + 5 = 12 -> 2 in ones, 1 carried to tens -> 1 + 2 + 1 = 4 -> Answer: 42)
-2)  38 + 24 = ___
-3)  49 + 16 = ___
-4)  56 + 27 = ___
-
-Word Problem:
-Omar has 28 Nile school stamps. Laila gave him 17 more stamps.
-How many stamps does Omar have in total?
-Working: 28 + 17 = 45 stamps.`
-  },
-  {
-    id: 'mat-3',
-    title: 'Science - Living Things & Plant Parts Experiment Manual',
-    subjectId: 'science',
-    classId: 'all',
-    blockId: 'block1',
-    weekId: 'week2',
-    fileType: 'pdf',
-    fileName: 'Science_Grade2_PlantParts_LabExperiment.pdf',
-    fileSize: '3.1 MB',
-    uploadDate: '2026-09-07',
-    uploadedBy: 'Ms. Mona (Science Teacher)',
-    description: 'دليل تجارب معمل الساينس لملاحظة امتصاص النبات للماء ووظائف الجذور والساق على ضفاف نهر النيل بالمنيا.',
-    previewSummary: `Nile Egyptian Schools - Minya Branch
-Cambridge Science Primary 2 - Unit 1: Living Things & Habitats
-
-Lab Guide: How Does Water Travel Through a Plant?
-Materials Needed:
-- Fresh celery stalk with leafy top
-- Transparent cup with clean water
-- 5 drops of red or blue food coloring
-
-Steps:
-1. Place celery stalk in colored water.
-2. Observe after 2 hours and after 24 hours.
-3. Draw your observations in your science log.
-
-Key Scientific Concept:
-The stem acts like small straws (xylem tubes) that pull water and nutrients from roots up to leaves and flowers.`
-  },
-  {
-    id: 'mat-4',
-    title: 'اللغة العربية - مذكرة قصة "أنا أستطيع" والتمييز بين التاء والهاء',
+    id: 'mat-b1-arab',
+    title: 'شيت مادة اللغة العربية (شيت العربي) - تدريبات قصة "أنا أستطيع" والتاء المربوطة',
     subjectId: 'arabic',
     classId: 'all',
     blockId: 'block1',
     weekId: 'week2',
     fileType: 'pdf',
-    fileName: 'Arabic_Grade2_Story_AnaAstaeea_TaaRules.pdf',
-    fileSize: '1.4 MB',
-    uploadDate: '2026-09-07',
+    fileName: 'Arabic_Sheet_Grade2_Block1.pdf',
+    fileSize: '1.8 MB',
+    uploadDate: '2026-09-08',
     uploadedBy: 'أ. فاطمة (معلمة أولى لغة عربية)',
-    description: 'مذكرة مراجعة لغوية تشمل أسئلة الفهم القرائي وشبكة المفردات وقواعد التاء المربوطة والمفتوحة والهاء في أواخر الكلمات.',
+    description: 'شيت تدريبي وتطبيقي شامل لمهارات القراءة والفهم القرائي وقواعد التاء المربوطة والمفتوحة والهاء مع شبكة المفردات.',
     previewSummary: `مدارس النيل المصرية الدولية - فرع المنيا
 قسم اللغة العربية - الصف الثاني الابتدائي (Grade 2)
+شيت تدريبات وتطبيقات: بلوك 1 (Block 1 Sheet)
 
-المحور الأول: من أكون؟
-الدرس الأول: قصة "أنا أستطيع"
+المحور الأول: من أكون؟ | الدرس: قصة "أنا أستطيع"
+اسم الطالب: ....................................... الفصل: 2 ( ... )
 
-أولاً: معاني المفردات:
-- واثق: متأكد ومطمئن.
-- ماهر: بارع ومتقن.
-- استطاع: قدر وتمكن.
+أولاً: اقرأ الفقرة ثم أجب:
+"في فناء المدرسة وقف المعلم ليختار من التلاميذ فريقاً لكرة القدم. اختار المعلم التلميذ آدم. لكن آدم قال: أعتذر يا معلمي، لا أحب أن أكون سبباً في الخسارة."
+1. استخرج من الفقرة:
+   - كلمة بها مد بالألف: (................)
+   - كلمة بها لام قمرية: (................)
+   - كلمة بها تنوين بالكسر: (................)
+2. لماذا اعتذر آدم للمعلم؟
+   ................................................................................................
 
-ثانياً: القاعدة الذهبية للتاء المربوطة (ـة / ة) والتاء المفتوحة (ت):
-- التاء المربوطة: تنطق هاء عند الوقف (مدرسة)، وتنطق تاء عند الوصل (مدرسةُ النيل).
-- التاء المفتوحة: تنطق تاء دائماً في الوقف والوصل (بيتْ / بيتُنا).
+ثانياً: ميز بين التاء المربوطة (ـة / ة) والتاء المفتوحة (ت) والهاء (ـه / ه):
+ضع كل كلمة في مكانها المناسب بالجدول:
+(مدرسة - صوت - مياه - بيت - زهرة - وجه - حديقة - زيت)
 
-تدريب: صنف الكلمات التالية (حديقة - بنت - كُرة - زيت - مياه - شجرة).`
+ثالثاً: رتب الكلمات لتكون جملة مفيدة:
+(ماهر - في - آدم - السلة - كرة - لاعب)
+--> ................................................................................................
+
+ختم واعتماد قسم اللغة العربية - فرع المنيا`
   },
   {
-    id: 'mat-5',
-    title: 'Weekly Master Plan - Block 1 Week 2 Official Guide',
+    id: 'mat-b1-math',
+    title: 'شيت الماث والرياضيات - Math Worksheet: Two-Digit Addition with Regrouping',
+    subjectId: 'math',
+    classId: 'all',
+    blockId: 'block1',
+    weekId: 'week2',
+    fileType: 'pdf',
+    fileName: 'Math_Sheet_Grade2_Block1.pdf',
+    fileSize: '2.4 MB',
+    uploadDate: '2026-09-08',
+    uploadedBy: 'Mr. Ahmed (Math Coordinator)',
+    description: 'شيت الرياضيات والماث لبلوك 1: الجمع بإعادة التسمية، القيمة المكانية Tens & Ones، ومسائل كلامية تفاعلية.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+Department of Mathematics - Grade 2 (Classes 2A, 2B, 2C)
+Official Worksheet: Block 1 Practice Sheet
+
+Student Name: __________________________ Class: 2 [    ]
+Topic: 2-Digit Addition with Regrouping (Tens & Ones)
+
+★ Section 1: Calculate the following with regrouping:
+  1)   37 + 25 = [ ____ ]    (Think: 7 + 5 = 12 -> 2 in ones, 1 to tens!)
+  2)   48 + 36 = [ ____ ]
+  3)   59 + 17 = [ ____ ]
+  4)   64 + 28 = [ ____ ]
+  5)   73 + 19 = [ ____ ]
+
+★ Section 2: Place Value Models
+Color the base-ten flats (10s) blue and cubes (1s) green to represent 54 + 28.
+
+★ Section 3: Word Problems (Critical Thinking)
+Farida collected 38 Nile lotus flowers. Her brother Youssef gave her 27 more flowers.
+How many flowers does Farida have altogether?
+Number sentence: ______________________________________
+Final Answer: [ ________ ] lotus flowers.
+
+Teacher Signature: Mr. Ahmed & Math Dept - Nile Egyptian Schools Minya`
+  },
+  {
+    id: 'mat-b1-eng',
+    title: 'شيت الإنجليزي - English Practice Sheet: Phonics Long "a" & Community Helpers',
     subjectId: 'english',
     classId: 'all',
     blockId: 'block1',
     weekId: 'week2',
-    fileType: 'sheet',
-    fileName: 'Nile_Minya_Grade2_WeeklyPlan_B1_W2.pdf',
-    fileSize: '950 KB',
-    uploadDate: '2026-09-06',
-    uploadedBy: 'Academic Coordinator',
-    description: 'الوثيقة المعتمدة للخطة الأسبوعية الشاملة لجميع المواد الدراسية لفصول 2A و 2B و 2C.',
+    fileType: 'pdf',
+    fileName: 'English_Sheet_Grade2_Block1.pdf',
+    fileSize: '2.1 MB',
+    uploadDate: '2026-09-08',
+    uploadedBy: 'Ms. Sarah (Head of English)',
+    description: 'شيت مادة اللغة الإنجليزية لبلوك 1: صوتيات الحرف A الممدود، قراءة قصة مجتمعنا، وتمارين القواعد النحوية.',
     previewSummary: `Nile Egyptian Schools - Minya Branch
-Weekly Master Curriculum Plan - Block 1 (Week 2)
-Grade 2 (Classes 2A, 2B, 2C)
+Department of English - Grade 2 (2A, 2B, 2C)
+Block 1 Worksheet: Phonics & Reading Comprehension
 
-Summary of Learning Tracks:
-- English: Phonics long 'a', Community Helpers story reading.
-- Math: 2-digit addition with regrouping, word problem scenarios.
-- Science: Plant structures, water transport lab demonstration.
-- Arabic: درس أنا أستطيع، التاء المربوطة والمفتوحة، تعبير شفهي.
-- French: Les salutations et la trousse d'école.
-- ICT: Computer hardware inputs & mouse drawing skills.`
+Student Name: _________________________ Date: ________________
+
+★ Part 1: Phonics Detective (The Long 'a' sound)
+Words with [ai] or [ay] make the long 'a' sound!
+Circle only the words with the long 'a' sound:
+[  train  •  cat  •  rain  •  play  •  man  •  day  •  wait  •  hat  ]
+
+★ Part 2: Community Helpers & Tools
+Fill in the blanks with: [ Firefighter / Doctor / Teacher / Policeman ]
+1. The ____________ helps us stay safe and directs traffic.
+2. The ____________ uses a stethoscope to listen to our heartbeat.
+3. The ____________ puts out fires using a big water hose.
+4. The ____________ teaches us to read, write, and explore in school.
+
+★ Part 3: Short Story Comprehension
+"Samy went to the Minya Riverbank with his family. He saw birds flying over the Nile and waved at the friendly ferry boat captain."
+Question: Where did Samy go?
+Answer: ____________________________________________________
+
+Grade 2 English Dept - NES Minya Approved`
   },
   {
-    id: 'mat-6',
-    title: 'Social Studies - معالم محافظة المنيا عروس الصعيد وخريطة النيل',
+    id: 'mat-b1-sci',
+    title: 'شيت الساينس والعلوم - Science Lab Sheet: Living Things & Plant Water Transport',
+    subjectId: 'science',
+    classId: 'all',
+    blockId: 'block1',
+    weekId: 'week2',
+    fileType: 'pdf',
+    fileName: 'Science_Sheet_Grade2_Block1.pdf',
+    fileSize: '2.8 MB',
+    uploadDate: '2026-09-07',
+    uploadedBy: 'Ms. Mona (Science Teacher)',
+    description: 'شيت مادة الساينس لبلوك 1: أجزاء النبات، وظائف الجذور والساق، وتجربة تلوين الكرفس لملاحظة حركة الماء.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+Cambridge Primary Science - Grade 2
+Block 1 Worksheet: Plant Structures & Habitats
+
+Student Name: __________________________ Class: 2 [    ]
+
+★ Part 1: Plant Anatomy
+Label the diagram with the following words:
+[  Roots  •  Stem  •  Leaves  •  Flower  ]
+1. Which part anchors the plant in the soil? [ ________________ ]
+2. Which part absorbs sunlight to make plant food? [ ________________ ]
+3. Which part transports water up to the leaves? [ ________________ ]
+
+★ Part 2: The Celery Water Lab Observation
+We placed a celery stalk in water colored with red food dye:
+- After 2 hours: Red dots appeared inside the celery stem.
+- After 24 hours: The leaves turned light red!
+Conclusion: The stem contains tiny tubes (xylem) that carry water upwards against gravity.
+
+Science Department - Nile Egyptian Schools Minya`
+  },
+  {
+    id: 'mat-b1-soc',
+    title: 'شيت الدراسات الاجتماعية - معالم محافظة المنيا ونهر النيل الخالد (بلوك 1)',
     subjectId: 'social',
     classId: 'all',
     blockId: 'block1',
     weekId: 'week2',
-    fileType: 'image',
-    fileName: 'Minya_Landmarks_Map_Grade2.png',
-    fileSize: '1.9 MB',
-    uploadDate: '2026-09-06',
-    uploadedBy: 'أ. محمد محمود',
-    description: 'خريطة وصور ملونة لمعالم محافظة المنيا ونهر النيل والبيئة الزراعية والحضرية للطلاب.',
+    fileType: 'pdf',
+    fileName: 'Social_Studies_Sheet_Grade2_Block1.pdf',
+    fileSize: '1.6 MB',
+    uploadDate: '2026-09-07',
+    uploadedBy: 'أ. محمد محمود (معلم الدراسات)',
+    description: 'شيت مادة الدراسات الاجتماعية لبلوك 1: التعرف على خريطة المنيا، البيئة الزراعية، ومعالم المحافظة وموقع المدرسة.',
     previewSummary: `مدارس النيل المصرية الدولية - فرع المنيا
-مادة الدراسات الاجتماعية والتربية الوطنية - الصف الثاني الابتدائي
+مادة الدراسات الاجتماعية - الصف الثاني الابتدائي
+شيت تدريبات بلوك 1: محافظتي عروس الصعيد
 
-الوحدة الأولى: محافظتي عروس الصعيد (المنيا)
-أهم معالم المحافظة:
-1. كورنيش النيل بالمنيا
-2. كوبري المنيا العلوي
-3. تل العمارنة وآثار المنيا التاريخية
-4. البيئة الزراعية الغنية على ضفاف نهر النيل الخالد
+اسم الطالب: ....................................... الفصل: 2 ( ... )
 
-نشاط التلميذ: تلوين مسار نهر النيل باللون الأزرق وكتابة اسم مدرستك على الخريطة.`
+السؤال الأول: ضع علامة (✓) أو (✗):
+1. تقع محافظة المنيا على ضفاف نهر النيل في صعيد مصر. (   )
+2. البيئة في المنيا تشمل أراضي زراعية خصبة ومناطق أثرية هامة. (   )
+3. يمر نهر النيل بجوار مدرستنا في محافظة المنيا. (   )
+
+السؤال الثاني: اكتب تحت كل صورة المعلم المناسب:
+(كورنيش النيل بالمنيا - كوبري المنيا العلوي - تل العمارنة)
+
+السؤال الثالث: نشاط تلوين:
+لون مجرى نهر النيل باللون الأزرق، والأراضي الزراعية باللون الأخضر، وحدد موقع مدينتك الجميلة المنيا.`
+  },
+  {
+    id: 'mat-b1-ict',
+    title: 'شيت تكنولوجيا المعلومات والكمبيوتر - ICT Computer Basics & Input Devices (بلوك 1)',
+    subjectId: 'ict',
+    classId: 'all',
+    blockId: 'block1',
+    weekId: 'week2',
+    fileType: 'pdf',
+    fileName: 'ICT_Sheet_Grade2_Block1.pdf',
+    fileSize: '1.3 MB',
+    uploadDate: '2026-09-06',
+    uploadedBy: 'Eng. Tamer (ICT Dept)',
+    description: 'شيت مادة الكمبيوتر والتكنولوجيا لبلوك 1: وحدات الإدخال والإخراج، برنامج الرسم Paint، والاستخدام الآمن للشاشات.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+Department of Information & Communication Technology (ICT)
+Block 1 Worksheet: Computer Hardware Basics
+
+Student Name: __________________________ Class: 2 [    ]
+
+★ Exercise 1: Input vs. Output Devices
+Classify each item as [ INPUT ] or [ OUTPUT ]:
+1. Keyboard: [ ________________ ]
+2. Computer Screen (Monitor): [ ________________ ]
+3. Mouse: [ ________________ ]
+4. Color Printer: [ ________________ ]
+
+★ Exercise 2: Healthy Screen Habits
+Draw a smiley face next to the good habits:
+(  ) Sitting with a straight back and screen at eye level.
+(  ) Taking a 5-minute break every 20 minutes.
+(  ) Touching computer cables with wet hands.
+
+NES Minya ICT Lab Approved`
+  },
+  {
+    id: 'mat-b1-fre',
+    title: 'شيت اللغة الفرنسية - Fiche de Français: Les Salutations et la Trousse (بلوك 1)',
+    subjectId: 'french',
+    classId: 'all',
+    blockId: 'block1',
+    weekId: 'week2',
+    fileType: 'pdf',
+    fileName: 'French_Sheet_Grade2_Block1.pdf',
+    fileSize: '1.1 MB',
+    uploadDate: '2026-09-06',
+    uploadedBy: 'Mme. Claire (Professeur de français)',
+    description: 'شيت تدريبات اللغة الفرنسية لبلوك 1: التحيات، أدوات المقلمة المدرسية، والأرقام من 1 إلى 10.',
+    previewSummary: `Écoles Égyptiennes du Nil - Branche de Minya
+Département de Français - Grade 2 (2A, 2B, 2C)
+Fiche d'activités : Bloc 1
+
+Nom de l'élève : _______________________ Classe : 2 [    ]
+
+★ Activité 1 : Relie les salutations avec la bonne image :
+1. Bonjour !               --> [ Le soleil du matin ]
+2. Bonsoir !               --> [ La lune et les étoiles ]
+3. Au revoir !             --> [ La main qui salue ]
+
+★ Activité 2 : Ma trousse scolaire (Écris le mot correspondant) :
+[  un stylo  •  un crayon  •  une règle  •  une gomme  ]
+1. Pour effacer : ______________________
+2. Pour tracer une ligne droite : ______________________
+3. Pour écrire avec de l'encre bleue : ______________________
+
+Département de français - NES Minya`
+  },
+  {
+    id: 'mat-b1-eth',
+    title: 'شيت التربية الدينية والقيم والأخلاق - الأمانة والتعاون ومساعدة الزملاء (بلوك 1)',
+    subjectId: 'ethics',
+    classId: 'all',
+    blockId: 'block1',
+    weekId: 'week2',
+    fileType: 'pdf',
+    fileName: 'Religion_Ethics_Sheet_Grade2_Block1.pdf',
+    fileSize: '1.2 MB',
+    uploadDate: '2026-09-06',
+    uploadedBy: 'أ. فاطمة (مشرفة مادة القيم)',
+    description: 'شيت أنشطة التربية الدينية والقيم لبلوك 1: خلق الأمانة، مساعدة الأصدقاء، والمحافظة على ممتلكات المدرسة.',
+    previewSummary: `مدارس النيل المصرية الدولية - فرع المنيا
+مادة التربية الدينية والقيم والأخلاق - الصف الثاني الابتدائي
+شيت أنشطة بلوك 1: قيمنا الجميلة
+
+اسم الطالب: ....................................... الفصل: 2 ( ... )
+
+★ النشاط الأول: خلق الأمانة
+إذا وجدت قلماً أو مسطرة في فناء المدرسة، ماذا تفعل؟
+[   ] أحتفظ به في حقيبتي.
+[   ] أسلمه لمعلمي أو إدارة المدرسة فوراً لإعادته لزميلي.
+
+★ النشاط الثاني: التعاون في الفصل
+اكتب عملاً طيباً تقوم به لمساعدة زميلك في الفصل:
+................................................................................................`
+  },
+  {
+    id: 'mat-b1-art',
+    title: 'شيت التربية الفنية والرسم - Art & Nile Colors: تدرج الألوان وتصميم ضفاف النيل (بلوك 1)',
+    subjectId: 'art',
+    classId: 'all',
+    blockId: 'block1',
+    weekId: 'week2',
+    fileType: 'pdf',
+    fileName: 'Art_Sheet_Grade2_Block1.pdf',
+    fileSize: '1.5 MB',
+    uploadDate: '2026-09-05',
+    uploadedBy: 'Ms. Nour (Art Teacher)',
+    description: 'شيت مادة الفنون لبلوك 1: الألوان الأساسية والثانوية، رسم مركب شراعي على ضفاف نيل المنيا، وتقنيات التلوين.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+Department of Art & Design - Grade 2
+Block 1 Creative Worksheet: Colors of River Nile
+
+Student Name: __________________________ Class: 2 [    ]
+★ Project: Felucca Sailing on the Nile
+- Primary Colors: Red, Yellow, Blue.
+- Secondary Colors: Orange, Green, Purple.
+Task: Use your colored pencils to blend water ripples and design a colorful sail!`
+  },
+  {
+    id: 'mat-b1-pe',
+    title: 'شيت التربية البدنية والصحية - PE & Healthy Habits: النشاط البدني والغذاء الصحي (بلوك 1)',
+    subjectId: 'pe',
+    classId: 'all',
+    blockId: 'block1',
+    weekId: 'week2',
+    fileType: 'pdf',
+    fileName: 'PE_Sheet_Grade2_Block1.pdf',
+    fileSize: '950 KB',
+    uploadDate: '2026-09-05',
+    uploadedBy: 'Coach Yasser (Physical Education)',
+    description: 'شيت التربية الرياضية لبلوك 1: الإحماء الصباحي، شرب الماء، والغذاء المتوازن لطاقة يوم دراسي مميز.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+Physical Education & Health - Grade 2
+Block 1 Wellness Sheet: Healthy Nile Champions
+
+Student Name: __________________________ Class: 2 [    ]
+1. How many glasses of water should a Grade 2 champion drink daily? [ 6 to 8 glasses ]
+2. Always wear proper sports shoes for running and gymnastics to protect your joints!`
+  },
+
+  // ===================== BLOCK 2 SHEETS =====================
+  {
+    id: 'mat-b2-arab',
+    title: 'شيت اللغة العربية - التراكيب اللغوية وأسماء الإشارة (بلوك 2)',
+    subjectId: 'arabic',
+    classId: 'all',
+    blockId: 'block2',
+    weekId: 'week1',
+    fileType: 'pdf',
+    fileName: 'Arabic_Sheet_Grade2_Block2.pdf',
+    fileSize: '1.9 MB',
+    uploadDate: '2026-09-05',
+    uploadedBy: 'قسم اللغة العربية',
+    description: 'شيت تدريبات بلوك 2: أسماء الإشارة (هذا، هذه، هؤلاء) وضمائر المتكلم والمخاطب.',
+    previewSummary: `مدارس النيل المصرية الدولية - فرع المنيا
+شيت مادة اللغة العربية - بلوك 2 (Block 2)
+تدريبات أسماء الإشارة للقريب وضمائر المتكلم والمخاطب مع تدريبات إملائية ممتعة.`
+  },
+  {
+    id: 'mat-b2-math',
+    title: 'شيت الماث - Math Worksheet: 3-Digit Numbers & Place Value (Block 2)',
+    subjectId: 'math',
+    classId: 'all',
+    blockId: 'block2',
+    weekId: 'week1',
+    fileType: 'pdf',
+    fileName: 'Math_Sheet_Grade2_Block2.pdf',
+    fileSize: '2.5 MB',
+    uploadDate: '2026-09-05',
+    uploadedBy: 'Mr. Ahmed (Math Coordinator)',
+    description: 'شيت الماث لبلوك 2: الأعداد المكونة من ثلاثة أرقام، Hundreds, Tens & Ones، والمقارنة باستخدام > و <.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+Math Worksheet: Block 2 - 3-Digit Numbers, Expanded Form & Place Value.`
+  },
+  {
+    id: 'mat-b2-eng',
+    title: 'شيت الإنجليزي - English Practice Sheet: Grammar & Story Writing (Block 2)',
+    subjectId: 'english',
+    classId: 'all',
+    blockId: 'block2',
+    weekId: 'week1',
+    fileType: 'pdf',
+    fileName: 'English_Sheet_Grade2_Block2.pdf',
+    fileSize: '2.0 MB',
+    uploadDate: '2026-09-05',
+    uploadedBy: 'Ms. Sarah (Head of English)',
+    description: 'شيت الإنجليزي لبلوك 2: زمن المضارع البسيط، أدوات الربط، وصياغة جمل قصيرة لقصص الحيوانات.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+English Block 2 Worksheet: Present Simple Tense, Conjunctions (and, but, because) and Creative Writing.`
+  },
+  {
+    id: 'mat-b2-sci',
+    title: 'شيت الساينس - Science Sheet: Animal Habitats & Senses (Block 2)',
+    subjectId: 'science',
+    classId: 'all',
+    blockId: 'block2',
+    weekId: 'week1',
+    fileType: 'pdf',
+    fileName: 'Science_Sheet_Grade2_Block2.pdf',
+    fileSize: '2.6 MB',
+    uploadDate: '2026-09-05',
+    uploadedBy: 'Ms. Mona (Science Teacher)',
+    description: 'شيت الساينس لبلوك 2: بيئات الحيوانات والحواس الخمس والتكيف مع بيئات النيل والصحراء.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+Cambridge Science Grade 2 - Block 2: Animal Habitats, Adaptations & Animal Diets.`
+  },
+
+  // ===================== BLOCK 3 SHEETS =====================
+  {
+    id: 'mat-b3-arab',
+    title: 'شيت اللغة العربية - المفرد والمثنى والجمع وعلامات الترقيم (بلوك 3)',
+    subjectId: 'arabic',
+    classId: 'all',
+    blockId: 'block3',
+    weekId: 'week1',
+    fileType: 'pdf',
+    fileName: 'Arabic_Sheet_Grade2_Block3.pdf',
+    fileSize: '1.7 MB',
+    uploadDate: '2026-09-04',
+    uploadedBy: 'قسم اللغة العربية',
+    description: 'شيت تدريبات بلوك 3: التمييز بين المفرد والمثنى والجمع واستخدام علامات الترقيم (النقطة وعلامة الاستفهام).',
+    previewSummary: `مدارس النيل المصرية الدولية - فرع المنيا
+شيت مادة اللغة العربية - بلوك 3 (Block 3)
+قواعد لغوية، تدريب قراءة متحررة، وتعبير كتابي ممتع.`
+  },
+  {
+    id: 'mat-b3-math',
+    title: 'شيت الماث - Math Worksheet: Multiplication Arrays & Mental Math (Block 3)',
+    subjectId: 'math',
+    classId: 'all',
+    blockId: 'block3',
+    weekId: 'week1',
+    fileType: 'pdf',
+    fileName: 'Math_Sheet_Grade2_Block3.pdf',
+    fileSize: '2.3 MB',
+    uploadDate: '2026-09-04',
+    uploadedBy: 'Mr. Ahmed (Math Coordinator)',
+    description: 'شيت الماث لبلوك 3: مقدمة الضرب كمجموع متكرر، المصفوفات Arrays، وجداول 2 و 5 و 10.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+Mathematics Block 3: Introduction to Multiplication, Arrays & Equal Groups.`
+  },
+
+  // ===================== BLOCK 4 SHEETS =====================
+  {
+    id: 'mat-b4-arab',
+    title: 'شيت اللغة العربية - المراجعة الختامية الشاملة ونماذج الاختبارات (بلوك 4)',
+    subjectId: 'arabic',
+    classId: 'all',
+    blockId: 'block4',
+    weekId: 'week1',
+    fileType: 'pdf',
+    fileName: 'Arabic_Sheet_Grade2_Block4.pdf',
+    fileSize: '2.2 MB',
+    uploadDate: '2026-09-03',
+    uploadedBy: 'قسم اللغة العربية',
+    description: 'شيت المراجعة النهائية الشاملة لمادة اللغة العربية لبلوك 4 مع نماذج امتحانات تقييمية معتمدة.',
+    previewSummary: `مدارس النيل المصرية الدولية - فرع المنيا
+شيت مادة اللغة العربية - بلوك 4 (Block 4)
+المراجعة النهائية الشاملة لجميع محاور الفصل الدراسي.`
+  },
+  {
+    id: 'mat-b4-math',
+    title: 'شيت الماث - Math Comprehensive Final Review & Practice Booklet (Block 4)',
+    subjectId: 'math',
+    classId: 'all',
+    blockId: 'block4',
+    weekId: 'week1',
+    fileType: 'pdf',
+    fileName: 'Math_Sheet_Grade2_Block4.pdf',
+    fileSize: '2.7 MB',
+    uploadDate: '2026-09-03',
+    uploadedBy: 'Mr. Ahmed (Math Coordinator)',
+    description: 'كتيب المراجعة الشاملة لمادة الماث والرياضيات لبلوك 4 ونماذج أسئلة كامبريدج التجريبية.',
+    previewSummary: `Nile Egyptian Schools - Minya Branch
+Cambridge Primary Mathematics - Block 4 Final Comprehensive Review Booklet.`
   }
 ];

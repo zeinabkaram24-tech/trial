@@ -90,6 +90,28 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
     setEditingSlot({ isOpen: false });
   };
 
+  const handleDeleteSlot = (dayNameAr: string, slotId: string) => {
+    if (!window.confirm('هل أنت متأكد من رغبتك في حذف هذه الحصة من الجدول الدراسي؟')) return;
+    const updatedTimetables = timetables.map((tt) => {
+      if (tt.classId === selectedClass) {
+        const updatedDays = tt.days.map((day) => {
+          if (day.dayNameAr === dayNameAr) {
+            return {
+              ...day,
+              periods: day.periods.filter((p) => p.id !== slotId)
+            };
+          }
+          return day;
+        });
+        return { ...tt, days: updatedDays };
+      }
+      return tt;
+    });
+
+    onUpdateTimetables(updatedTimetables);
+    setEditingSlot({ isOpen: false });
+  };
+
   const currentDaySchedule = currentTimetable.days[activeDayIndex] || currentTimetable.days[0];
 
   return (
@@ -169,10 +191,17 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
         </div>
 
         {currentRole === 'admin' && (
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2 text-xs text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-            <span className="font-bold">ملاحظة الأدمن:</span>
-            <span>
-              يمكنك النقر مباشرة على أي حصة في الجدول لتعديل المادة واسم المعلم أو القاعة وحفظ التغييرات فوراً.
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-xs text-amber-900 bg-amber-50 p-3 rounded-xl border border-amber-200">
+            <div className="flex items-center gap-2">
+              <span className="font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md text-[11px]">
+                صلاحية الأدمن
+              </span>
+              <span>
+                يمكنك النقر مباشرة على أي حصة في الجدول لتعديل المادة أو حذفها، مع إمكانية إضافة وتعديل الحصص بالكامل من تبويب لوحة الإدارة.
+              </span>
+            </div>
+            <span className="text-emerald-700 font-bold bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md text-[10px]">
+              ✓ المزامنة المباشرة مع الزوار والطلاب مفعلة
             </span>
           </div>
         )}
@@ -413,20 +442,35 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setEditingSlot({ isOpen: false })}
-                  className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs"
-                >
-                  تحديث الحصة في الجدول
-                </button>
+              <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 flex-wrap">
+                {editingSlot.slot && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editingSlot.dayNameAr && editingSlot.slot) {
+                        handleDeleteSlot(editingSlot.dayNameAr, editingSlot.slot.id);
+                      }
+                    }}
+                    className="px-3 py-2 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl font-bold transition-colors"
+                  >
+                    حذف الحصة من الجدول
+                  </button>
+                )}
+                <div className="flex items-center gap-2 mr-auto">
+                  <button
+                    type="button"
+                    onClick={() => setEditingSlot({ isOpen: false })}
+                    className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs"
+                  >
+                    تحديث الحصة في الجدول ✓
+                  </button>
+                </div>
               </div>
             </form>
           </div>

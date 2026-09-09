@@ -19,18 +19,76 @@ import {
   CheckCircle2,
   X,
   Eye,
-  Filter
+  Filter,
+  Clock,
+  Sparkles,
+  Package,
+  GraduationCap
 } from 'lucide-react';
 import {
   SchoolClass,
   DailyFollowUp,
   WeeklyPlanItem,
   ClassTimetable,
-  SchoolMaterialFile
+  SchoolMaterialFile,
+  PeriodSlot
 } from '../types';
 import { exportAllDataToJSON } from '../lib/storage';
-import { SUBJECTS, BLOCKS, WEEKS } from '../data/initialData';
+import { SUBJECTS, BLOCKS, WEEKS, PERIOD_TIMES, INITIAL_TIMETABLES } from '../data/initialData';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
+
+const SUBJECT_PACKING_KIT: Record<string, { book: string; notebook: string; tools: string }> = {
+  english: {
+    book: "Cambridge Primary English Learner's Book",
+    notebook: 'كشكول إنجليزي مسطر 4 أسطر',
+    tools: 'مقلمة، قلم رصاص HB، ممحاة'
+  },
+  math: {
+    book: "Cambridge Primary Math Learner's Book",
+    notebook: 'كشكول ماث مربعات Grid',
+    tools: 'مسطرة 20 سم، قلم رصاص، ممحاة'
+  },
+  science: {
+    book: "Cambridge Primary Science Learner's Book",
+    notebook: 'كشكول الساينس للأنشطة والتجارب',
+    tools: 'ألوان خشبية للرسم التوضيحي'
+  },
+  arabic: {
+    book: 'كتاب تواصل (اللغة العربية) وكراسة الأنشطة',
+    notebook: 'كشكول عربي مسطر سطرين',
+    tools: 'قلم رصاص + ممحاة'
+  },
+  social: {
+    book: 'كتاب الدراسات الاجتماعية والمواطنة',
+    notebook: 'كشكول الدراسات الاجتماعية',
+    tools: 'ألوان خشبية ومسطرة'
+  },
+  french: {
+    book: "Alex et Zoé (Livre de l'élève)",
+    notebook: 'كشكول اللغة الفرنسية',
+    tools: 'أقلام رصاص وممحاة'
+  },
+  ict: {
+    book: 'كتاب تكنولوجيا المعلومات والاتصالات ICT',
+    notebook: 'كشكول الحاسب الآلي',
+    tools: 'جاهزية الحصة بمعمل الحاسب'
+  },
+  art: {
+    book: 'كراسة الرسم والتصميم (Sketchbook)',
+    notebook: 'ملف الأعمال الفنية',
+    tools: 'ألوان خشبية، شمعية، مسطرة، صمغ'
+  },
+  pe: {
+    book: 'لا يوجد كتاب (نشاط رياضي بدني)',
+    notebook: 'لا يوجد كشكول',
+    tools: 'الزي الرياضي الكامل والحذاء الرياضي'
+  },
+  ethics: {
+    book: 'كتاب التربية الدينية / القيم وبناء الشخصية',
+    notebook: 'كشكول القيم والدين',
+    tools: 'قلم رصاص وممحاة'
+  }
+};
 
 interface AdminPanelProps {
   selectedClass: SchoolClass;
@@ -44,6 +102,7 @@ interface AdminPanelProps {
   weeklyPlans: WeeklyPlanItem[];
   onUpdateWeeklyPlans: (plans: WeeklyPlanItem[]) => void;
   timetables: ClassTimetable[];
+  onUpdateTimetables: (timetables: ClassTimetable[]) => void;
   materials: SchoolMaterialFile[];
   onUpdateMaterials: (materials: SchoolMaterialFile[]) => void;
 }
@@ -60,11 +119,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   weeklyPlans,
   onUpdateWeeklyPlans,
   timetables,
+  onUpdateTimetables,
   materials,
   onUpdateMaterials
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [adminTab, setAdminTab] = useState<'materials' | 'plans' | 'overview'>('materials');
+  const [adminTab, setAdminTab] = useState<'materials' | 'plans' | 'timetables' | 'overview'>('materials');
+
+  // Live Sync feedback alert
+  const [syncAlert, setSyncAlert] = useState<string | null>(null);
+
+  const triggerSyncAlert = (msg: string) => {
+    setSyncAlert(msg);
+    setTimeout(() => {
+      setSyncAlert(null);
+    }, 4500);
+  };
+
+  // Timetable Management States
+  const [timetableClass, setTimetableClass] = useState<SchoolClass>(selectedClass);
+  const [timetableDay, setTimetableDay] = useState<string>('الأحد');
+  const [isPeriodModalOpen, setIsPeriodModalOpen] = useState(false);
+  const [editingPeriodId, setEditingPeriodId] = useState<string | null>(null);
+  const [periodClassTarget, setPeriodClassTarget] = useState<SchoolClass | 'all'>(selectedClass);
+  const [periodDay, setPeriodDay] = useState<string>('الأحد');
+  const [periodNumber, setPeriodNumber] = useState<number>(1);
+  const [periodSubject, setPeriodSubject] = useState<string>(SUBJECTS[0].id);
+  const [periodTime, setPeriodTime] = useState<string>('08:00 - 08:45');
+  const [periodTeacher, setPeriodTeacher] = useState<string>('');
+  const [periodRoom, setPeriodRoom] = useState<string>('');
 
   // Search & Filter States for Materials
   const [materialSearch, setMaterialSearch] = useState('');
@@ -153,6 +236,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     if (window.confirm(`هل أنت متأكد من حذف الملف "${title}" من مكتبة الماتيريال؟`)) {
       const updated = materials.filter((m) => m.id !== id);
       onUpdateMaterials(updated);
+      triggerSyncAlert(`تم حذف الملف "${title}" بنجاح وتحديث واجهة الزائر والطالب فوراً ✓`);
     }
   };
 
@@ -182,6 +266,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         return m;
       });
       onUpdateMaterials(updated);
+      triggerSyncAlert(`تم تعديل المذكرة "${materialTitle.trim()}" بنجاح وتحديثها فوراً للزوار والطلاب ✓`);
     } else {
       // Add new
       const newMat: SchoolMaterialFile = {
@@ -198,6 +283,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         previewSummary: materialPreview.trim() || undefined
       };
       onUpdateMaterials([newMat, ...materials]);
+      triggerSyncAlert(`تمت إضافة المذكرة "${materialTitle.trim()}" بنجاح ونزولها فوراً في واجهة الزائر والطالب ✓`);
     }
 
     setIsMaterialModalOpen(false);
@@ -257,6 +343,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     if (window.confirm(`هل أنت متأكد من حذف الخطة الأسبوعية "${title}"؟`)) {
       const updated = weeklyPlans.filter((p) => p.id !== id);
       onUpdateWeeklyPlans(updated);
+      triggerSyncAlert('تم حذف الخطة الأسبوعية بنجاح وتحديث واجهة الزائر والطالب فوراً ✓');
     }
   };
 
@@ -297,6 +384,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         return p;
       });
       onUpdateWeeklyPlans(updated);
+      triggerSyncAlert('تم تحديث الخطة الأسبوعية بنجاح وتفعيلها فوراً لجميع الفصول والزوار ✓');
     } else {
       // Add new
       const newPlan: WeeklyPlanItem = {
@@ -312,9 +400,161 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         assessmentNote: planAssessment.trim() || undefined
       };
       onUpdateWeeklyPlans([newPlan, ...weeklyPlans]);
+      triggerSyncAlert('تمت إضافة الخطة الأسبوعية بنجاح ونزولها فوراً في جدول الخطط الأسبوعية ✓');
     }
 
     setIsPlanModalOpen(false);
+  };
+
+  // ================= TIMETABLE CRUD ACTIONS =================
+  const handleOpenAddPeriod = (day?: string) => {
+    setEditingPeriodId(null);
+    setPeriodClassTarget(timetableClass);
+    const targetDay = day || timetableDay;
+    setPeriodDay(targetDay);
+
+    // Calculate next period number
+    const targetTT = timetables.find((t) => t.classId === timetableClass) || timetables[0];
+    const targetDaySchedule = targetTT?.days.find((d) => d.dayNameAr === targetDay);
+    const existing = targetDaySchedule?.periods || [];
+    const maxPeriod = existing.length > 0 ? Math.max(...existing.map((p) => p.periodNum)) : 0;
+    const nextNum = maxPeriod >= 7 ? 8 : maxPeriod + 1;
+    setPeriodNumber(nextNum);
+
+    const defaultTime = PERIOD_TIMES.find((pt) => pt.periodNum === nextNum)?.time || '08:00 - 08:45';
+    setPeriodTime(defaultTime);
+    setPeriodSubject(SUBJECTS[0].id);
+    setPeriodTeacher('');
+    setPeriodRoom('');
+    setIsPeriodModalOpen(true);
+  };
+
+  const handleOpenEditPeriod = (targetClass: SchoolClass, dayName: string, slot: PeriodSlot) => {
+    setEditingPeriodId(slot.id);
+    setPeriodClassTarget(targetClass);
+    setPeriodDay(dayName);
+    setPeriodNumber(slot.periodNum);
+    setPeriodSubject(slot.subjectId);
+    setPeriodTime(slot.time);
+    setPeriodTeacher(slot.teacher || '');
+    setPeriodRoom(slot.room || '');
+    setIsPeriodModalOpen(true);
+  };
+
+  const handleDeletePeriod = (targetClass: SchoolClass, dayName: string, periodId: string) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذه الحصة من الجدول؟ سيتم تفعيل الحذف فوراً لجميع الطلاب والزوار وجدول الحقيبة.')) {
+      return;
+    }
+    const updatedTimetables = timetables.map((tt) => {
+      if (tt.classId === targetClass) {
+        return {
+          ...tt,
+          days: tt.days.map((d) => {
+            if (d.dayNameAr === dayName) {
+              return {
+                ...d,
+                periods: d.periods.filter((p) => p.id !== periodId)
+              };
+            }
+            return d;
+          })
+        };
+      }
+      return tt;
+    });
+    onUpdateTimetables(updatedTimetables);
+    triggerSyncAlert('تم حذف الحصة من الجدول بنجاح وتحديث واجهات الطلاب والزوار فوراً ✓');
+  };
+
+  const handleResetClassTimetable = (targetClass: SchoolClass) => {
+    if (!window.confirm(`هل أنت متأكد من رغبتك في استعادة الجدول الدراسي النموذجي لفصل ${targetClass}؟`)) {
+      return;
+    }
+    const initialForClass = INITIAL_TIMETABLES.find((t) => t.classId === targetClass);
+    if (!initialForClass) return;
+
+    const updatedTimetables = timetables.map((tt) => {
+      if (tt.classId === targetClass) {
+        return JSON.parse(JSON.stringify(initialForClass));
+      }
+      return tt;
+    });
+    onUpdateTimetables(updatedTimetables);
+    triggerSyncAlert(`تمت استعادة الجدول النموذجي لفصل ${targetClass} بنجاح وتفعيله فوراً ✓`);
+  };
+
+  const handleSavePeriod = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const targetClasses: SchoolClass[] =
+      periodClassTarget === 'all' ? ['2A', '2B', '2C'] : [periodClassTarget];
+
+    let updatedTimetables = [...timetables];
+
+    targetClasses.forEach((cls) => {
+      updatedTimetables = updatedTimetables.map((tt) => {
+        if (tt.classId !== cls) return tt;
+
+        const updatedDays = tt.days.map((day) => {
+          if (day.dayNameAr !== periodDay) return day;
+
+          let updatedPeriods: PeriodSlot[];
+
+          if (editingPeriodId) {
+            // Editing existing period
+            updatedPeriods = day.periods.map((p) => {
+              if (p.id === editingPeriodId) {
+                return {
+                  ...p,
+                  periodNum: Number(periodNumber),
+                  time: periodTime.trim(),
+                  subjectId: periodSubject,
+                  teacher: periodTeacher.trim() || undefined,
+                  room: periodRoom.trim() || undefined
+                };
+              }
+              return p;
+            });
+          } else {
+            // Check if slot with same periodNum already exists
+            const exists = day.periods.find((p) => p.periodNum === Number(periodNumber));
+            if (exists) {
+              updatedPeriods = day.periods.map((p) => {
+                if (p.periodNum === Number(periodNumber)) {
+                  return {
+                    ...p,
+                    time: periodTime.trim(),
+                    subjectId: periodSubject,
+                    teacher: periodTeacher.trim() || undefined,
+                    room: periodRoom.trim() || undefined
+                  };
+                }
+                return p;
+              });
+            } else {
+              const newSlot: PeriodSlot = {
+                id: `p-${cls.toLowerCase()}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                periodNum: Number(periodNumber),
+                time: periodTime.trim(),
+                subjectId: periodSubject,
+                teacher: periodTeacher.trim() || undefined,
+                room: periodRoom.trim() || undefined
+              };
+              updatedPeriods = [...day.periods, newSlot];
+            }
+          }
+
+          updatedPeriods.sort((a, b) => a.periodNum - b.periodNum);
+          return { ...day, periods: updatedPeriods };
+        });
+
+        return { ...tt, days: updatedDays };
+      });
+    });
+
+    onUpdateTimetables(updatedTimetables);
+    setIsPeriodModalOpen(false);
+    triggerSyncAlert('تم حفظ وتحديث الحصة في الجدول فوراً لجميع الطلاب والزوار وجدول الحقيبة المدرسية ✓');
   };
 
   // ================= FILTERED LISTS =================
@@ -340,6 +580,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     return matchesSearch && matchesSubject && matchesClass && matchesBlock && matchesWeek;
   });
 
+  const totalPeriodsCount = timetables.reduce(
+    (acc, tt) => acc + tt.days.reduce((dAcc, d) => dAcc + d.periods.length, 0),
+    0
+  );
+
   return (
     <div className="space-y-6">
       {/* Top Banner with Direct Action Buttons */}
@@ -359,13 +604,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </span>
               </div>
               <p className="text-xs font-semibold text-slate-900 mt-1">
-                إضافة وحذف وتعديل الماتيريال والمذكرات والخطط الأسبوعية لفصول Grade 2
+                إضافة وحذف وتعديل الماتيريال والمذكرات والخطط الأسبوعية وجداول الحصص لفصول Grade 2
               </p>
             </div>
           </div>
 
           {/* Quick Direct Add Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5">
+            {/* Button requested by user: Add to Timetable directly */}
+            <button
+              id="admin-btn-add-period"
+              type="button"
+              onClick={() => handleOpenAddPeriod()}
+              className="flex items-center gap-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition-all hover:scale-102"
+            >
+              <Calendar className="w-4 h-4" />
+              <span>+ إضافة حصة للجدول الدراسي</span>
+            </button>
+
             <button
               id="admin-btn-add-material"
               type="button"
@@ -416,8 +672,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
       </div>
 
+      {/* Live Sync Status Banner */}
+      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-xs flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2.5 text-emerald-950">
+          <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="font-black text-sm">المزامنة الفورية المباشرة مفعلة (Live Instant Sync):</span>
+          <span className="text-emerald-800 font-medium">
+            أي إضافة أو تعديل أو حذف في الماتيريال أو الخطط أو جداول الحصص ينزل فوراً في واجهة الزائر وواجهة الطالب وتجهيزات الحقيبة المدرسية بدون الحاجة لإعادة تحميل الصفحة.
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="bg-emerald-200 text-emerald-900 font-black px-2.5 py-1 rounded-lg text-[11px] border border-emerald-300">
+            ✓ تحديث فوري ومحفوظ
+          </span>
+        </div>
+      </div>
+
+      {/* Sync Alert Toast Notification */}
+      {syncAlert && (
+        <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-xl border border-emerald-500/50 flex items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-2.5 text-xs font-bold text-emerald-300">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span>{syncAlert}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSyncAlert(null)}
+            className="text-slate-400 hover:text-white p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Admin Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3 flex-wrap">
+        <button
+          id="admin-tab-timetables"
+          type="button"
+          onClick={() => setAdminTab('timetables')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            adminTab === 'timetables'
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Calendar className="w-4 h-4" />
+          <span>إدارة وتعديل جداول الحصص</span>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+            adminTab === 'timetables' ? 'bg-indigo-800 text-white' : 'bg-slate-100 text-slate-600'
+          }`}>
+            {totalPeriodsCount} حصة مجدولة
+          </span>
+        </button>
+
         <button
           id="admin-tab-materials"
           type="button"
@@ -466,8 +774,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          <Calendar className="w-4 h-4" />
-          <span>الأقسام العامة والروابط</span>
+          <Sparkles className="w-4 h-4" />
+          <span>نظرة عامة وإحصائيات سريعة</span>
         </button>
       </div>
 
@@ -943,6 +1251,262 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
       )}
 
+      {/* ================= TAB: TIMETABLE MANAGEMENT ================= */}
+      {adminTab === 'timetables' && (
+        <div className="space-y-5">
+          {/* Controls Bar: Class Selector & Day Selector */}
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-indigo-600" />
+                  <span>إدارة وتعديل جداول الحصص الأسبوعية</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  إضافة الحصص، تعديل المواد والمعلمين، وتحديث توقيتات الحصص لفصول 2A و 2B و 2C
+                </p>
+              </div>
+
+              {/* Class Selection Buttons */}
+              <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 px-2">الفصل:</span>
+                {(['2A', '2B', '2C'] as SchoolClass[]).map((cls) => (
+                  <button
+                    key={cls}
+                    type="button"
+                    onClick={() => {
+                      setTimetableClass(cls);
+                      onSelectClass(cls);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                      timetableClass === cls
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                  >
+                    فصل {cls}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Days Tabs */}
+            <div className="flex items-center gap-2 border-t border-slate-100 pt-3 flex-wrap">
+              <span className="text-[11px] font-bold text-slate-500">اختر اليوم:</span>
+              {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((dayName) => {
+                const daySlotCount =
+                  timetables
+                    .find((t) => t.classId === timetableClass)
+                    ?.days.find((d) => d.dayNameAr === dayName)?.periods.length || 0;
+                const isSelected = timetableDay === dayName;
+                return (
+                  <button
+                    key={dayName}
+                    type="button"
+                    onClick={() => setTimetableDay(dayName)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    <span>{dayName}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                        isSelected ? 'bg-indigo-800 text-white' : 'bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {daySlotCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Day View Header & Action Buttons */}
+          {(() => {
+            const currentTT = timetables.find((t) => t.classId === timetableClass) || timetables[0];
+            const currentDayObj = currentTT?.days.find((d) => d.dayNameAr === timetableDay) || currentTT?.days[0];
+            const activePeriods = currentDayObj?.periods || [];
+
+            return (
+              <>
+                <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-xs flex items-center justify-center font-black text-indigo-200 border border-white/10">
+                      <Clock className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-lg font-black tracking-tight">
+                          جدول حصص يوم {timetableDay} - فصل {timetableClass}
+                        </h4>
+                        <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">
+                          {activePeriods.length} حصص مجدولة
+                        </span>
+                      </div>
+                      <p className="text-xs text-indigo-200/80 mt-0.5">
+                        مدارس النيل المصرية الدولية - فرع المنيا • العام الدراسي 2026/2027
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Direct Add Buttons for Timetable */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAddPeriod(timetableDay)}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all hover:scale-102"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>+ إضافة حصة لهذا اليوم ({timetableDay})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleOpenAddPeriod(timetableDay);
+                        setPeriodClassTarget('all');
+                      }}
+                      className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-colors"
+                      title="إضافة الحصة لجميع الفصول دفعة واحدة"
+                    >
+                      <span>+ إضافة لجميع الفصول (2A, 2B, 2C)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleResetClassTimetable(timetableClass)}
+                      className="flex items-center gap-1 px-3 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/30 font-bold text-xs rounded-xl transition-colors"
+                      title="استعادة الجدول النموذجي لهذا الفصل"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>استعادة الافتراضي</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Periods Cards List */}
+                {activePeriods.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
+                    <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <h4 className="font-bold text-slate-800 text-base mb-1">
+                      لا توجد حصص مجدولة ليوم {timetableDay} في فصل {timetableClass}
+                    </h4>
+                    <p className="text-xs text-slate-500 mb-4 max-w-md mx-auto">
+                      يمكنك الآن الضغط على زر إضافة حصة لإدراج الحصة الأولى وتحديد المادة والتوقيت واسم المعلم ومستلزمات الحقيبة المدرسية.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAddPeriod(timetableDay)}
+                      className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+                    >
+                      + إضافة أول حصة ليوم {timetableDay}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {activePeriods.map((slot) => {
+                      const kit = SUBJECT_PACKING_KIT[slot.subjectId] || {
+                        book: 'كتاب المادة المعتمد',
+                        notebook: 'كشكول المادة',
+                        tools: 'الأدوات المدرسية والمقلمة'
+                      };
+
+                      return (
+                        <div
+                          key={slot.id}
+                          className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs hover:border-indigo-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                        >
+                          {/* Left: Period Number & Time & Subject */}
+                          <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
+                            {/* Period Badge */}
+                            <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex flex-col items-center justify-center shrink-0">
+                              <span className="text-[10px] font-bold text-indigo-600">حصة</span>
+                              <span className="text-base font-black text-indigo-950 leading-none">
+                                {slot.periodNum}
+                              </span>
+                            </div>
+
+                            {/* Subject and Details */}
+                            <div className="space-y-1.5 min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <SubjectBadge subjectId={slot.subjectId} showIcon size="md" />
+                                <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-md">
+                                  <Clock className="w-3 h-3 text-slate-400" />
+                                  <span>{slot.time}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
+                                <div className="flex items-center gap-1 font-medium">
+                                  <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>المعلم:</span>
+                                  <span className="font-bold text-slate-800">
+                                    {slot.teacher || 'معلم المادة المعتمد'}
+                                  </span>
+                                </div>
+
+                                <span className="text-slate-300">•</span>
+
+                                <div className="flex items-center gap-1 font-medium">
+                                  <span>القاعة / المكان:</span>
+                                  <span className="font-bold text-slate-800">
+                                    {slot.room || `فصل ${timetableClass}`}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Packing Kit requirements summary */}
+                              <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-500 flex-wrap">
+                                <span className="font-bold text-slate-600 flex items-center gap-1">
+                                  <Package className="w-3 h-3 text-slate-400" />
+                                  تجهيزات الحقيبة:
+                                </span>
+                                <span className="bg-slate-50 border border-slate-200 px-2 py-0.5 rounded text-slate-700">
+                                  📖 {kit.book}
+                                </span>
+                                <span className="bg-slate-50 border border-slate-200 px-2 py-0.5 rounded text-slate-700">
+                                  📓 {kit.notebook}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right: Actions */}
+                          <div className="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditPeriod(timetableClass, timetableDay, slot)}
+                              className="flex items-center gap-1 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition-colors"
+                              title="تعديل الحصة وتوقيتها ومعلمها"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                              <span>تعديل الحصة</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePeriod(timetableClass, timetableDay, slot.id)}
+                              className="flex items-center gap-1 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl text-xs font-bold transition-colors"
+                              title="حذف الحصة من الجدول"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>حذف</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            );
+          })()}
+        </div>
+      )}
+
       {/* ================= MODAL: ADD / EDIT MATERIAL ================= */}
       {isMaterialModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -1276,6 +1840,222 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   className="px-5 py-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs"
                 >
                   {editingPlan ? 'حفظ التعديل' : 'إضافة الخطة الأسبوعية ✓'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: ADD / EDIT TIMETABLE PERIOD ================= */}
+      {isPeriodModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-slate-900">
+                    {editingPeriodId ? 'تعديل بيانات الحصة في الجدول' : 'إضافة حصة جديدة إلى جدول الحصص'}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    مدارس النيل المصرية الدولية فرع المنيا - Grade 2
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPeriodModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePeriod} className="space-y-4">
+              {/* Notice of Live Sync */}
+              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-xs text-indigo-900 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                <span>
+                  <strong>تأكيد النشر المباشر:</strong> بمجرد الحفظ، تنزل الحصة فوراً في واجهة الزائر وواجهة الطالب وتجهيزات الحقيبة المدرسية وطباعة الجدول.
+                </span>
+              </div>
+
+              {/* Class target & Day */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    الفصل المستهدف:
+                  </label>
+                  <select
+                    value={periodClassTarget}
+                    onChange={(e) => setPeriodClassTarget(e.target.value as SchoolClass | 'all')}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
+                  >
+                    <option value="2A">فصل 2A فقط</option>
+                    <option value="2B">فصل 2B فقط</option>
+                    <option value="2C">فصل 2C فقط</option>
+                    <option value="all">★ تطبيق على جميع فصول جريد 2 (2A, 2B, 2C)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    اليوم الدراسي:
+                  </label>
+                  <select
+                    value={periodDay}
+                    onChange={(e) => setPeriodDay(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
+                  >
+                    <option value="الأحد">الأحد (Sunday)</option>
+                    <option value="الإثنين">الإثنين (Monday)</option>
+                    <option value="الثلاثاء">الثلاثاء (Tuesday)</option>
+                    <option value="الأربعاء">الأربعاء (Wednesday)</option>
+                    <option value="الخميس">الخميس (Thursday)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Period Number and Subject */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    رقم الحصة:
+                  </label>
+                  <select
+                    value={periodNumber}
+                    onChange={(e) => {
+                      const num = Number(e.target.value);
+                      setPeriodNumber(num);
+                      const matchingTime = PERIOD_TIMES.find((pt) => pt.periodNum === num);
+                      if (matchingTime) {
+                        setPeriodTime(matchingTime.time);
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                      <option key={num} value={num}>
+                        الحصة {num}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    المادة الدراسية:
+                  </label>
+                  <select
+                    value={periodSubject}
+                    onChange={(e) => setPeriodSubject(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
+                  >
+                    {SUBJECTS.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nameAr} ({s.nameEn})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Time slot */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  توقيت الحصة:
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) setPeriodTime(e.target.value);
+                    }}
+                    className="sm:col-span-1 px-3 py-2 rounded-xl border border-slate-300 text-xs bg-slate-50"
+                  >
+                    <option value="">اختر توقيت معتمد...</option>
+                    {PERIOD_TIMES.map((pt) => (
+                      <option key={pt.periodNum} value={pt.time}>
+                        حصة {pt.periodNum}: {pt.time}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    required
+                    value={periodTime}
+                    onChange={(e) => setPeriodTime(e.target.value)}
+                    placeholder="مثال: 08:00 - 08:45"
+                    className="sm:col-span-2 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Teacher & Room */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    اسم المعلم / المعلمة (اختياري):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="مثال: Ms. Sarah أو Mr. Ahmed أو أ. فاطمة"
+                    value={periodTeacher}
+                    onChange={(e) => setPeriodTeacher(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    القاعة / المعمل (اختياري):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="مثال: معمل العلوم Science Lab أو Room 204"
+                    value={periodRoom}
+                    onChange={(e) => setPeriodRoom(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Packing list preview for this subject */}
+              {(() => {
+                const kit = SUBJECT_PACKING_KIT[periodSubject] || {
+                  book: 'كتاب المادة المعتمد',
+                  notebook: 'كشكول المادة',
+                  tools: 'الأدوات المدرسية والمقلمة'
+                };
+                return (
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 text-xs space-y-1">
+                    <span className="font-bold text-slate-700 block text-[11px]">
+                      مستلزمات الحقيبة المدرسية التلقائية لهذه المادة:
+                    </span>
+                    <div className="text-slate-600 text-[11px] grid grid-cols-1 sm:grid-cols-3 gap-1">
+                      <div>📚 {kit.book}</div>
+                      <div>📓 {kit.notebook}</div>
+                      <div>✏️ {kit.tools}</div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsPeriodModalOpen(false)}
+                  className="px-4 py-2 text-xs text-slate-600 hover:bg-slate-100 rounded-xl font-bold"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-xs"
+                >
+                  {editingPeriodId ? 'حفظ تعديل الحصة ✓' : 'حفظ وإدراج الحصة في الجدول ✓'}
                 </button>
               </div>
             </form>
