@@ -214,7 +214,7 @@ Weekly Plan - Grade 2
 المادة: ${sub.nameAr} (${sub.nameEn})
 الوحدة والموضوع: ${plan.unitOrTheme}
 Block: ${plan.blockId} | الأسبوع: ${plan.weekId}
-Class: ${plan.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${plan.classId}`}
+Class: ${plan.classId === 'all' ? 'All Classes (2A, 2G, 2C)' : `Class ${plan.classId}`}
 الملف: ${plan.fileName || 'Plan.pdf'} (${plan.fileSize || '1.5 MB'})
 
 مخرجات وأهداف التعلم المستهدفة:
@@ -338,7 +338,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                 Weekly Plan (Curriculum Plans)
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                {currentBlockObj?.nameAr} • {currentWeekObj?.nameAr} • Grade 2 (Class 2A, 2B, 2C)
+                {currentBlockObj?.nameAr} • {currentWeekObj?.nameAr} • Grade 2 (Class 2A, 2G, 2C)
               </p>
             </div>
           </div>
@@ -880,7 +880,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                   <input
                     type="text"
                     disabled
-                    value="Grade 2 (2A, 2B, 2C)"
+                    value="Grade 2 (2A, 2G, 2C)"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 text-xs font-bold"
                   />
                 </div>

@@ -45,6 +45,7 @@ import { exportAllDataToJSON } from '../lib/storage';
 import { getStoredVisitorStats, resetDailyVisitorStats, DailyVisitorStats } from '../lib/visitorTracking';
 import { SUBJECTS, BLOCKS, WEEKS, PERIOD_TIMES, INITIAL_TIMETABLES } from '../data/initialData';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
+import { parseUploadedTimetable } from '../lib/timetableParser';
 
 const SUBJECT_PACKING_KIT: Record<string, { book: string; notebook: string; tools: string }> = {
   english: {
@@ -403,7 +404,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     <div class="info-grid">
       <div><strong>المادة:</strong> ${sub.nameEn}</div>
-      <div><strong>Class:</strong> ${plan.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${plan.classId}`}</div>
+      <div><strong>Class:</strong> ${plan.classId === 'all' ? 'All Classes (2A, 2G, 2C)' : `Class ${plan.classId}`}</div>
       <div><strong>البلوك والأسبوع:</strong> ${blockObj?.nameAr || plan.blockId} • ${weekObj?.nameAr || plan.weekId}</div>
     </div>
 
@@ -610,7 +611,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleConfirmReplaceTimetable = (e: React.FormEvent) => {
+  const handleConfirmReplaceTimetable = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!replaceTimetableFile) {
       alert('يرجى اختيار ملف الجدول (PDF أو صورة أو Word) أولاً');
@@ -623,10 +624,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       day: 'numeric'
     });
 
+    const targetClasses = replaceClassTarget === 'all' ? (['2A', '2G', '2C'] as SchoolClass[]) : [replaceClassTarget];
+    const parsedByClass: Record<string, Awaited<ReturnType<typeof parseUploadedTimetable>>> = {};
+    if (replaceTimetableFile.type === 'pdf') {
+      try {
+        const parsed = await Promise.all(targetClasses.map(async (classId) => [classId, await parseUploadedTimetable(replaceTimetableFile.dataUrl, classId, replaceTimetableFile.type)] as const));
+        Object.assign(parsedByClass, Object.fromEntries(parsed));
+      } catch (error) {
+        console.error('PDF timetable extraction failed', error);
+      }
+    }
+
     const updated = timetables.map((tt) => {
       if (replaceClassTarget === 'all' || tt.classId === replaceClassTarget) {
+        const parsed = parsedByClass[tt.classId];
         return {
           ...tt,
+          days: parsed?.days?.length ? parsed.days : tt.days,
           fileName: replaceTimetableFile.name,
           fileType: replaceTimetableFile.type,
           fileSize: replaceTimetableFile.size,
@@ -742,7 +756,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     e.preventDefault();
 
     const targetClasses: SchoolClass[] =
-      periodClassTarget === 'all' ? ['2A', '2B', '2C'] : [periodClassTarget];
+      periodClassTarget === 'all' ? ['2A', '2G', '2C'] : [periodClassTarget];
 
     let updatedTimetables = [...timetables];
 
@@ -1112,9 +1126,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   onChange={(e) => setMaterialClassFilter(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-purple-500"
                 >
-                  <option value="all">All Classes (2A, 2B, 2C)</option>
+                  <option value="all">All Classes (2A, 2G, 2C)</option>
                   <option value="2A">Class 2A</option>
-                  <option value="2B">Class 2B</option>
+                  <option value="2G">Class 2G</option>
                   <option value="2C">Class 2C</option>
                 </select>
               </div>
@@ -1387,7 +1401,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
               <span className="text-xs font-semibold text-slate-500 block">فصول جريد 2</span>
               <span className="text-2xl font-black text-slate-900">3 فصول</span>
-              <span className="text-[11px] text-sky-600 font-bold mt-1 block">2A و 2B و 2C</span>
+              <span className="text-[11px] text-sky-600 font-bold mt-1 block">2A و 2G و 2C</span>
             </div>
 
             <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
@@ -1464,7 +1478,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   إدارة جداول الحصص
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                  تعديل توزيع الحصص اليومية، أسماء المعلمين، وتوقيت الحصص لفصول 2A، 2B، 2C.
+                  تعديل توزيع الحصص اليومية، أسماء المعلمين، وتوقيت الحصص لفصول 2A، 2G، 2C.
                 </p>
               </div>
 
@@ -1564,7 +1578,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 {/* Class Selection Buttons */}
                 <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
                   <span className="text-[11px] font-bold text-slate-500 px-2">Class:</span>
-                  {(['2A', '2B', '2C'] as SchoolClass[]).map((cls) => (
+                  {(['2A', '2G', '2C'] as SchoolClass[]).map((cls) => (
                     <button
                       key={cls}
                       type="button"
@@ -1729,7 +1743,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-colors"
                       title="إضافة الحصة لجميع الفصول دفعة واحدة"
                     >
-                      <span>+ إضافة لجميع الفصول (2A, 2B, 2C)</span>
+                      <span>+ إضافة لجميع الفصول (2A, 2G, 2C)</span>
                     </button>
 
                     <button
@@ -1929,9 +1943,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     onChange={(e) => setMaterialClass(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold"
                   >
-                    <option value="all">All Classes (2A, 2B, 2C)</option>
+                    <option value="all">All Classes (2A, 2G, 2C)</option>
                     <option value="2A">Class 2A</option>
-                    <option value="2B">Class 2B</option>
+                    <option value="2G">Class 2G</option>
                     <option value="2C">Class 2C</option>
                   </select>
                 </div>
@@ -2080,7 +2094,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   >
                     <option value="all">All Classes (Grade 2)</option>
                     <option value="2A">Class 2A</option>
-                    <option value="2B">Class 2B</option>
+                    <option value="2G">Class 2G</option>
                     <option value="2C">Class 2C</option>
                   </select>
                 </div>
@@ -2275,9 +2289,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
                   >
                     <option value="2A">Class 2A</option>
-                    <option value="2B">Class 2B</option>
+                    <option value="2G">Class 2G</option>
                     <option value="2C">Class 2C</option>
-                    <option value="all">★ All Classes (2A, 2B, 2C)</option>
+                    <option value="all">★ All Classes (2A, 2G, 2C)</option>
                   </select>
                 </div>
 
@@ -2492,14 +2506,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setReplaceClassTarget('2B')}
+                    onClick={() => setReplaceClassTarget('2G')}
                     className={`py-2 px-3 rounded-xl text-xs font-black transition-all border ${
-                      replaceClassTarget === '2B'
+                      replaceClassTarget === '2G'
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    Class 2B
+                    Class 2G
                   </button>
                   <button
                     type="button"

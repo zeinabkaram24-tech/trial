@@ -93,7 +93,7 @@ export const StudentSpace: React.FC<StudentSpaceProps> = ({
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">Class in Grade 2:</label>
             <div className="grid grid-cols-3 gap-2">
-              {(['2A', '2B', '2C'] as SchoolClass[]).map((c) => (
+              {(['2A', '2G', '2C'] as SchoolClass[]).map((c) => (
                 <button
                   key={c}
                   type="button"

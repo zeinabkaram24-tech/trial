@@ -22,7 +22,7 @@ import {
 import { ClassTimetable, SchoolClass, UserRole, PeriodSlot, DaySchedule } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 import { SUBJECTS, PERIOD_TIMES } from '../data/initialData';
-import { parseTimetableFromText, createDefaultScheduleFromSubjects } from '../lib/timetableParser';
+import { parseUploadedTimetable } from '../lib/timetableParser';
 
 interface TimetableViewProps {
   currentRole: UserRole;
@@ -129,22 +129,31 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleSaveUploadedTimetable = () => {
+  const handleSaveUploadedTimetable = async () => {
     if (!uploadFileDataUrl) {
       alert('يرجى اختيار ملف الجدول أولاً');
       return;
     }
 
-    // Automatically parse the timetable file into structured days (Sunday to Thursday)
-    // and populate the prepared interactive timetable grid directly
+    let parsedByClass: Record<string, Awaited<ReturnType<typeof parseUploadedTimetable>>> = {};
+    if (uploadFileType === 'pdf') {
+      try {
+        const targets = uploadClassTarget === 'all' ? (['2A', '2G', '2C'] as SchoolClass[]) : [uploadClassTarget];
+        const results = await Promise.all(targets.map(async (classId) => [classId, await parseUploadedTimetable(uploadFileDataUrl, classId, uploadFileType)] as const));
+        parsedByClass = Object.fromEntries(results);
+      } catch (error) {
+        console.error('PDF timetable extraction failed', error);
+      }
+    }
+
+    // Keep the uploaded bytes as the source of truth. Parsed days only feed the optional interactive grid.
     const updated = timetables.map((tt) => {
       if (uploadClassTarget === 'all' || tt.classId === uploadClassTarget) {
-        // Parse raw text or generate schedule mapped directly to school timetable slots
-        const parsedResult = parseTimetableFromText(uploadFileName, tt.classId);
+        const parsedResult = parsedByClass[tt.classId];
 
         return {
           ...tt,
-          days: parsedResult.days && parsedResult.days.length > 0 ? parsedResult.days : tt.days,
+          days: parsedResult?.days?.length ? parsedResult.days : tt.days,
           fileDataUrl: uploadFileDataUrl,
           fileName: uploadFileName || `جدول الحصص المعتمد - فصل ${tt.classId}`,
           fileType: uploadFileType,
@@ -508,7 +517,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             {/* Class Toggle Buttons */}
             <div className="flex items-center bg-slate-100 p-1 rounded-xl">
-              {(['2A', '2B', '2C'] as SchoolClass[]).map((c) => (
+              {(['2A', '2G', '2C'] as SchoolClass[]).map((c) => (
                 <button
                   key={c}
                   type="button"
@@ -1161,7 +1170,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                   الفصل المستهدف بالجدول:
                 </label>
                 <div className="grid grid-cols-4 gap-2">
-                  {(['2A', '2B', '2C', 'all'] as const).map((cls) => (
+                  {(['2A', '2G', '2C', 'all'] as const).map((cls) => (
                     <button
                       key={cls}
                       type="button"

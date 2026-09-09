@@ -1,4 +1,4 @@
-export type SchoolClass = '2A' | '2B' | '2C';
+export type SchoolClass = '2A' | '2G' | '2C';
 
 export type UserRole = 'visitor' | 'student' | 'admin';
 

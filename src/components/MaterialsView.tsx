@@ -71,7 +71,7 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
   const generateDocumentHtml = (file: SchoolMaterialFile) => {
     const sub = getSubjectInfo(file.subjectId);
     const blockName = getBlockName(file.blockId || 'block1');
-    const classLabel = file.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${file.classId}`;
+    const classLabel = file.classId === 'all' ? 'All Classes (2A, 2G, 2C)' : `Class ${file.classId}`;
 
     return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -352,7 +352,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
 عنوان الشيت: ${file.title}
 المادة: ${getSubjectInfo(file.subjectId).nameAr} - ${getSubjectInfo(file.subjectId).nameEn}
 Block: ${getBlockName(file.blockId || 'block1')}
-Class: ${file.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${file.classId}`}
+Class: ${file.classId === 'all' ? 'All Classes (2A, 2G, 2C)' : `Class ${file.classId}`}
 تاريخ الرفع: ${file.uploadDate}
 اسم الملف: ${file.fileName}
 نوع الملف: ${file.fileType.toUpperCase()} (${file.fileSize})

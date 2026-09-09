@@ -197,10 +197,10 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Secondary Controls Bar: Class Selection + Block & Week */}
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
-        {/* Class Selection Buttons (2A, 2B, 2C) */}
+        {/* Class Selection Buttons (2A, 2G, 2C) */}
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-slate-500 ml-1">Class:</span>
-          {(['2A', '2B', '2C'] as SchoolClass[]).map((cls) => {
+          {(['2A', '2G', '2C'] as SchoolClass[]).map((cls) => {
             const isSelected = selectedClass === cls;
             return (
               <button
@@ -497,7 +497,7 @@ export const Header: React.FC<HeaderProps> = ({
                   Class:
                 </label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(['2A', '2B', '2C'] as SchoolClass[]).map((cls) => (
+                  {(['2A', '2G', '2C'] as SchoolClass[]).map((cls) => (
                     <button
                       key={cls}
                       type="button"

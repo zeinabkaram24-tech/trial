@@ -323,7 +323,7 @@ export default function App() {
               مدارس النيل المصرية الدولية - فرع المنيا
             </span>
             <span>•</span>
-            <span>نظام المتابعة المدرسية لجريد 2 (2A - 2B - 2C)</span>
+            <span>نظام المتابعة المدرسية لجريد 2 (2A - 2G - 2C)</span>
           </div>
 
           <div className="flex items-center gap-4">

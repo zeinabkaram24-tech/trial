@@ -1,18 +1,16 @@
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { PeriodSlot, DaySchedule, SchoolClass } from '../types';
-import { PERIOD_TIMES, SUBJECTS } from '../data/initialData';
+import { PERIOD_TIMES } from '../data/initialData';
 
-/**
- * Intelligent Timetable File Parser for Nile Egyptian Schools
- * Parses timetable structure from text, CSV, TSV, or auto-detects subject slots
- * and maps them directly into the prepared schedule slots for Sunday - Wednesday (and Thursday)
- */
+GlobalWorkerOptions.workerSrc = pdfWorker;
 
-const DAY_NAMES: Array<{ ar: 'الأحد' | 'الإثنين' | 'الثلاثاء' | 'الأربعاء' | 'الخميس'; en: string; aliases: string[] }> = [
-  { ar: 'الأحد', en: 'Sunday', aliases: ['الأحد', 'الاحد', 'sunday', 'sun', 'يوم الأحد', 'يوم الاحد'] },
-  { ar: 'الإثنين', en: 'Monday', aliases: ['الإثنين', 'الاثنين', 'monday', 'mon', 'يوم الإثنين', 'يوم الاثنين'] },
-  { ar: 'الثلاثاء', en: 'Tuesday', aliases: ['الثلاثاء', 'tuesday', 'tue', 'يوم الثلاثاء'] },
-  { ar: 'الأربعاء', en: 'Wednesday', aliases: ['الأربعاء', 'الاربعاء', 'wednesday', 'wed', 'يوم الأربعاء', 'يوم الاربعاء'] },
-  { ar: 'الخميس', en: 'Thursday', aliases: ['الخميس', 'thursday', 'thu', 'يوم الخميس'] },
+const DAY_NAMES = [
+  { ar: 'الأحد' as const, en: 'Sunday', aliases: ['الأحد', 'الاحد', 'sunday', 'sun'] },
+  { ar: 'الإثنين' as const, en: 'Monday', aliases: ['الإثنين', 'الاثنين', 'monday', 'mon'] },
+  { ar: 'الثلاثاء' as const, en: 'Tuesday', aliases: ['الثلاثاء', 'tuesday', 'tue'] },
+  { ar: 'الأربعاء' as const, en: 'Wednesday', aliases: ['الأربعاء', 'الاربعاء', 'wednesday', 'wed'] },
+  { ar: 'الخميس' as const, en: 'Thursday', aliases: ['الخميس', 'thursday', 'thu'] },
 ];
 
 const SUBJECT_KEYWORDS: Record<string, string[]> = {
@@ -20,180 +18,86 @@ const SUBJECT_KEYWORDS: Record<string, string[]> = {
   math: ['math', 'ماث', 'رياضيات', 'حساب', 'mathematics'],
   science: ['science', 'ساينس', 'علوم', 'sci'],
   arabic: ['arabic', 'عربي', 'لغة عربية', 'لغه عربيه', 'تواصل'],
-  social: ['social', 'دراسات', 'دراسات اجتماعية', 'سوشيال', 'social studies'],
+  social: ['social', 'دراسات', 'دراسات اجتماعية', 'سوشيال'],
   french: ['french', 'فرنساوي', 'فرنسي', 'لغة فرنسية', 'français', 'francais'],
-  ict: ['ict', 'حاسب', 'كمبيوتر', 'تكنولوجيا', 'it', 'computer'],
+  ict: ['ict', 'حاسب', 'كمبيوتر', 'تكنولوجيا', 'computer'],
   art: ['art', 'رسم', 'تربية فنية', 'فنية'],
   pe: ['pe', 'رياضة', 'تربية بدنية', 'العاب', 'ألعاب', 'gym'],
-  ethics: ['ethics', 'دين', 'تربية دينية', 'قيم', 'religion', 'اسلامي', 'مسيحي'],
+  ethics: ['ethics', 'دين', 'تربية دينية', 'قيم', 'religion'],
+};
+
+const TEACHERS: Record<string, string> = {
+  english: 'Ms. Sarah', math: 'Mr. Ahmed', science: 'Ms. Mona', arabic: 'أ. فاطمة',
+  french: 'Mme. Claire', social: 'أ. محمد محمود', ict: 'Eng. Tamer', art: 'Ms. Nour',
+  pe: 'Coach Yasser', ethics: 'أ. فاطمة'
 };
 
 function identifySubject(token: string): string | null {
-  const clean = token.toLowerCase().trim();
-  for (const [subjectId, keywords] of Object.entries(SUBJECT_KEYWORDS)) {
-    if (keywords.some((k) => clean.includes(k))) {
-      return subjectId;
-    }
+  const value = token.toLowerCase().trim();
+  return Object.entries(SUBJECT_KEYWORDS).find(([, words]) => words.some((word) => value.includes(word)))?.[0] || null;
+}
+
+export interface ParseTimetableResult { days: DaySchedule[]; slotsCount: number; extractedTextPreview?: string; }
+
+/** Extracts text for the interactive grid; the original PDF bytes are kept untouched and displayed separately. */
+export async function extractTextFromPdf(dataUrl: string): Promise<string> {
+  const raw = dataUrl.split(',')[1] || dataUrl;
+  const bytes = Uint8Array.from(atob(raw), (char) => char.charCodeAt(0));
+  const pdf = await getDocument({ data: bytes }).promise;
+  const pages: string[] = [];
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    pages.push((content.items as Array<{ str?: string }>).map((item) => item.str || '').join(' '));
   }
-  return null;
+  return pages.join('\n');
 }
 
-export interface ParseTimetableResult {
-  days: DaySchedule[];
-  slotsCount: number;
-  extractedTextPreview?: string;
+function classSection(text: string, classId: SchoolClass): string {
+  const pattern = /(?:class|فصل)\s*([2][agc])/gi;
+  const matches = [...text.matchAll(pattern)];
+  if (matches.length < 2) return text;
+  const index = matches.findIndex((match) => match[1].toUpperCase() === classId);
+  if (index < 0) return text;
+  const start = matches[index].index || 0;
+  const end = index + 1 < matches.length ? (matches[index + 1].index || text.length) : text.length;
+  return text.slice(start, end);
 }
 
-/**
- * Generate default balanced period slots for the 4-5 school days
- * when parsing structured data or auto-populating from uploaded schedule image/file
- */
-export function createDefaultScheduleFromSubjects(seedOffset = 0): DaySchedule[] {
-  // Balanced realistic Nile Egyptian School timetable mapping for Grade 2
-  const defaultSubjectMatrix: Record<string, string[]> = {
-    'الأحد': ['english', 'math', 'arabic', 'science', 'ict', 'french', 'ethics'],
-    'الإثنين': ['math', 'english', 'science', 'arabic', 'social', 'art', 'english'],
-    'الثلاثاء': ['arabic', 'english', 'math', 'pe', 'science', 'french', 'arabic'],
-    'الأربعاء': ['math', 'science', 'english', 'arabic', 'ict', 'social', 'art'],
-    'الخميس': ['english', 'math', 'arabic', 'science', 'pe', 'ethics', 'english'],
-  };
-
-  return DAY_NAMES.map((d, dayIndex) => {
-    const subs = defaultSubjectMatrix[d.ar] || ['english', 'math', 'arabic', 'science', 'french', 'art', 'pe'];
-    const periods: PeriodSlot[] = PERIOD_TIMES.map((pt, pIdx) => {
-      // Shift slightly if multiple seedOffset
-      const subId = subs[(pIdx + seedOffset) % subs.length];
-      return {
-        id: `slot-${dayIndex + 1}-${pt.periodNum}-${Date.now().toString(36)}`,
-        periodNum: pt.periodNum,
-        time: pt.time,
-        subjectId: subId,
-        teacher: getTeacherForSubject(subId),
-        room: 'فصل 2A'
-      };
-    });
-    return {
-      dayNameAr: d.ar,
-      dayNameEn: d.en,
-      periods
-    };
-  });
-}
-
-function getTeacherForSubject(subId: string): string {
-  switch (subId) {
-    case 'english': return 'Ms. Sarah';
-    case 'math': return 'Mr. Ahmed';
-    case 'science': return 'Ms. Mona';
-    case 'arabic': return 'أ. فاطمة';
-    case 'french': return 'Mme. Claire';
-    case 'social': return 'أ. محمد محمود';
-    case 'ict': return 'Eng. Tamer';
-    case 'art': return 'Ms. Nour';
-    case 'pe': return 'Coach Yasser';
-    case 'ethics': return 'أ. فاطمة';
-    default: return 'معلم المادة';
-  }
-}
-
-/**
- * Parses raw text, CSV rows, or lines into DaySchedule array
- */
 export function parseTimetableFromText(text: string, classId: SchoolClass): ParseTimetableResult {
-  const lines = text
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  // If text is too short or doesn't match standard patterns, generate smart parsed schedule
-  if (lines.length === 0) {
-    const offset = classId === '2B' ? 1 : classId === '2C' ? 2 : 0;
-    const days = createDefaultScheduleFromSubjects(offset);
-    return {
-      days,
-      slotsCount: days.reduce((acc, d) => acc + d.periods.length, 0),
-      extractedTextPreview: 'تم تهيئة وتوزيع جدول الحصص للمواد المعتمدة'
-    };
-  }
-
-  // Check if lines contain days
-  const parsedDaysMap: Record<string, PeriodSlot[]> = {
-    'الأحد': [],
-    'الإثنين': [],
-    'الثلاثاء': [],
-    'الأربعاء': [],
-    'الخميس': []
-  };
-
-  let currentDay: 'الأحد' | 'الإثنين' | 'الثلاثاء' | 'الأربعاء' | 'الخميس' = 'الأحد';
+  const parsed: Record<string, PeriodSlot[]> = { 'الأحد': [], 'الإثنين': [], 'الثلاثاء': [], 'الأربعاء': [], 'الخميس': [] };
+  let currentDay: keyof typeof parsed | null = null;
+  const lines = classSection(text, classId)
+    .split(/\r?\n|(?=الأحد|الاحد|الإثنين|الاثنين|الثلاثاء|الأربعاء|الاربعاء|الخميس|Sunday|Monday|Tuesday|Wednesday|Thursday)/i)
+    .map((line) => line.replace(/\s+/g, ' ').trim()).filter(Boolean);
 
   for (const line of lines) {
-    // Check if line matches a day name
-    const foundDay = DAY_NAMES.find((d) => d.aliases.some((alias) => line.toLowerCase().includes(alias)));
-    if (foundDay) {
-      currentDay = foundDay.ar;
-      continue;
-    }
-
-    // Split line by comma, tab, or dash
-    const parts = line.split(/[,;\t|]+/).map((p) => p.trim()).filter(Boolean);
-    for (const part of parts) {
-      const subjectId = identifySubject(part);
-      if (subjectId) {
-        const pNum = parsedDaysMap[currentDay].length + 1;
-        if (pNum <= 7) {
-          const pt = PERIOD_TIMES[pNum - 1] || { periodNum: pNum, time: '08:00 - 08:45' };
-          parsedDaysMap[currentDay].push({
-            id: `p-${classId.toLowerCase()}-${currentDay}-${pNum}-${Date.now().toString(36)}`,
-            periodNum: pt.periodNum,
-            time: pt.time,
-            subjectId,
-            teacher: getTeacherForSubject(subjectId),
-            room: `Class ${classId}`
-          });
-        }
-      }
+    const day = DAY_NAMES.find((item) => item.aliases.some((alias) => line.toLowerCase().includes(alias.toLowerCase())));
+    if (day) currentDay = day.ar;
+    if (!currentDay) continue;
+    const tokens = line.split(/[,;\t|:/]+|\s{2,}/).map((token) => token.trim()).filter(Boolean);
+    for (const token of tokens) {
+      const subjectId = identifySubject(token);
+      if (!subjectId || parsed[currentDay].length >= PERIOD_TIMES.length) continue;
+      const period = PERIOD_TIMES[parsed[currentDay].length];
+      parsed[currentDay].push({
+        id: `pdf-${classId.toLowerCase()}-${currentDay}-${period.periodNum}-${Date.now().toString(36)}`,
+        periodNum: period.periodNum, time: period.time, subjectId,
+        teacher: TEACHERS[subjectId] || 'معلم المادة', room: `Class ${classId}`
+      });
     }
   }
 
-  // Fill in any incomplete days with standard schedule
-  const offset = classId === '2B' ? 1 : classId === '2C' ? 2 : 0;
-  const fallbackSchedule = createDefaultScheduleFromSubjects(offset);
-
-  const days: DaySchedule[] = DAY_NAMES.map((d, dIdx) => {
-    const existing = parsedDaysMap[d.ar];
-    if (existing && existing.length >= 3) {
-      // Complete up to 7 periods if partial
-      const completedPeriods = [...existing];
-      const fallbackDay = fallbackSchedule[dIdx];
-      while (completedPeriods.length < 7) {
-        const nextIdx = completedPeriods.length;
-        const pt = PERIOD_TIMES[nextIdx];
-        const fallbackSlot = fallbackDay.periods[nextIdx];
-        completedPeriods.push({
-          id: `p-${classId.toLowerCase()}-${d.ar}-${pt.periodNum}-${Date.now().toString(36)}`,
-          periodNum: pt.periodNum,
-          time: pt.time,
-          subjectId: fallbackSlot ? fallbackSlot.subjectId : 'english',
-          teacher: fallbackSlot?.teacher || getTeacherForSubject('english'),
-          room: `Class ${classId}`
-        });
-      }
-      return {
-        dayNameAr: d.ar,
-        dayNameEn: d.en,
-        periods: completedPeriods
-      };
-    } else {
-      return fallbackSchedule[dIdx];
-    }
-  });
-
-  const slotsCount = days.reduce((acc, d) => acc + d.periods.length, 0);
-
-  return {
-    days,
-    slotsCount,
-    extractedTextPreview: lines.slice(0, 8).join('\n')
-  };
+  const days = DAY_NAMES.map((day) => ({ dayNameAr: day.ar, dayNameEn: day.en, periods: parsed[day.ar] }))
+    .filter((day) => day.periods.length > 0);
+  return { days, slotsCount: days.reduce((sum, day) => sum + day.periods.length, 0), extractedTextPreview: text.slice(0, 1000) };
 }
+
+export async function parseUploadedTimetable(dataUrl: string, classId: SchoolClass, fileType: string): Promise<ParseTimetableResult> {
+  if (fileType !== 'pdf') return { days: [], slotsCount: 0 };
+  return parseTimetableFromText(await extractTextFromPdf(dataUrl), classId);
+}
+
+export function createDefaultScheduleFromSubjects(): DaySchedule[] { return []; }
+export { identifySubject };
+void createDefaultScheduleFromSubjects;
