@@ -53,6 +53,7 @@ export interface WeeklyPlanItem {
   classworkNote?: string;
   tomorrowNote?: string;
   extractedText?: string;
+  dayContent?: Record<string, { classworkNote?: string; homeworkNote?: string; tomorrowNote?: string }>;
   dictationFileName?: string;
   dictationFileType?: 'pdf' | 'word' | 'image';
   dictationFileSize?: string;

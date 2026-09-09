@@ -794,7 +794,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {currentTimetable.days.map((day, dIdx) => (
-                  <tr key={day.dayNameAr} className={`transition-colors hover:brightness-[0.98] ${['bg-sky-50/45', 'bg-emerald-50/45', 'bg-amber-50/45', 'bg-violet-50/45', 'bg-rose-50/45'][dIdx % 5]}`}>
+                  <tr key={day.dayNameAr} className={`transition-colors hover:brightness-[0.98] ${['bg-sky-50', 'bg-emerald-50', 'bg-amber-50', 'bg-violet-50', 'bg-rose-50'][dIdx % 5]}`}>
                     <td className="p-3.5 font-black text-slate-900 bg-white/65 border-l border-slate-200 text-center">
                       <div className="text-sm">{day.dayNameAr}</div>
                       <div className="text-[10px] font-medium text-slate-400">{day.dayNameEn}</div>

@@ -23,8 +23,7 @@ import {
 import { WeeklyPlanItem, SchoolClass, UserRole } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 import { SUBJECTS, BLOCKS, WEEKS } from '../data/initialData';
-import { extractTextFromPdf } from '../lib/timetableParser';
-import { parseWeeklyPlanText } from '../lib/weeklyPlanParser';
+import { extractWeeklyPlanText, parseWeeklyPlanText } from '../lib/weeklyPlanParser';
 
 interface WeeklyPlanViewProps {
   currentRole: UserRole;
@@ -65,6 +64,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
   const [formClasswork, setFormClasswork] = useState('');
   const [formTomorrowNote, setFormTomorrowNote] = useState('');
   const [formExtractedText, setFormExtractedText] = useState('');
+  const [formDayContent, setFormDayContent] = useState<Record<string, { classworkNote?: string; homeworkNote?: string; tomorrowNote?: string }>>({});
 
   // File Attachment States for Weekly Plan (PDF / Word)
   const [formFileName, setFormFileName] = useState('');
@@ -80,13 +80,13 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    const pending = weeklyPlans.filter((plan) => plan.fileType === 'pdf' && plan.fileDataUrl && !plan.extractedText);
+    const pending = weeklyPlans.filter((plan) => (plan.fileType === 'pdf' || plan.fileType === 'word' || plan.fileType === 'doc') && plan.fileDataUrl && !plan.extractedText);
     if (!pending.length) return;
     void Promise.all(pending.map(async (plan) => {
       try {
-        const text = await extractTextFromPdf(plan.fileDataUrl!);
+        const text = await extractWeeklyPlanText(plan.fileDataUrl!, plan.fileType);
         const extracted = parseWeeklyPlanText(text);
-        return { ...plan, extractedText: extracted.extractedText, classworkNote: extracted.classworkNote, homeworkNote: extracted.homeworkNote || plan.homeworkNote, tomorrowNote: extracted.tomorrowNote };
+        return { ...plan, extractedText: extracted.extractedText, classworkNote: extracted.classworkNote, homeworkNote: extracted.homeworkNote || plan.homeworkNote, tomorrowNote: extracted.tomorrowNote, dayContent: extracted.dayContent };
       } catch {
         return plan;
       }
@@ -119,6 +119,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
     setFormClasswork('');
     setFormTomorrowNote('');
     setFormExtractedText('');
+    setFormDayContent({});
     setFormFileName('');
     setFormFileType('pdf');
     setFormFileSize('');
@@ -143,6 +144,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
     setFormClasswork(item.classworkNote || '');
     setFormTomorrowNote(item.tomorrowNote || '');
     setFormExtractedText(item.extractedText || '');
+    setFormDayContent(item.dayContent || {});
     setFormFileName(item.fileName || '');
     setFormFileType(item.fileType || 'pdf');
     setFormFileSize(item.fileSize || '');
@@ -170,12 +172,22 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
       const dataUrl = reader.result as string;
       setFormFileDataUrl(dataUrl);
       if (ext !== 'doc' && ext !== 'docx') {
-        void extractTextFromPdf(dataUrl).then((text) => {
+        void extractWeeklyPlanText(dataUrl, 'pdf').then((text) => {
           const extracted = parseWeeklyPlanText(text);
           setFormExtractedText(extracted.extractedText);
           if (extracted.classworkNote) setFormClasswork(extracted.classworkNote);
           if (extracted.homeworkNote) setFormHomework(extracted.homeworkNote);
           if (extracted.tomorrowNote) setFormTomorrowNote(extracted.tomorrowNote);
+          setFormDayContent(extracted.dayContent);
+        }).catch(() => undefined);
+      } else {
+        void extractWeeklyPlanText(dataUrl, 'word').then((text) => {
+          const extracted = parseWeeklyPlanText(text);
+          setFormExtractedText(extracted.extractedText);
+          if (extracted.classworkNote) setFormClasswork(extracted.classworkNote);
+          if (extracted.homeworkNote) setFormHomework(extracted.homeworkNote);
+          if (extracted.tomorrowNote) setFormTomorrowNote(extracted.tomorrowNote);
+          setFormDayContent(extracted.dayContent);
         }).catch(() => undefined);
       }
     };
@@ -217,6 +229,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
       classworkNote: formClasswork.trim() || undefined,
       tomorrowNote: formTomorrowNote.trim() || undefined,
       extractedText: formExtractedText.trim() || undefined,
+      dayContent: formDayContent,
       fileName: formFileName.trim() || `${formSubject}_Plan_${selectedBlock}_${selectedWeek}.${formFileType === 'word' ? 'docx' : 'pdf'}`,
       fileType: formFileType,
       fileSize: formFileSize || '1.5 MB',

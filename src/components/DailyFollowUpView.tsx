@@ -192,11 +192,12 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         rawRecord: null
       }));
     const planned = weekPlans
-      .filter((wp) => (wp.homeworkNote && wp.homeworkNote.trim()) || wp.dictationFileName)
+      .filter((wp) => (wp.dayContent?.[selectedFollowUpDay]?.homeworkNote || (!wp.dayContent && wp.homeworkNote)) || wp.dictationFileName)
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
+        const dayHomework = wp.dayContent?.[selectedFollowUpDay]?.homeworkNote;
         const parts = [
-          wp.homeworkNote?.trim(),
+          (dayHomework || wp.homeworkNote)?.trim(),
           wp.dictationFileName ? `Dictation: ${wp.dictationFileName}` : undefined
         ].filter(Boolean);
         return {
@@ -239,7 +240,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         };
       });
     }
-  }, [currentRecord.homework, weekPlans, materials, selectedBlock, selectedWeek]);
+  }, [currentRecord.homework, weekPlans, materials, selectedBlock, selectedWeek, selectedFollowUpDay]);
 
   // Today's timetable schedule in the exact order of the selected class.
   const todayDaySchedule = useMemo(() => {
@@ -260,8 +261,9 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     }).map((period) => {
       const sub = getSubjectInfo(period.subjectId);
       const wp = weekPlans.find((p) => p.subjectId === period.subjectId);
+      const dayPlan = wp?.dayContent?.[selectedFollowUpDay];
       const existingCw = currentRecord.classwork?.find((c) => c.subjectId === period.subjectId);
-      const lessonTopic = wp?.classworkNote || wp?.unitOrTheme || '';
+      const lessonTopic = dayPlan?.classworkNote || (!wp?.dayContent ? wp?.classworkNote : '') || wp?.unitOrTheme || '';
       return {
         id: `${period.id}-${existingCw?.id || 'lesson'}`,
         periodNum: period.periodNum,
@@ -271,22 +273,23 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         existingCw
       };
     });
-  }, [todayPeriodsList, weekPlans, currentRecord.classwork]);
+  }, [todayPeriodsList, weekPlans, currentRecord.classwork, selectedFollowUpDay]);
 
   // Weekly Plan notes for Tomorrow: resources and assessment notes are both actionable.
   const weeklyPlanNotes = useMemo(() => {
     return weekPlans
-      .filter((wp) => wp.tomorrowNote || wp.resourcesNote || wp.assessmentNote)
+      .filter((wp) => wp.dayContent?.[selectedTomorrowDay]?.tomorrowNote || (!wp.dayContent && (wp.tomorrowNote || wp.resourcesNote || wp.assessmentNote)))
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
+        const dayNote = wp.dayContent?.[selectedTomorrowDay]?.tomorrowNote;
         return {
           id: wp.id,
           subjectId: wp.subjectId,
           subjectName: sub.nameEn,
-          note: [wp.tomorrowNote, wp.resourcesNote, wp.assessmentNote].filter(Boolean).join(' • ')
+          note: [dayNote || wp.tomorrowNote, wp.resourcesNote, wp.assessmentNote].filter(Boolean).join(' • ')
         };
       });
-  }, [weekPlans]);
+  }, [weekPlans, selectedTomorrowDay]);
 
   const [packedPeriods, setPackedPeriods] = useState<Record<string, boolean>>(() => {
     try {
