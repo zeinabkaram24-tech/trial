@@ -232,13 +232,18 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   }, [activeTimetable, currentRecord.dayNameAr]);
 
   const todayPeriodsList = todayDaySchedule?.periods || [];
-  // Classwork: one item per period, preserving duplicates and the timetable order.
+  // Classwork: one item per subject, preserving the first occurrence in Schedule.
   const classworkItems = useMemo(() => {
-    return todayPeriodsList.map((period) => {
+    const seen = new Set<string>();
+    return todayPeriodsList.filter((period) => {
+      if (seen.has(period.subjectId)) return false;
+      seen.add(period.subjectId);
+      return true;
+    }).map((period) => {
       const sub = getSubjectInfo(period.subjectId);
       const wp = weekPlans.find((p) => p.subjectId === period.subjectId);
       const existingCw = currentRecord.classwork?.find((c) => c.subjectId === period.subjectId);
-      const lessonTopic = wp?.unitOrTheme || '';
+      const lessonTopic = wp?.classworkNote || wp?.unitOrTheme || '';
       return {
         id: `${period.id}-${existingCw?.id || 'lesson'}`,
         periodNum: period.periodNum,
@@ -253,14 +258,14 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   // Weekly Plan notes for Tomorrow: resources and assessment notes are both actionable.
   const weeklyPlanNotes = useMemo(() => {
     return weekPlans
-      .filter((wp) => (wp.resourcesNote && wp.resourcesNote.trim()) || (wp.assessmentNote && wp.assessmentNote.trim()))
+      .filter((wp) => wp.tomorrowNote || wp.resourcesNote || wp.assessmentNote)
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
         return {
           id: wp.id,
           subjectId: wp.subjectId,
           subjectName: sub.nameEn,
-          note: [wp.resourcesNote, wp.assessmentNote].filter(Boolean).join(' • ')
+          note: [wp.tomorrowNote, wp.resourcesNote, wp.assessmentNote].filter(Boolean).join(' • ')
         };
       });
   }, [weekPlans]);
