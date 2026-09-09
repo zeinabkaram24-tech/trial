@@ -91,7 +91,7 @@ export const StudentSpace: React.FC<StudentSpaceProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">فصلك في جريد 2:</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Class in Grade 2:</label>
             <div className="grid grid-cols-3 gap-2">
               {(['2A', '2B', '2C'] as SchoolClass[]).map((c) => (
                 <button
@@ -104,7 +104,7 @@ export const StudentSpace: React.FC<StudentSpaceProps> = ({
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
-                  فصل {c}
+                  Class {c}
                 </button>
               ))}
             </div>
@@ -173,7 +173,7 @@ export const StudentSpace: React.FC<StudentSpaceProps> = ({
                   أهلاً بك يا بطل: {studentProfile.name} 🌟
                 </h2>
                 <span className="bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 text-xs px-3 py-1 rounded-full font-bold">
-                  فصل {studentProfile.classId}
+                  Class {studentProfile.classId}
                 </span>
               </div>
               <p className="text-emerald-200 text-xs mt-1">
@@ -394,7 +394,7 @@ export const StudentSpace: React.FC<StudentSpaceProps> = ({
               <div className="flex items-center gap-2">
                 <CheckSquare className="w-5 h-5 text-amber-600" />
                 <h3 className="font-black text-sm text-slate-900">
-                  واجبات فصلك اليوم ({studentProfile.classId})
+                  Homework - Class {studentProfile.classId}
                 </h3>
               </div>
               <span className="bg-amber-100 text-amber-900 text-[11px] font-bold px-2 py-0.5 rounded-full">

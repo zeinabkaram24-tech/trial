@@ -209,12 +209,12 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
     const sub = getSubjectInfo(plan.subjectId);
     const content = `===============================================================
 مدارس النيل المصرية الدولية - فرع المنيا (Nile Egyptian Schools)
-الخطة الأسبوعية المعتمدة - Grade 2 (الصف الثاني الابتدائي)
+Weekly Plan - Grade 2
 ===============================================================
 المادة: ${sub.nameAr} (${sub.nameEn})
 الوحدة والموضوع: ${plan.unitOrTheme}
-البلوك: ${plan.blockId} | الأسبوع: ${plan.weekId}
-الفصل: ${plan.classId === 'all' ? 'جميع فصول 2 (2A, 2B, 2C)' : plan.classId}
+Block: ${plan.blockId} | الأسبوع: ${plan.weekId}
+Class: ${plan.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${plan.classId}`}
 الملف: ${plan.fileName || 'Plan.pdf'} (${plan.fileSize || '1.5 MB'})
 
 مخرجات وأهداف التعلم المستهدفة:
@@ -267,7 +267,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
         <div class="header">
           <div>
             <div class="title">مدارس النيل المصرية الدولية - فرع المنيا</div>
-            <div>الخطة الأسبوعية المعتمدة • الصف الثاني الابتدائي (Grade 2)</div>
+            <div>Weekly Plan • Grade 2</div>
           </div>
           <div style="font-weight:bold; font-size:12pt; background:#0f172a; color:white; padding:6px 12px; border-radius:6px;">
             ${sub.nameAr} - ${sub.nameEn}
@@ -276,7 +276,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
 
         <div class="box">
           <div style="font-size:13pt; font-weight:bold; margin-bottom:4px;">${plan.unitOrTheme}</div>
-          <div style="font-size:10pt; color:#64748b;">البلوك: ${plan.blockId} • الأسبوع: ${plan.weekId} • الملف: ${plan.fileName || 'WeeklyPlan.pdf'}</div>
+          <div style="font-size:10pt; color:#64748b;">Block: ${plan.blockId} • الأسبوع: ${plan.weekId} • الملف: ${plan.fileName || 'WeeklyPlan.pdf'}</div>
         </div>
 
         <div class="box">
@@ -335,10 +335,10 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
             </div>
             <div>
               <h2 className="text-lg font-black text-slate-900 tracking-tight">
-                الخطة الأسبوعية الرسمية (Weekly Curriculum Plans)
+                Weekly Plan (Curriculum Plans)
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                {currentBlockObj?.nameAr} • {currentWeekObj?.nameAr} • فصول Grade 2 (2A, 2B, 2C)
+                {currentBlockObj?.nameAr} • {currentWeekObj?.nameAr} • Grade 2 (Class 2A, 2B, 2C)
               </p>
             </div>
           </div>
@@ -351,7 +351,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
               className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Printer className="w-4 h-4 text-slate-600" />
-              <span>طباعة الجدول الكامل</span>
+              <span>طباعة Weekly Plan</span>
             </button>
 
             {currentRole === 'admin' && (
@@ -362,10 +362,10 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                   type="button"
                   onClick={() => handleOpenAddModal(true)}
                   className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="رفع خطة كاملة كملف PDF أو Word"
+                  title="رفع ملف PDF أو Word"
                 >
                   <Upload className="w-4 h-4" />
-                  <span>+ رفع خطة كملف (PDF / Word)</span>
+                  <span>+ رفع ملف (PDF / Word)</span>
                 </button>
 
                 <button
@@ -375,7 +375,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>+ إضافة خطة مادة</span>
+                  <span>+ إضافة مادة</span>
                 </button>
               </>
             )}
@@ -386,7 +386,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100">
           <div>
             <label className="block text-[11px] font-bold text-slate-400 mb-1">
-              اختر البلوك الدراسي (Block):
+              Block:
             </label>
             <div className="grid grid-cols-4 gap-1.5">
               {BLOCKS.map((block) => (
@@ -401,7 +401,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
-                  {block.nameAr.split(' ')[0]} {block.nameAr.split(' ')[1]}
+                  {block.nameAr}
                 </button>
               ))}
             </div>
@@ -409,7 +409,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
 
           <div>
             <label className="block text-[11px] font-bold text-slate-400 mb-1">
-              اختر الأسبوع (Week):
+              Week:
             </label>
             <div className="grid grid-cols-4 gap-1.5">
               {WEEKS.map((week) => (
@@ -424,7 +424,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
-                  {week.nameAr.split(' ')[0]} {week.nameAr.split(' ')[1]}
+                  {week.nameAr}
                 </button>
               ))}
             </div>
@@ -513,7 +513,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                     <div className="flex items-center gap-2">
                       <SubjectBadge subjectId={plan.subjectId} size="md" />
                       <span className="text-[11px] font-bold text-slate-400">
-                        {plan.classId === 'all' ? 'لكل فصول جريد 2' : `فصل ${plan.classId}`}
+                        {plan.classId === 'all' ? 'All Classes (Grade 2)' : `Class ${plan.classId}`}
                       </span>
                     </div>
 
@@ -837,11 +837,11 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">الفصل المستهدف:</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Class:</label>
                   <input
                     type="text"
                     disabled
-                    value="فصول جريد 2 (2A, 2B, 2C)"
+                    value="Grade 2 (2A, 2B, 2C)"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 text-xs font-bold"
                   />
                 </div>

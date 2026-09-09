@@ -22,7 +22,9 @@ import {
   Sparkles,
   Check,
   FileCheck,
-  Calendar
+  Calendar,
+  ExternalLink,
+  Maximize2
 } from 'lucide-react';
 import { SchoolMaterialFile, SchoolClass, UserRole } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
@@ -50,12 +52,238 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
   const [copiedNotification, setCopiedNotification] = useState(false);
 
-  // Preview Modal State (Shows both the miniature thumbnail and the file itself)
+  // Preview Modal State (Shows the actual file in a high-definition document viewer)
   const [previewFile, setPreviewFile] = useState<SchoolMaterialFile | null>(null);
+  const [previewTab, setPreviewTab] = useState<'document' | 'text'>('document');
 
   // Admin Add / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
+
+  // Helper to format block name
+  const getBlockName = (blockId: string) => {
+    const found = BLOCKS.find((b) => b.id === blockId);
+    return found ? found.nameAr : 'Block 1';
+  };
+
+  // Generate authentic high-fidelity printable HTML document for materials without binary URL
+  const generateDocumentHtml = (file: SchoolMaterialFile) => {
+    const sub = getSubjectInfo(file.subjectId);
+    const blockName = getBlockName(file.blockId || 'block1');
+    const classLabel = file.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${file.classId}`;
+
+    return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${file.title} - Nile Egyptian Schools</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      margin: 0;
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .page {
+      background: white;
+      width: 100%;
+      max-width: 820px;
+      min-height: 1050px;
+      padding: 36px 42px;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      border: 1px solid #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 52px;
+      font-weight: 900;
+      color: rgba(2, 132, 199, 0.04);
+      pointer-events: none;
+      white-space: nowrap;
+      user-select: none;
+      z-index: 1;
+    }
+    .header {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 16px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 2;
+    }
+    .school-title-ar { font-size: 17px; font-weight: 900; color: #0f172a; margin-bottom: 2px; }
+    .school-title-en { font-size: 13px; font-weight: 700; color: #0284c7; margin-bottom: 4px; }
+    .school-sub { font-size: 11px; color: #64748b; }
+    .badge-subject {
+      background: #0f172a;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .student-fields {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+    .student-field strong { color: #0f172a; }
+    .sheet-title-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+    .sheet-title-box h2 {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      font-weight: 900;
+      color: #166534;
+    }
+    .sheet-meta {
+      font-size: 11px;
+      color: #15803d;
+      font-weight: 600;
+    }
+    .content-box {
+      flex: 1;
+      font-size: 13.5px;
+      line-height: 1.85;
+      color: #1e293b;
+      white-space: pre-wrap;
+      position: relative;
+      z-index: 2;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 24px;
+      background: #ffffff;
+    }
+    .footer {
+      margin-top: 24px;
+      padding-top: 14px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #64748b;
+      position: relative;
+      z-index: 2;
+    }
+    .seal {
+      border: 2px solid #0284c7;
+      color: #0284c7;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 10px;
+    }
+    @media print {
+      body { padding: 0; background: white; }
+      .page { box-shadow: none; border: none; max-width: 100%; min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="watermark">NILE EGYPTIAN SCHOOLS</div>
+    <div>
+      <div class="header">
+        <div>
+          <div class="school-title-ar">مدارس النيل المصرية الدولية - فرع المنيا</div>
+          <div class="school-title-en">Nile Egyptian Schools - Minya Branch</div>
+          <div class="school-sub">Grade 2 • ${blockName} • العام الدراسي 2026/2027</div>
+        </div>
+        <div class="badge-subject">
+          ${sub.nameAr}
+          <div style="font-size: 10px; opacity: 0.8; font-weight: normal;">${sub.nameEn}</div>
+        </div>
+      </div>
+
+      <div class="student-fields">
+        <div><strong>اسم الطالب:</strong> ....................................................</div>
+        <div><strong>Class:</strong> ${classLabel}</div>
+        <div><strong>التاريخ:</strong> ${file.uploadDate || '2026/2027'}</div>
+      </div>
+
+      <div class="sheet-title-box">
+        <h2>${file.title}</h2>
+        <div class="sheet-meta">${file.fileName} • ${file.fileSize} • ${file.uploadedBy || 'معلم المادة'}</div>
+      </div>
+
+      <div class="content-box">
+${file.previewSummary || file.description || 'محتوى الشيت والتدريبات الدراسية المعتمدة لمدارس النيل المصرية الدولية.'}
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>توقيع المعلم: ................................</div>
+      <div class="seal">معتمد ✓ مدرسة النيل بالمنيا</div>
+      <div>الصفحة 1 من 1</div>
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
+  // Open the actual file in a new tab or window
+  const handleOpenInNewTab = (file: SchoolMaterialFile) => {
+    if (file.fileDataUrl) {
+      const win = window.open();
+      if (win) {
+        if (file.fileDataUrl.startsWith('data:application/pdf') || file.fileType === 'pdf') {
+          win.document.write(`
+            <!DOCTYPE html>
+            <html>
+              <head><title>${file.title}</title><style>html,body{margin:0;height:100%;overflow:hidden;background:#333;}</style></head>
+              <body>
+                <iframe src="${file.fileDataUrl}" width="100%" height="100%" frameborder="0" style="border:none;"></iframe>
+              </body>
+            </html>
+          `);
+        } else {
+          win.location.href = file.fileDataUrl;
+        }
+        win.document.close();
+      }
+      return;
+    }
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(generateDocumentHtml(file));
+      win.document.close();
+    }
+  };
 
   // Form State
   const [formTitle, setFormTitle] = useState('');
@@ -122,8 +350,8 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 ===============================================================
 عنوان الشيت: ${file.title}
 المادة: ${getSubjectInfo(file.subjectId).nameAr} - ${getSubjectInfo(file.subjectId).nameEn}
-البلوك: ${file.blockId === 'block1' ? 'بلوك 1' : file.blockId === 'block2' ? 'بلوك 2' : file.blockId === 'block3' ? 'بلوك 3' : 'بلوك 4'}
-الفصل المستهدف: ${file.classId === 'all' ? 'جميع فصول جريد 2 (2A, 2B, 2C)' : file.classId}
+Block: ${getBlockName(file.blockId || 'block1')}
+Class: ${file.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${file.classId}`}
 تاريخ الرفع: ${file.uploadDate}
 اسم الملف: ${file.fileName}
 نوع الملف: ${file.fileType.toUpperCase()} (${file.fileSize})
@@ -237,13 +465,13 @@ ${file.previewSummary || file.description || 'محتوى معتمد من إدا�
 
         <div class="student-row">
           <div>اسم التلميذ: ..............................................................</div>
-          <div>الفصل: 2 ( ... )</div>
+          <div>Class: 2 ( ... )</div>
           <div>التاريخ: ${new Date().toLocaleDateString('ar-EG')}</div>
         </div>
 
         <div class="meta-grid">
           <div><strong>عنوان الشيت:</strong> ${file.title}</div>
-          <div><strong>البلوك:</strong> ${file.blockId || 'بلوك 1'}</div>
+          <div><strong>Block:</strong> ${getBlockName(file.blockId || 'block1')}</div>
           <div><strong>نوع الملف:</strong> ${file.fileType.toUpperCase()}</div>
           <div><strong>الملف:</strong> ${file.fileName}</div>
         </div>
@@ -378,21 +606,6 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
     }
 
     setIsModalOpen(false);
-  };
-
-  const getBlockName = (id: string) => {
-    switch (id) {
-      case 'block1':
-        return 'بلوك 1 (Block 1)';
-      case 'block2':
-        return 'بلوك 2 (Block 2)';
-      case 'block3':
-        return 'بلوك 3 (Block 3)';
-      case 'block4':
-        return 'بلوك 4 (Block 4)';
-      default:
-        return id;
-    }
   };
 
   // Helper for file type icons
@@ -578,7 +791,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                       <div>
                         <SubjectBadge subjectId={file.subjectId} size="sm" />
                         <span className="block text-[11px] text-slate-400 mt-0.5">
-                          {file.classId === 'all' ? 'لكل فصول جريد 2' : `فصل ${file.classId}`}
+                          {file.classId === 'all' ? 'All Classes (Grade 2)' : `Class ${file.classId}`}
                         </span>
                       </div>
                     </div>
@@ -694,176 +907,188 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
         </div>
       )}
 
-      {/* ================= MODAL: PREVIEW FILE + THUMBNAIL (معاينة) ================= */}
+      {/* ================= MODAL: HIGH-DEFINITION ACTUAL FILE VIEWER (معاينة) ================= */}
       {previewFile && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-4xl w-full p-6 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col justify-between my-auto">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center justify-center shrink-0">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 z-50 overflow-hidden">
+          <div className="bg-white rounded-3xl max-w-5xl w-full h-[94vh] shadow-2xl border border-slate-300 flex flex-col justify-between overflow-hidden">
+            {/* Modal Top Header */}
+            <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-slate-200 bg-slate-50/80 shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 border border-purple-200 flex items-center justify-center shrink-0">
                   {renderFileTypeIcon(previewFile.fileType)}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <SubjectBadge subjectId={previewFile.subjectId} size="sm" />
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
                       {getBlockName(previewFile.blockId || 'block1')}
                     </span>
-                    <span className="text-[11px] font-semibold text-slate-400">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                      {previewFile.classId === 'all' ? 'All Classes (Grade 2)' : `Class ${previewFile.classId}`}
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-500 truncate max-w-[200px]">
                       {previewFile.fileName}
                     </span>
                   </div>
-                  <h3 className="font-black text-slate-900 text-base sm:text-lg mt-1">
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base mt-0.5 truncate">
                     {previewFile.title}
                   </h3>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setPreviewFile(null)}
-                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Split View: Left is Thumbnail, Right is The File Itself */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 my-4 overflow-y-auto flex-1 p-1">
-              {/* SECTION A: صورة مصغرة من الفايل (Thumbnail miniature of the sheet) */}
-              <div className="lg:col-span-4 bg-slate-900 text-white rounded-2xl p-4 flex flex-col justify-between border border-slate-800 shadow-md">
-                <div>
-                  <div className="text-xs font-bold text-amber-400 mb-2 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>صورة مصغرة من الشيت (Thumbnail)</span>
-                  </div>
-
-                  {/* Thumbnail Card Representation */}
-                  <div className="bg-white text-slate-900 rounded-xl p-3 shadow-inner border border-slate-200 text-right font-sans text-xs select-none">
-                    {/* Official Nile Minya Header */}
-                    <div className="border-b border-slate-200 pb-2 mb-2 text-center">
-                      <div className="font-black text-[10px] text-slate-800">
-                        مدارس النيل المصرية الدولية - فرع المنيا
-                      </div>
-                      <div className="text-[8px] text-slate-500">
-                        Nile Egyptian Schools - Minya Branch
-                      </div>
-                      <div className="inline-block mt-1 text-[8px] font-bold px-2 py-0.2 rounded-full bg-purple-100 text-purple-800">
-                        Grade 2 • {getBlockName(previewFile.blockId || 'block1')}
-                      </div>
-                    </div>
-
-                    {/* Subject badge inside thumbnail */}
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-bold text-[9px] text-purple-700">
-                        {getSubjectInfo(previewFile.subjectId).nameAr}
-                      </span>
-                      <span className="text-[8px] text-slate-400 uppercase font-mono">
-                        {previewFile.fileType}
-                      </span>
-                    </div>
-
-                    {/* Document Lines Representation */}
-                    <div className="space-y-1.5 my-2">
-                      <div className="h-1.5 bg-slate-200 rounded-full w-full"></div>
-                      <div className="h-1.5 bg-slate-100 rounded-full w-5/6"></div>
-                      <div className="h-1.5 bg-slate-200 rounded-full w-4/6"></div>
-                      <div className="h-1.5 bg-slate-100 rounded-full w-full"></div>
-                      <div className="h-1.5 bg-slate-200 rounded-full w-3/4"></div>
-                    </div>
-
-                    {/* Stamp */}
-                    <div className="mt-3 pt-2 border-t border-dashed border-slate-200 flex justify-between items-center text-[7.5px] text-slate-500">
-                      <span>ختم المدرسة المعتمد</span>
-                      <span className="font-bold text-emerald-600">معتمد ✓</span>
-                    </div>
-                  </div>
-
-                  {/* File Metadata */}
-                  <div className="mt-4 space-y-2 text-xs text-slate-300">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">حجم الملف:</span>
-                      <span className="font-bold text-white">{previewFile.fileSize}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">تاريخ الإضافة:</span>
-                      <span className="font-bold text-white">{previewFile.uploadDate}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">الفصل:</span>
-                      <span className="font-bold text-white">
-                        {previewFile.classId === 'all' ? 'جميع فصول جريد 2' : previewFile.classId}
-                      </span>
-                    </div>
-                  </div>
+              {/* Quick Actions in Header */}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* View Mode Switcher */}
+                <div className="hidden sm:flex items-center bg-slate-200/80 p-0.5 rounded-xl text-xs font-bold text-slate-700">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewTab('document')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      previewTab === 'document' ? 'bg-white text-purple-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    عرض الفايل الكامل
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewTab('text')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      previewTab === 'text' ? 'bg-white text-purple-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    النص والأسئلة
+                  </button>
                 </div>
 
-                <div className="text-[11px] text-slate-400 text-center mt-3 pt-3 border-t border-slate-800">
-                  جاهز للطباعة والتحميل الفوري
-                </div>
-              </div>
+                {/* Open In New Window Button */}
+                <button
+                  type="button"
+                  onClick={() => handleOpenInNewTab(previewFile)}
+                  className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="فتح الفايل في نافذة منفصلة أو تبويب كامل"
+                >
+                  <ExternalLink className="w-4 h-4 text-purple-600" />
+                  <span className="hidden md:inline">فتح في نافذة كاملة</span>
+                </button>
 
-              {/* SECTION B: الفايل نفسه (The Document Sheet Viewer) */}
-              <div className="lg:col-span-8 bg-slate-50 rounded-2xl border border-slate-200 p-5 flex flex-col justify-between max-h-[60vh] overflow-y-auto">
-                <div>
-                  <div className="flex items-center justify-between mb-3 border-b border-slate-200 pb-2.5">
-                    <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4 text-purple-600" />
-                      <span>محتوى الشيت والتدريبات الدراسية:</span>
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const text = previewFile.previewSummary || previewFile.description || '';
-                        navigator.clipboard.writeText(text);
-                        setCopiedNotification(true);
-                        setTimeout(() => setCopiedNotification(false), 2000);
-                      }}
-                      className="text-xs font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-purple-200 transition-colors"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>{copiedNotification ? 'تم النسخ بنجاح ✓' : 'نسخ النص'}</span>
-                    </button>
-                  </div>
-
-                  {/* Rendered Worksheet Document */}
-                  <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs font-sans text-xs leading-relaxed whitespace-pre-wrap text-slate-800">
-                    {previewFile.previewSummary ||
-                      previewFile.description ||
-                      'محتوى الشيت التدريبي متوفر لدى إدارة المدرسة.'}
-                  </div>
-                </div>
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setPreviewFile(null)}
+                  className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-xl transition-colors shrink-0 cursor-pointer"
+                  title="إغلاق المعاينة"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
-            {/* Modal Footer with the 3 Actions */}
-            <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+            {/* Modal Body: The Actual File Viewer */}
+            <div className="flex-1 bg-slate-100 p-2 sm:p-4 overflow-hidden flex flex-col">
+              {previewTab === 'document' ? (
+                <div className="w-full h-full flex flex-col bg-white rounded-2xl border border-slate-300 shadow-inner overflow-hidden relative">
+                  {previewFile.fileDataUrl ? (
+                    previewFile.fileDataUrl.startsWith('data:image') || previewFile.fileType === 'image' ? (
+                      <div className="w-full h-full flex items-center justify-center p-4 bg-slate-900 overflow-auto">
+                        <img
+                          src={previewFile.fileDataUrl}
+                          alt={previewFile.title}
+                          className="max-h-full max-w-full object-contain rounded-lg shadow-2xl"
+                        />
+                      </div>
+                    ) : (
+                      /* Actual binary PDF embedded directly in native PDF iframe */
+                      <iframe
+                        src={previewFile.fileDataUrl}
+                        title={previewFile.title}
+                        className="w-full h-full border-0 bg-white"
+                      />
+                    )
+                  ) : (
+                    /* High-definition rendered Nile Egyptian Schools Worksheet Document */
+                    <iframe
+                      srcDoc={generateDocumentHtml(previewFile)}
+                      title={previewFile.title}
+                      className="w-full h-full border-0 bg-white"
+                    />
+                  )}
+                </div>
+              ) : (
+                /* Text and exercises view with copy ability */
+                <div className="w-full h-full bg-white rounded-2xl border border-slate-300 shadow-inner p-6 overflow-y-auto flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-5 h-5 text-purple-600" />
+                        <span className="font-black text-slate-800 text-sm">
+                          نص التدريبات والأسئلة الدراسية للشيت:
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const text = previewFile.previewSummary || previewFile.description || '';
+                          navigator.clipboard.writeText(text);
+                          setCopiedNotification(true);
+                          setTimeout(() => setCopiedNotification(false), 2000);
+                        }}
+                        className="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-xl border border-purple-200 transition-colors cursor-pointer"
+                      >
+                        <Copy className="w-4 h-4" />
+                        <span>{copiedNotification ? 'تم النسخ بنجاح ✓' : 'نسخ نص الأسئلة'}</span>
+                      </button>
+                    </div>
+
+                    <div className="font-sans text-sm leading-relaxed whitespace-pre-wrap text-slate-800 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                      {previewFile.previewSummary ||
+                        previewFile.description ||
+                        'محتوى الشيت التدريبي متوفر لدى إدارة مدرسة النيل.'}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center">
+                    <span>حجم الملف: {previewFile.fileSize}</span>
+                    <span>تاريخ الرفع: {previewFile.uploadDate}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Bottom Footer */}
+            <div className="px-5 py-3 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => handleDownloadFile(previewFile)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-colors shadow-xs"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-4 h-4" />
                   <span>تحميل الشيت</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handlePrintFile(previewFile)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1.5 transition-colors shadow-xs"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                 >
-                  <Printer className="w-3.5 h-3.5" />
+                  <Printer className="w-4 h-4" />
                   <span>طباعة الشيت</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenInNewTab(previewFile)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Maximize2 className="w-4 h-4 text-slate-600" />
+                  <span>عرض ملء الشاشة</span>
                 </button>
               </div>
 
               <button
                 type="button"
                 onClick={() => setPreviewFile(null)}
-                className="px-5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                className="px-5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
               >
                 إغلاق المعاينة
               </button>

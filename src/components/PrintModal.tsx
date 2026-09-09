@@ -91,7 +91,7 @@ export const PrintModal: React.FC<PrintModalProps> = ({
                   printType === 'weekly' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
                 }`}
               >
-                الخطة الأسبوعية
+                Weekly Plan
               </button>
               <button
                 type="button"
@@ -135,7 +135,7 @@ export const PrintModal: React.FC<PrintModalProps> = ({
                 Nile Egyptian Schools - Minya Branch • Grade 2
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
-                فصل {selectedClass} • العام الدراسي 2026/2027
+                Class {selectedClass} • العام الدراسي 2026/2027
               </p>
             </div>
 
@@ -146,7 +146,7 @@ export const PrintModal: React.FC<PrintModalProps> = ({
                   ? `متابعة يوم ${currentDaily?.dayNameAr || ''} (${currentDaily?.date || ''})`
                   : printType === 'weekly'
                   ? `${blockObj?.nameAr} - ${weekObj?.nameAr}`
-                  : `جدول الحصص الأسبوعي لفصل ${selectedClass}`}
+                  : `جدول الحصص الأسبوعي لـ Class ${selectedClass}`}
               </span>
             </div>
           </div>
@@ -157,7 +157,7 @@ export const PrintModal: React.FC<PrintModalProps> = ({
               {/* Classwork Table */}
               <div>
                 <h3 className="text-sm font-black bg-slate-800 text-white px-3 py-1.5 rounded-md mb-2">
-                  1. ما تم تدريسه اليوم داخل الفصل (Classwork)
+                  1. Classwork
                 </h3>
                 <table className="w-full border-collapse border border-slate-300 text-xs text-right">
                   <thead>
@@ -192,7 +192,7 @@ export const PrintModal: React.FC<PrintModalProps> = ({
               {/* Homework Table */}
               <div>
                 <h3 className="text-sm font-black bg-amber-800 text-white px-3 py-1.5 rounded-md mb-2">
-                  2. الهوم ورك والواجب المنزلي (Homework)
+                  2. Homework
                 </h3>
                 <table className="w-full border-collapse border border-slate-300 text-xs text-right">
                   <thead>

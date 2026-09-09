@@ -467,7 +467,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const handleResetClassTimetable = (targetClass: SchoolClass) => {
-    if (!window.confirm(`هل أنت متأكد من رغبتك في استعادة الجدول الدراسي النموذجي لفصل ${targetClass}؟`)) {
+    if (!window.confirm(`هل أنت متأكد من رغبتك في استعادة الجدول الدراسي النموذجي لـ Class ${targetClass}؟`)) {
       return;
     }
     const initialForClass = INITIAL_TIMETABLES.find((t) => t.classId === targetClass);
@@ -480,7 +480,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       return tt;
     });
     onUpdateTimetables(updatedTimetables);
-    triggerSyncAlert(`تمت استعادة الجدول النموذجي لفصل ${targetClass} بنجاح وتفعيله فوراً ✓`);
+    triggerSyncAlert(`تمت استعادة الجدول النموذجي لـ Class ${targetClass} بنجاح وتفعيله فوراً ✓`);
   };
 
   const handleSavePeriod = (e: React.FormEvent) => {
@@ -838,10 +838,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   onChange={(e) => setMaterialClassFilter(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-purple-500"
                 >
-                  <option value="all">جميع الفصول (2A, 2B, 2C)</option>
-                  <option value="2A">فصل 2A فقط</option>
-                  <option value="2B">فصل 2B فقط</option>
-                  <option value="2C">فصل 2C فقط</option>
+                  <option value="all">All Classes (2A, 2B, 2C)</option>
+                  <option value="2A">Class 2A</option>
+                  <option value="2B">Class 2B</option>
+                  <option value="2C">Class 2C</option>
                 </select>
               </div>
             </div>
@@ -885,7 +885,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <SubjectBadge subjectId={item.subjectId} size="sm" />
                           <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                            {item.classId === 'all' ? 'جميع فصول جريد 2' : `فصل ${item.classId}`}
+                            {item.classId === 'all' ? 'All Classes (Grade 2)' : `Class ${item.classId}`}
                           </span>
                           <span className="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-md uppercase font-mono">
                             {item.fileType} • {item.fileSize}
@@ -1043,7 +1043,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <div className="flex items-center gap-2 flex-wrap">
                         <SubjectBadge subjectId={plan.subjectId} size="md" />
                         <span className="bg-slate-100 text-slate-700 text-xs font-bold px-2.5 py-0.5 rounded-lg">
-                          {plan.classId === 'all' ? 'جميع فصول 2' : `فصل ${plan.classId}`}
+                          {plan.classId === 'all' ? 'All Classes (Grade 2)' : `Class ${plan.classId}`}
                         </span>
                         <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold px-2.5 py-0.5 rounded-lg">
                           {blockObj?.nameAr || plan.blockId} • {weekObj?.nameAr || plan.weekId}
@@ -1269,7 +1269,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
               {/* Class Selection Buttons */}
               <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-                <span className="text-[11px] font-bold text-slate-500 px-2">الفصل:</span>
+                <span className="text-[11px] font-bold text-slate-500 px-2">Class:</span>
                 {(['2A', '2B', '2C'] as SchoolClass[]).map((cls) => (
                   <button
                     key={cls}
@@ -1284,7 +1284,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                     }`}
                   >
-                    فصل {cls}
+                    Class {cls}
                   </button>
                 ))}
               </div>
@@ -1340,7 +1340,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="text-lg font-black tracking-tight">
-                          جدول حصص يوم {timetableDay} - فصل {timetableClass}
+                          جدول حصص يوم {timetableDay} - Class {timetableClass}
                         </h4>
                         <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">
                           {activePeriods.length} حصص مجدولة
@@ -1392,7 +1392,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
                     <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <h4 className="font-bold text-slate-800 text-base mb-1">
-                      لا توجد حصص مجدولة ليوم {timetableDay} في فصل {timetableClass}
+                      لا توجد حصص مجدولة ليوم {timetableDay} في Class {timetableClass}
                     </h4>
                     <p className="text-xs text-slate-500 mb-4 max-w-md mx-auto">
                       يمكنك الآن الضغط على زر إضافة حصة لإدراج الحصة الأولى وتحديد المادة والتوقيت واسم المعلم ومستلزمات الحقيبة المدرسية.
@@ -1566,16 +1566,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">الفصل المستهدف:</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Class:</label>
                   <select
                     value={materialClass}
                     onChange={(e) => setMaterialClass(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold"
                   >
-                    <option value="all">جميع فصول جريد 2 (2A, 2B, 2C)</option>
-                    <option value="2A">فصل 2A فقط</option>
-                    <option value="2B">فصل 2B فقط</option>
-                    <option value="2C">فصل 2C فقط</option>
+                    <option value="all">All Classes (2A, 2B, 2C)</option>
+                    <option value="2A">Class 2A</option>
+                    <option value="2B">Class 2B</option>
+                    <option value="2C">Class 2C</option>
                   </select>
                 </div>
               </div>
@@ -1715,16 +1715,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">الفصل المستهدف:</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Class:</label>
                   <select
                     value={planClass}
                     onChange={(e) => setPlanClass(e.target.value as any)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold"
                   >
-                    <option value="all">جميع فصول جريد 2 (All Grade 2)</option>
-                    <option value="2A">فصل 2A فقط</option>
-                    <option value="2B">فصل 2B فقط</option>
-                    <option value="2C">فصل 2C فقط</option>
+                    <option value="all">All Classes (Grade 2)</option>
+                    <option value="2A">Class 2A</option>
+                    <option value="2B">Class 2B</option>
+                    <option value="2C">Class 2C</option>
                   </select>
                 </div>
               </div>
@@ -1887,17 +1887,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    الفصل المستهدف:
+                    Class:
                   </label>
                   <select
                     value={periodClassTarget}
                     onChange={(e) => setPeriodClassTarget(e.target.value as SchoolClass | 'all')}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
                   >
-                    <option value="2A">فصل 2A فقط</option>
-                    <option value="2B">فصل 2B فقط</option>
-                    <option value="2C">فصل 2C فقط</option>
-                    <option value="all">★ تطبيق على جميع فصول جريد 2 (2A, 2B, 2C)</option>
+                    <option value="2A">Class 2A</option>
+                    <option value="2B">Class 2B</option>
+                    <option value="2C">Class 2C</option>
+                    <option value="all">★ All Classes (2A, 2B, 2C)</option>
                   </select>
                 </div>
 

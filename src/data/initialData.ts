@@ -101,17 +101,17 @@ export const SUBJECTS: SubjectInfo[] = [
 ];
 
 export const BLOCKS = [
-  { id: 'block1', nameAr: 'بلوك 1 (Block 1)', weeksCount: 4, current: true },
-  { id: 'block2', nameAr: 'بلوك 2 (Block 2)', weeksCount: 4, current: false },
-  { id: 'block3', nameAr: 'بلوك 3 (Block 3)', weeksCount: 4, current: false },
-  { id: 'block4', nameAr: 'بلوك 4 (Block 4)', weeksCount: 4, current: false },
+  { id: 'block1', nameAr: 'Block 1', weeksCount: 4, current: true },
+  { id: 'block2', nameAr: 'Block 2', weeksCount: 4, current: false },
+  { id: 'block3', nameAr: 'Block 3', weeksCount: 4, current: false },
+  { id: 'block4', nameAr: 'Block 4', weeksCount: 4, current: false },
 ];
 
 export const WEEKS = [
-  { id: 'week1', nameAr: 'الأسبوع 1 (Week 1)', isCurrent: false },
-  { id: 'week2', nameAr: 'الأسبوع 2 (Week 2)', isCurrent: true },
-  { id: 'week3', nameAr: 'الأسبوع 3 (Week 3)', isCurrent: false },
-  { id: 'week4', nameAr: 'الأسبوع 4 (Week 4)', isCurrent: false },
+  { id: 'week1', nameAr: 'Week 1', isCurrent: false },
+  { id: 'week2', nameAr: 'Week 2', isCurrent: true },
+  { id: 'week3', nameAr: 'Week 3', isCurrent: false },
+  { id: 'week4', nameAr: 'Week 4', isCurrent: false },
 ];
 
 export const PERIOD_TIMES = [

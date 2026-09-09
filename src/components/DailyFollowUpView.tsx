@@ -390,7 +390,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-black text-slate-900">
-                  تقرير المتابعة اليومية - فصل {selectedClass}
+                  تقرير المتابعة اليومية - Class {selectedClass}
                 </h2>
                 <span className="bg-sky-100 text-sky-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
                   {currentRecord.dayNameAr}
@@ -426,7 +426,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              الهوم ورك ({hwCount})
+              Homework ({hwCount})
             </button>
             <button
               id="filter-classwork-btn"
@@ -438,7 +438,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              ما تم تدريسه ({cwCount})
+              Classwork ({cwCount})
             </button>
             <button
               id="filter-prep-btn"
@@ -482,7 +482,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
       {/* Grid of the 3 Requested Core Modules (Order: 1. Homework, 2. Classwork, 3. Preparations) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* ================= SECTION 1: جزء خاص بالهوم ورك (Homework) ================= */}
+        {/* ================= SECTION 1: جزء خاص بـ Homework ================= */}
         {(activeSection === 'all' || activeSection === 'homework') && (
           <div className={`space-y-4 ${activeSection === 'homework' ? 'lg:col-span-3' : ''}`}>
             <div className="bg-amber-800 text-white p-4 rounded-2xl flex items-center justify-between shadow-xs">
@@ -491,8 +491,8 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                   <CheckSquare className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-black text-sm">1. الهوم ورك (Homework)</h3>
-                  <p className="text-[11px] text-amber-200">الواجبات المنزلية المطلوبة ومواعيد التسليم</p>
+                  <h3 className="font-black text-sm">1. Homework</h3>
+                  <p className="text-[11px] text-amber-200">الواجبات والمهام المطلوبة ومواعيد التسليم</p>
                 </div>
               </div>
 
@@ -620,7 +620,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           </div>
         )}
 
-        {/* ================= SECTION 2: كلاس ورك - ما تم تدريسه اليوم (Classwork) ================= */}
+        {/* ================= SECTION 2: Classwork ================= */}
         {(activeSection === 'all' || activeSection === 'classwork') && (
           <div className={`space-y-4 ${activeSection === 'classwork' ? 'lg:col-span-3' : ''}`}>
             <div className="bg-sky-900 text-white p-4 rounded-2xl flex items-center justify-between shadow-xs">
@@ -629,8 +629,8 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                   <BookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-black text-sm">2. ما تم تدريسه اليوم (Classwork)</h3>
-                  <p className="text-[11px] text-sky-200">الدروس والأنشطة التي نُفذت داخل الفصل</p>
+                  <h3 className="font-black text-sm">2. Classwork</h3>
+                  <p className="text-[11px] text-sky-200">الدروس والأنشطة التي نُفذت داخل الحصة</p>
                 </div>
               </div>
 
@@ -756,7 +756,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                   </span>
                   <div>
                     <h4 className="font-extrabold text-xs text-slate-900">
-                      جدول حصص يوم ({selectedTomorrowDay}) - فصل {selectedClass}
+                      جدول حصص يوم ({selectedTomorrowDay}) - Class {selectedClass}
                     </h4>
                     <p className="text-[11px] text-slate-500">
                       ترتيب الحقيبة المدرسية الليلة: تم تجهيز {packedTomorrowCount} من {tomorrowPeriods.length} حصص ({bagReadyPercent}%)
@@ -1053,7 +1053,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
             <h3 className="text-base font-black text-slate-900 mb-4">
-              {editingCw.item ? 'تعديل درس اليوم' : 'إضافة ما تم تدريسه اليوم (Classwork)'}
+              {editingCw.item ? 'تعديل Classwork' : 'إضافة Classwork'}
             </h3>
             <form onSubmit={handleSaveCw} className="space-y-4">
               <div>
@@ -1130,7 +1130,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
             <h3 className="text-base font-black text-slate-900 mb-4">
-              {editingHw.item ? 'تعديل الواجب المدرسي' : 'إضافة واجب مدرسي (Homework)'}
+              {editingHw.item ? 'تعديل Homework' : 'إضافة Homework'}
             </h3>
             <form onSubmit={handleSaveHw} className="space-y-4">
               <div>

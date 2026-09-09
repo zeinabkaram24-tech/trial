@@ -126,7 +126,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-black text-slate-900">
-                  جدول الحصص الأسبوعي - فصل {selectedClass}
+                  جدول الحصص الأسبوعي - Class {selectedClass}
                 </h2>
                 <span className="bg-indigo-100 text-indigo-900 text-xs px-2.5 py-0.5 rounded-full font-bold">
                   جريد 2 (Grade 2)
@@ -152,7 +152,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  فصل {c}
+                  Class {c}
                 </button>
               ))}
             </div>
@@ -323,7 +323,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
             <h3 className="font-extrabold text-base text-slate-900 mb-4 flex items-center gap-2">
               <span>حصص يوم {currentDaySchedule.dayNameAr}</span>
               <span className="text-xs font-normal text-slate-500">
-                - فصل {selectedClass}
+                - Class {selectedClass}
               </span>
             </h3>
 
@@ -395,7 +395,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
               تعديل بيانات الحصة {editingSlot.slot.periodNum}
             </h3>
             <p className="text-xs text-slate-500 mb-4">
-              فصل {selectedClass} • يوم {editingSlot.dayNameAr} ({editingSlot.slot.time})
+              Class {selectedClass} • يوم {editingSlot.dayNameAr} ({editingSlot.slot.time})
             </p>
 
             <form onSubmit={handleSaveSlot} className="space-y-4">
