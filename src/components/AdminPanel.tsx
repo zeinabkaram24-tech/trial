@@ -23,7 +23,12 @@ import {
   Clock,
   Sparkles,
   Package,
-  GraduationCap
+  GraduationCap,
+  FileUp,
+  File,
+  ExternalLink,
+  Printer,
+  Maximize2
 } from 'lucide-react';
 import {
   SchoolClass,
@@ -149,6 +154,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [periodTeacher, setPeriodTeacher] = useState<string>('');
   const [periodRoom, setPeriodRoom] = useState<string>('');
 
+  // Bulk Timetable File Upload States (PDF / Image / Word)
+  const [isReplaceTimetableModalOpen, setIsReplaceTimetableModalOpen] = useState(false);
+  const [replaceClassTarget, setReplaceClassTarget] = useState<SchoolClass | 'all'>(selectedClass);
+  const [replaceTimetableFile, setReplaceTimetableFile] = useState<{
+    name: string;
+    size: string;
+    type: 'pdf' | 'image' | 'word';
+    dataUrl: string;
+  } | null>(null);
+  const [previewTimetableDoc, setPreviewTimetableDoc] = useState<ClassTimetable | null>(null);
+
   // Search & Filter States for Materials
   const [materialSearch, setMaterialSearch] = useState('');
   const [materialSubjectFilter, setMaterialSubjectFilter] = useState('all');
@@ -185,6 +201,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [planVocabText, setPlanVocabText] = useState('');
   const [planResources, setPlanResources] = useState('');
   const [planAssessment, setPlanAssessment] = useState('');
+  const [planUploadedFile, setPlanUploadedFile] = useState<{
+    name: string;
+    size: string;
+    type: 'pdf' | 'word' | 'image';
+    dataUrl: string;
+  } | null>(null);
+
+  // Weekly Plan Preview Modal State
+  const [previewPlan, setPreviewPlan] = useState<WeeklyPlanItem | null>(null);
 
   // Import JSON handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -311,6 +336,81 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   // ================= WEEKLY PLAN ACTIONS =================
+  const generateWeeklyPlanHtml = (plan: WeeklyPlanItem) => {
+    const sub = getSubjectInfo(plan.subjectId);
+    const blockObj = BLOCKS.find((b) => b.id === plan.blockId);
+    const weekObj = WEEKS.find((w) => w.id === plan.weekId);
+
+    return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>Weekly Plan - ${sub.nameEn}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #1e293b; padding: 24px; margin: 0; line-height: 1.6; }
+    .sheet-card { max-width: 820px; margin: 0 auto; background: white; border: 2px solid #0f766e; border-radius: 16px; padding: 32px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+    .header-box { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 18px; margin-bottom: 20px; }
+    .title { font-size: 20px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
+    .sub-title { font-size: 13px; color: #64748b; font-weight: 600; }
+    .badge { background: #0f766e; color: white; padding: 6px 14px; border-radius: 8px; font-weight: 800; font-size: 14px; }
+    .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; background: #f1f5f9; padding: 14px; border-radius: 10px; margin-bottom: 22px; font-size: 12px; }
+    .plan-title { font-size: 18px; font-weight: 900; color: #047857; margin-bottom: 14px; }
+    .section-title { font-size: 14px; font-weight: 800; color: #0f172a; margin: 16px 0 8px; border-right: 4px solid #0f766e; padding-right: 8px; }
+    ul { margin: 0; padding-right: 20px; }
+    li { margin-bottom: 6px; font-size: 13px; }
+    .vocab-tag { display: inline-block; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; margin: 2px 4px; }
+    .footer-note { margin-top: 24px; padding-top: 14px; border-top: 1px dashed #cbd5e1; display: flex; justify-content: space-between; font-size: 11px; color: #64748b; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="sheet-card">
+    <div class="header-box">
+      <div>
+        <div class="title">مدارس النيل المصرية الدولية - فرع المنيا</div>
+        <div class="sub-title">Nile Egyptian Schools • Minya Branch • Grade 2</div>
+      </div>
+      <div class="badge">${sub.nameEn} (${sub.nameAr})</div>
+    </div>
+
+    <div class="info-grid">
+      <div><strong>المادة:</strong> ${sub.nameEn}</div>
+      <div><strong>Class:</strong> ${plan.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${plan.classId}`}</div>
+      <div><strong>البلوك والأسبوع:</strong> ${blockObj?.nameAr || plan.blockId} • ${weekObj?.nameAr || plan.weekId}</div>
+    </div>
+
+    <div class="plan-title">Weekly Plan - ${sub.nameEn}: ${plan.unitOrTheme}</div>
+
+    <div class="section-title">🎯 أهداف ومخرجات التعلم:</div>
+    <ul>
+      ${plan.learningObjectives.map((o) => `<li>${o}</li>`).join('')}
+    </ul>
+
+    ${plan.vocabulary && plan.vocabulary.length > 0 ? `
+      <div class="section-title">🔤 الكلمات والمصطلحات:</div>
+      <div style="margin-top: 6px;">
+        ${plan.vocabulary.map((v) => `<span class="vocab-tag">${v}</span>`).join('')}
+      </div>
+    ` : ''}
+
+    ${plan.resourcesNote ? `
+      <div class="section-title">📖 المصادر والكتب المقررة:</div>
+      <div style="font-size: 13px; color: #334155; margin-right: 8px;">${plan.resourcesNote}</div>
+    ` : ''}
+
+    ${plan.assessmentNote ? `
+      <div class="section-title">📝 التقييم والملاحظات:</div>
+      <div style="font-size: 13px; color: #b45309; background: #fffbeb; padding: 8px 12px; border-radius: 8px; border: 1px solid #fef3c7; margin-top: 4px;">${plan.assessmentNote}</div>
+    ` : ''}
+
+    <div class="footer-note">
+      <div>الملف المعتمد: ${plan.fileName || 'WeeklyPlan.pdf'}</div>
+      <div>ختم الاعتماد الأكاديمي: مدارس النيل المصرية الدولية ✓</div>
+    </div>
+  </div>
+</body>
+</html>`;
+  };
+
   const handleOpenAddPlan = () => {
     setEditingPlan(null);
     setPlanSubject(SUBJECTS[0].id);
@@ -322,6 +422,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setPlanVocabText('');
     setPlanResources('');
     setPlanAssessment('');
+    setPlanUploadedFile(null);
     setIsPlanModalOpen(true);
   };
 
@@ -336,7 +437,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setPlanVocabText((plan.vocabulary || []).join(', '));
     setPlanResources(plan.resourcesNote || '');
     setPlanAssessment(plan.assessmentNote || '');
+    if (plan.fileDataUrl) {
+      setPlanUploadedFile({
+        name: plan.fileName || `${plan.unitOrTheme}.pdf`,
+        size: plan.fileSize || '1.5 MB',
+        type: plan.fileType || 'pdf',
+        dataUrl: plan.fileDataUrl
+      });
+    } else {
+      setPlanUploadedFile(null);
+    }
     setIsPlanModalOpen(true);
+  };
+
+  const handlePickLocalPlanFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    let fType: 'pdf' | 'word' | 'image' = 'pdf';
+    if (['jpg', 'jpeg', 'png', 'webp'].includes(ext || '')) {
+      fType = 'image';
+    } else if (ext === 'doc' || ext === 'docx') {
+      fType = 'word';
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPlanUploadedFile({
+        name: file.name,
+        size: `${sizeInMB} MB`,
+        type: fType,
+        dataUrl: event.target?.result as string
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDeletePlan = (id: string, title: string) => {
@@ -364,6 +500,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       .map((w) => w.trim())
       .filter((w) => w.length > 0);
 
+    const fileDataUrl = planUploadedFile ? planUploadedFile.dataUrl : editingPlan?.fileDataUrl;
+    const fileName = planUploadedFile ? planUploadedFile.name : editingPlan?.fileName;
+    const fileType = planUploadedFile ? planUploadedFile.type : editingPlan?.fileType;
+    const fileSize = planUploadedFile ? planUploadedFile.size : editingPlan?.fileSize;
+
     if (editingPlan) {
       // Edit
       const updated = weeklyPlans.map((p) => {
@@ -378,7 +519,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             learningObjectives: objectives.length > 0 ? objectives : ['تغطية أهداف الوحدة بحسب منهج النيل المعتمد'],
             vocabulary: vocab.length > 0 ? vocab : undefined,
             resourcesNote: planResources.trim() || undefined,
-            assessmentNote: planAssessment.trim() || undefined
+            assessmentNote: planAssessment.trim() || undefined,
+            fileDataUrl,
+            fileName,
+            fileType,
+            fileSize
           };
         }
         return p;
@@ -397,13 +542,94 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         learningObjectives: objectives.length > 0 ? objectives : ['تغطية أهداف الوحدة بحسب منهج النيل المعتمد'],
         vocabulary: vocab.length > 0 ? vocab : undefined,
         resourcesNote: planResources.trim() || undefined,
-        assessmentNote: planAssessment.trim() || undefined
+        assessmentNote: planAssessment.trim() || undefined,
+        fileDataUrl,
+        fileName,
+        fileType,
+        fileSize
       };
       onUpdateWeeklyPlans([newPlan, ...weeklyPlans]);
       triggerSyncAlert('تمت إضافة الخطة الأسبوعية بنجاح ونزولها فوراً في جدول الخطط الأسبوعية ✓');
     }
 
     setIsPlanModalOpen(false);
+  };
+
+  // ================= BULK TIMETABLE REPLACEMENT HANDLERS =================
+  const handlePickTimetableFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    let fType: 'pdf' | 'image' | 'word' = 'pdf';
+    if (['jpg', 'jpeg', 'png', 'webp'].includes(ext || '')) {
+      fType = 'image';
+    } else if (ext === 'doc' || ext === 'docx') {
+      fType = 'word';
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setReplaceTimetableFile({
+        name: file.name,
+        size: `${sizeInMB} MB`,
+        type: fType,
+        dataUrl: event.target?.result as string
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleConfirmReplaceTimetable = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replaceTimetableFile) {
+      alert('يرجى اختيار ملف الجدول (PDF أو صورة أو Word) أولاً');
+      return;
+    }
+
+    const nowStr = new Date().toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    const updated = timetables.map((tt) => {
+      if (replaceClassTarget === 'all' || tt.classId === replaceClassTarget) {
+        return {
+          ...tt,
+          fileName: replaceTimetableFile.name,
+          fileType: replaceTimetableFile.type,
+          fileSize: replaceTimetableFile.size,
+          fileDataUrl: replaceTimetableFile.dataUrl,
+          uploadedAt: nowStr
+        };
+      }
+      return tt;
+    });
+
+    onUpdateTimetables(updated);
+    setIsReplaceTimetableModalOpen(false);
+    setReplaceTimetableFile(null);
+    triggerSyncAlert(
+      replaceClassTarget === 'all'
+        ? `تم استبدال الجدول بالكامل لجميع الفصول بملف (${replaceTimetableFile.name}) بنجاح ✓`
+        : `تم استبدال جدول Class ${replaceClassTarget} بالكامل بملف (${replaceTimetableFile.name}) بنجاح ✓`
+    );
+  };
+
+  const handleRemoveUploadedTimetableDoc = (classId: SchoolClass) => {
+    if (window.confirm(`هل تريد حذف ملف الجدول المرفوع لـ Class ${classId} والرجوع للجدول النموذجي التفاعلي؟`)) {
+      const updated = timetables.map((tt) => {
+        if (tt.classId === classId) {
+          const { fileName, fileType, fileSize, fileDataUrl, uploadedAt, ...rest } = tt;
+          return rest as ClassTimetable;
+        }
+        return tt;
+      });
+      onUpdateTimetables(updated);
+      triggerSyncAlert(`تمت إزالة المستند المرفوع لـ Class ${classId} واستعادة الجدول التفاعلي ✓`);
+    }
   };
 
   // ================= TIMETABLE CRUD ACTIONS =================
@@ -1031,67 +1257,72 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
             ) : (
               filteredPlans.map((plan) => {
+                const sub = getSubjectInfo(plan.subjectId);
                 const blockObj = BLOCKS.find((b) => b.id === plan.blockId);
                 const weekObj = WEEKS.find((w) => w.id === plan.weekId);
 
                 return (
                   <div
                     key={plan.id}
-                    className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs hover:border-emerald-300 transition-all"
+                    className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs hover:border-emerald-300 transition-all space-y-3"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <SubjectBadge subjectId={plan.subjectId} size="md" />
-                        <span className="bg-slate-100 text-slate-700 text-xs font-bold px-2.5 py-0.5 rounded-lg">
+                        <span className="bg-slate-100 text-slate-700 text-xs font-bold px-2.5 py-1 rounded-lg">
                           {plan.classId === 'all' ? 'All Classes (Grade 2)' : `Class ${plan.classId}`}
                         </span>
-                        <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold px-2.5 py-0.5 rounded-lg">
+                        <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold px-2.5 py-1 rounded-lg">
                           {blockObj?.nameAr || plan.blockId} • {weekObj?.nameAr || plan.weekId}
                         </span>
                       </div>
 
-                      {/* Edit and Delete Actions */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditPlan(plan)}
-                          className="flex items-center gap-1 bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-bold px-3 py-1.5 rounded-xl text-xs transition-colors"
-                          title="تعديل بيانات الخطة"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                          <span>تعديل</span>
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePlan(plan.id, plan.unitOrTheme)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="حذف الخطة"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePlan(plan.id, plan.unitOrTheme)}
-                          className="flex items-center gap-1 bg-red-50 hover:bg-red-600 text-red-700 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-colors"
-                          title="حذف الخطة الأسبوعية"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>حذف</span>
-                        </button>
+                    <div>
+                      <h4 className="font-black text-base text-slate-900 leading-snug">
+                        Weekly Plan - {sub.nameEn} ({plan.unitOrTheme})
+                      </h4>
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium mt-1">
+                        <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{plan.fileName || `${sub.nameEn}_WeeklyPlan.pdf`}</span>
+                        <span>•</span>
+                        <span className="uppercase font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 text-[10px]">
+                          {plan.fileType?.toUpperCase() || 'PDF'}
+                        </span>
+                        <span>•</span>
+                        <span>{plan.fileSize || '1.5 MB'}</span>
                       </div>
                     </div>
 
-                    <h4 className="font-black text-sm text-slate-900 mb-1">{plan.unitOrTheme}</h4>
-                    <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                      {plan.learningObjectives.join(' • ')}
-                    </p>
+                    {/* Exactly 2 Buttons: Preview & Edit */}
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewPlan(plan)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>معاينة</span>
+                      </button>
 
-                    {plan.vocabulary && plan.vocabulary.length > 0 && (
-                      <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[11px] font-bold text-slate-400">الكلمات:</span>
-                        {plan.vocabulary.map((w, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-slate-50 text-slate-600 text-[10px] px-2 py-0.5 rounded border border-slate-200 font-mono"
-                          >
-                            {w}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditPlan(plan)}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition-all cursor-pointer"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        <span>تعديل</span>
+                      </button>
+                    </div>
                   </div>
                 );
               })
@@ -1263,30 +1494,46 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <span>إدارة وتعديل جداول الحصص الأسبوعية</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  إضافة الحصص، تعديل المواد والمعلمين، وتحديث توقيتات الحصص لفصول 2A و 2B و 2C
+                  إضافة الحصص، تعديل المواد والمعلمين، أو استبدال الجدول بالكامل بملف PDF أو صورة أو Word
                 </p>
               </div>
 
-              {/* Class Selection Buttons */}
-              <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-                <span className="text-[11px] font-bold text-slate-500 px-2">Class:</span>
-                {(['2A', '2B', '2C'] as SchoolClass[]).map((cls) => (
-                  <button
-                    key={cls}
-                    type="button"
-                    onClick={() => {
-                      setTimetableClass(cls);
-                      onSelectClass(cls);
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
-                      timetableClass === cls
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                    }`}
-                  >
-                    Class {cls}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Bulk Timetable Upload Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReplaceClassTarget(timetableClass);
+                    setIsReplaceTimetableModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-700 hover:to-indigo-700 text-white font-black text-xs rounded-xl shadow-xs transition-all hover:scale-102 cursor-pointer"
+                  title="استبدال الجدول بالكامل بملف PDF أو صورة أو Word"
+                >
+                  <FileUp className="w-4 h-4" />
+                  <span>استبدال الجدول بالكامل بملف (PDF / صورة / Word)</span>
+                </button>
+
+                {/* Class Selection Buttons */}
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                  <span className="text-[11px] font-bold text-slate-500 px-2">Class:</span>
+                  {(['2A', '2B', '2C'] as SchoolClass[]).map((cls) => (
+                    <button
+                      key={cls}
+                      type="button"
+                      onClick={() => {
+                        setTimetableClass(cls);
+                        onSelectClass(cls);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                        timetableClass === cls
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                      }`}
+                    >
+                      Class {cls}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -1332,6 +1579,68 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
             return (
               <>
+                {/* Active Uploaded Timetable Document Banner */}
+                {currentTT?.fileDataUrl && (
+                  <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="bg-emerald-600 text-white text-[11px] font-black px-2.5 py-0.5 rounded-md">
+                            تم استبدال الجدول بالكامل بالمستند المعتمد
+                          </span>
+                          <span className="text-xs font-bold text-slate-800">Class {timetableClass}</span>
+                        </div>
+                        <h4 className="text-sm font-black text-slate-900 mt-1 flex items-center gap-2 flex-wrap">
+                          <span>{currentTT.fileName}</span>
+                          <span className="text-xs font-semibold text-emerald-800 uppercase bg-emerald-100/80 px-2 py-0.5 rounded">
+                            {currentTT.fileType?.toUpperCase()}
+                          </span>
+                          <span className="text-xs text-slate-500 font-normal">({currentTT.fileSize})</span>
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          تاريخ الرفع: {currentTT.uploadedAt || '2026/2027'} • يظهر هذا الملف كجدول معتمد للطلاب والزوار
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewTimetableDoc(currentTT)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>معاينة المستند المعتمد</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReplaceClassTarget(timetableClass);
+                          setIsReplaceTimetableModalOpen(true);
+                        }}
+                        className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                      >
+                        <FileUp className="w-4 h-4" />
+                        <span>استبدال بملف آخر</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveUploadedTimetableDoc(timetableClass)}
+                        className="flex items-center gap-1 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl border border-red-200 transition-colors cursor-pointer"
+                        title="حذف المستند المرفوع واستعادة الجدول التفاعلي"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>إلغاء المستند المرفوع</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-xs flex items-center justify-center font-black text-indigo-200 border border-white/10">
@@ -1763,16 +2072,39 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  عنوان الوحدة أو الموضوع (Unit / Theme): <span className="text-red-500">*</span>
+                  عنوان الخطة الأسبوعية (Weekly Plan Title): <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="مثال: Unit 2: Two-Digit Addition or أنا أستطيع"
+                  placeholder="مثال: Two-Digit Addition or أنا أستطيع"
                   value={planUnitTitle}
                   onChange={(e) => setPlanUnitTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 font-bold"
                 />
+              </div>
+
+              {/* File Attachment for Weekly Plan (PDF / Word / Image) */}
+              <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5 space-y-2">
+                <label className="block text-xs font-bold text-emerald-950 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <FileUp className="w-4 h-4 text-emerald-600" />
+                    <span>رفع ملف الخطة الأسبوعية (PDF / Word / صورة):</span>
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-normal">يفتح للمعاينة المباشرة بنفس الصيغة</span>
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
+                  onChange={handlePickLocalPlanFile}
+                  className="w-full px-2 py-1.5 rounded-xl border border-emerald-300 text-xs bg-white file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200 cursor-pointer"
+                />
+                {planUploadedFile && (
+                  <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-emerald-200 text-xs">
+                    <span className="font-bold text-emerald-900 truncate">{planUploadedFile.name}</span>
+                    <span className="text-[11px] text-emerald-700 font-mono shrink-0 mr-2">{planUploadedFile.size} • {planUploadedFile.type.toUpperCase()}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -2059,6 +2391,346 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* ================= MODAL: BULK TIMETABLE REPLACEMENT ================= */}
+      {isReplaceTimetableModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md">
+                  <FileUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-slate-900">
+                    استبدال الجدول بالكامل بملف واحد
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    رفع ملف PDF أو صورة أو Word ليكون هو الجدول المعتمد للفصل
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsReplaceTimetableModalOpen(false);
+                  setReplaceTimetableFile(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmReplaceTimetable} className="space-y-4">
+              {/* Target Class Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  الفصل المستهدف بالاستبدال:
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setReplaceClassTarget('2A')}
+                    className={`py-2 px-3 rounded-xl text-xs font-black transition-all border ${
+                      replaceClassTarget === '2A'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    Class 2A
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReplaceClassTarget('2B')}
+                    className={`py-2 px-3 rounded-xl text-xs font-black transition-all border ${
+                      replaceClassTarget === '2B'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    Class 2B
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReplaceClassTarget('2C')}
+                    className={`py-2 px-3 rounded-xl text-xs font-black transition-all border ${
+                      replaceClassTarget === '2C'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    Class 2C
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReplaceClassTarget('all')}
+                    className={`py-2 px-3 rounded-xl text-xs font-black transition-all border ${
+                      replaceClassTarget === 'all'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    جميع الفصول
+                  </button>
+                </div>
+              </div>
+
+              {/* File Upload Drop Area */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  اختر ملف الجدول (PDF أو صورة أو ملف Word): <span className="text-red-500">*</span>
+                </label>
+                <div className="border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/40 rounded-2xl p-6 text-center transition-colors">
+                  <FileUp className="w-10 h-10 text-indigo-500 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-slate-800">
+                    اضغط لاختيار الملف من جهازك (أو اسحبه وأفلته هنا)
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    يدعم ملفات PDF، الصور عالية الدقة (PNG, JPG)، ومستندات Word (DOC, DOCX)
+                  </p>
+                  <input
+                    type="file"
+                    required
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
+                    onChange={handlePickTimetableFile}
+                    className="w-full mt-3 text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* Selected File Details & Preview */}
+              {replaceTimetableFile && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="text-xs font-black text-emerald-950 truncate max-w-[280px]">
+                        {replaceTimetableFile.name}
+                      </span>
+                    </div>
+                    <span className="bg-emerald-200 text-emerald-900 text-[10px] font-bold px-2 py-0.5 rounded uppercase font-mono">
+                      {replaceTimetableFile.type} • {replaceTimetableFile.size}
+                    </span>
+                  </div>
+
+                  {replaceTimetableFile.type === 'image' && (
+                    <div className="mt-2 rounded-xl overflow-hidden border border-emerald-200 max-h-48 bg-white flex items-center justify-center p-2">
+                      <img
+                        src={replaceTimetableFile.dataUrl}
+                        alt="معاينة الجدول"
+                        className="max-h-44 object-contain rounded-lg"
+                      />
+                    </div>
+                  )}
+
+                  {replaceTimetableFile.type === 'pdf' && (
+                    <p className="text-[11px] text-emerald-800 font-medium">
+                      ✓ تم تجهيز ملف الـ PDF للعرض المباشر والطباعة عند فتح الطلاب للجدول.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-900 text-xs leading-relaxed">
+                <strong>تنبيه:</strong> سيتم اعتماد هذا المستند فوراً كجدول رئيسي للفصل المختار، وسيتمكن الطلاب وأولياء الأمور من معاينته وطباعته مباشرة بضغطة زر.
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsReplaceTimetableModalOpen(false);
+                    setReplaceTimetableFile(null);
+                  }}
+                  className="px-4 py-2.5 text-xs text-slate-600 hover:bg-slate-100 rounded-xl font-bold cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 text-xs bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-700 hover:to-indigo-700 text-white font-black rounded-xl shadow-md transition-all cursor-pointer"
+                >
+                  اعتماد واستبدال الجدول الآن ✓
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: TIMETABLE DOCUMENT PREVIEW ================= */}
+      {previewTimetableDoc && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 bg-slate-900 text-white shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm sm:text-base flex items-center gap-2">
+                    <span>مستند جدول حصص Class {previewTimetableDoc.classId}</span>
+                    <span className="bg-indigo-500/30 text-indigo-200 text-[10px] px-2 py-0.5 rounded uppercase">
+                      {previewTimetableDoc.fileType?.toUpperCase() || 'DOCUMENT'}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    {previewTimetableDoc.fileName} • {previewTimetableDoc.fileSize}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const printWin = window.open('', '_blank');
+                    if (printWin && previewTimetableDoc.fileDataUrl) {
+                      if (previewTimetableDoc.fileType === 'image') {
+                        printWin.document.write(`<html><head><title>طباعة الجدول</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${previewTimetableDoc.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
+                        printWin.document.close();
+                      } else {
+                        printWin.location.href = previewTimetableDoc.fileDataUrl;
+                      }
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  title="طباعة الجدول"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">طباعة</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewTimetableDoc(null)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 bg-slate-100 p-4 overflow-auto flex items-center justify-center">
+              {previewTimetableDoc.fileType === 'image' && previewTimetableDoc.fileDataUrl ? (
+                <img
+                  src={previewTimetableDoc.fileDataUrl}
+                  alt={previewTimetableDoc.fileName || 'جدول الحصص'}
+                  className="max-w-full max-h-full object-contain rounded-xl shadow-lg border border-slate-200"
+                />
+              ) : previewTimetableDoc.fileType === 'pdf' && previewTimetableDoc.fileDataUrl ? (
+                <iframe
+                  src={previewTimetableDoc.fileDataUrl}
+                  title={previewTimetableDoc.fileName || 'جدول الحصص PDF'}
+                  className="w-full h-full rounded-xl border border-slate-200 shadow-sm bg-white"
+                />
+              ) : (
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center max-w-md shadow-sm">
+                  <File className="w-12 h-12 text-indigo-500 mx-auto mb-3" />
+                  <h4 className="font-bold text-slate-900 text-sm mb-1">{previewTimetableDoc.fileName}</h4>
+                  <p className="text-xs text-slate-500 mb-4 font-mono">{previewTimetableDoc.fileSize}</p>
+                  {previewTimetableDoc.fileDataUrl && (
+                    <a
+                      href={previewTimetableDoc.fileDataUrl}
+                      download={previewTimetableDoc.fileName}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow-xs"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>تحميل المستند المعتمد</span>
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: WEEKLY PLAN PREVIEW ================= */}
+      {previewPlan && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 bg-slate-900 text-white shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm sm:text-base flex items-center gap-2">
+                    <span>Weekly Plan - {getSubjectInfo(previewPlan.subjectId).nameEn} ({previewPlan.unitOrTheme})</span>
+                    <span className="bg-emerald-500/30 text-emerald-200 text-[10px] px-2 py-0.5 rounded uppercase">
+                      {previewPlan.fileType?.toUpperCase() || 'DOCUMENT'}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    {previewPlan.fileName || `${getSubjectInfo(previewPlan.subjectId).nameEn}_WeeklyPlan.pdf`} • {previewPlan.fileSize || '1.5 MB'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const printWin = window.open('', '_blank');
+                    if (printWin) {
+                      if (previewPlan.fileDataUrl && previewPlan.fileType === 'image') {
+                        printWin.document.write(`<html><head><title>طباعة الخطة الأسبوعية</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${previewPlan.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
+                        printWin.document.close();
+                      } else if (previewPlan.fileDataUrl) {
+                        printWin.location.href = previewPlan.fileDataUrl;
+                      } else {
+                        printWin.document.write(generateWeeklyPlanHtml(previewPlan));
+                        printWin.document.close();
+                        printWin.print();
+                      }
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  title="طباعة الخطة"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">طباعة</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewPlan(null)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 bg-slate-100 p-4 overflow-auto flex items-center justify-center">
+              {previewPlan.fileDataUrl && previewPlan.fileType === 'image' ? (
+                <img
+                  src={previewPlan.fileDataUrl}
+                  alt={previewPlan.unitOrTheme}
+                  className="max-w-full max-h-full object-contain rounded-xl shadow-lg border border-slate-200"
+                />
+              ) : previewPlan.fileDataUrl && previewPlan.fileType === 'pdf' ? (
+                <iframe
+                  src={previewPlan.fileDataUrl}
+                  title={previewPlan.unitOrTheme}
+                  className="w-full h-full rounded-xl border border-slate-200 shadow-sm bg-white"
+                />
+              ) : (
+                <iframe
+                  srcDoc={generateWeeklyPlanHtml(previewPlan)}
+                  title={previewPlan.unitOrTheme}
+                  className="w-full h-full rounded-xl border border-slate-200 shadow-sm bg-white"
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

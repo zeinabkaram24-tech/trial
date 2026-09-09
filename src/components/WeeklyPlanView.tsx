@@ -541,13 +541,10 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
 
                   {/* Card Body */}
                   <div className="p-5 space-y-4">
-                    {/* Unit / Theme Title */}
+                    {/* Weekly Plan Title */}
                     <div>
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
-                        الوحدة والموضوع (Unit & Topic)
-                      </span>
                       <h3 className="font-extrabold text-slate-900 text-base leading-snug">
-                        {plan.unitOrTheme}
+                        Weekly Plan - {sub.nameEn} ({plan.unitOrTheme})
                       </h3>
                     </div>
 
@@ -659,119 +656,161 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
 
       {/* ================= MODAL: PREVIEW PLAN FILE ================= */}
       {previewPlanItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 my-auto max-h-[90vh] flex flex-col justify-between">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 z-50 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-4xl w-full h-[90vh] shadow-2xl border border-slate-200 flex flex-col justify-between overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 bg-slate-900 text-white shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold">
                   {previewPlanItem.fileType === 'word' ? (
-                    <File className="w-5 h-5 text-blue-600" />
+                    <File className="w-5 h-5 text-blue-400" />
                   ) : (
-                    <FileText className="w-5 h-5 text-red-600" />
+                    <FileText className="w-5 h-5 text-red-400" />
                   )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <SubjectBadge subjectId={previewPlanItem.subjectId} size="sm" />
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-200 uppercase font-mono">
                       {previewPlanItem.fileName || 'WeeklyPlan.pdf'}
                     </span>
                   </div>
-                  <h3 className="font-black text-slate-900 text-base mt-1">
-                    {previewPlanItem.unitOrTheme}
+                  <h3 className="font-black text-white text-sm sm:text-base mt-0.5">
+                    Weekly Plan - {getSubjectInfo(previewPlanItem.subjectId).nameEn} ({previewPlanItem.unitOrTheme})
                   </h3>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setPreviewPlanItem(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4 my-2 overflow-y-auto max-h-[55vh] p-1">
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                <div className="text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
-                  <span>🎯 أهداف ومخرجات التعلم:</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const text = (previewPlanItem.learningObjectives || []).join('\n');
-                      navigator.clipboard.writeText(text);
-                      setCopiedNotification(true);
-                      setTimeout(() => setCopiedNotification(false), 2000);
-                    }}
-                    className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>{copiedNotification ? 'تم النسخ ✓' : 'نسخ الأهداف'}</span>
-                  </button>
-                </div>
-                <ul className="space-y-1.5">
-                  {(previewPlanItem.learningObjectives || []).map((o, idx) => (
-                    <li key={idx} className="text-xs text-slate-700 flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0"></span>
-                      <span>{o}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handlePrintSinglePlan(previewPlanItem)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">طباعة</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewPlanItem(null)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
+            </div>
 
-              {previewPlanItem.vocabulary && previewPlanItem.vocabulary.length > 0 && (
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                  <div className="text-xs font-bold text-slate-700 mb-2">🔤 الكلمات والمصطلحات:</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {previewPlanItem.vocabulary.map((v, i) => (
-                      <span
-                        key={i}
-                        className="bg-white border border-slate-200 px-2 py-0.5 rounded-md text-xs font-medium text-slate-800"
-                      >
-                        {v}
-                      </span>
-                    ))}
+            {/* Modal Body: If actual file data is attached, display the file itself */}
+            <div className="flex-1 bg-slate-100 p-4 overflow-auto">
+              {previewPlanItem.fileDataUrl ? (
+                previewPlanItem.fileType === 'word' ? (
+                  <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center max-w-md mx-auto my-12 shadow-sm">
+                    <File className="w-16 h-16 text-blue-600 mx-auto mb-3" />
+                    <h4 className="font-bold text-slate-900 text-base mb-1">{previewPlanItem.fileName}</h4>
+                    <p className="text-xs text-slate-500 mb-4 font-mono">{previewPlanItem.fileSize || 'مستند Word'}</p>
+                    <p className="text-xs text-slate-600 mb-6">
+                      ملف وورد رسمي معتمد لخطة الأسبوع. يمكنك فتحه في برنامج Word أو تحميله مباشرة.
+                    </p>
+                    <a
+                      href={previewPlanItem.fileDataUrl}
+                      download={previewPlanItem.fileName || 'WeeklyPlan.docx'}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>فتح / تحميل ملف Word المعتمد</span>
+                    </a>
                   </div>
-                </div>
-              )}
+                ) : previewPlanItem.fileDataUrl.startsWith('data:image/') ? (
+                  <div className="flex items-center justify-center min-h-full">
+                    <img
+                      src={previewPlanItem.fileDataUrl}
+                      alt={previewPlanItem.fileName || 'Weekly Plan'}
+                      className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-lg border border-slate-200"
+                    />
+                  </div>
+                ) : (
+                  <iframe
+                    src={previewPlanItem.fileDataUrl}
+                    title={previewPlanItem.fileName || 'Weekly Plan PDF'}
+                    className="w-full h-[75vh] rounded-xl border border-slate-200 shadow-sm bg-white"
+                  />
+                )
+              ) : (
+                <div className="max-w-2xl mx-auto space-y-4 my-2 p-1">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                    <div className="text-xs font-bold text-slate-700 mb-3 flex items-center justify-between">
+                      <span>🎯 أهداف ومخرجات التعلم:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const text = (previewPlanItem.learningObjectives || []).join('\n');
+                          navigator.clipboard.writeText(text);
+                          setCopiedNotification(true);
+                          setTimeout(() => setCopiedNotification(false), 2000);
+                        }}
+                        className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>{copiedNotification ? 'تم النسخ ✓' : 'نسخ الأهداف'}</span>
+                      </button>
+                    </div>
+                    <ul className="space-y-2">
+                      {(previewPlanItem.learningObjectives || []).map((o, idx) => (
+                        <li key={idx} className="text-xs text-slate-700 flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0"></span>
+                          <span>{o}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-              {previewPlanItem.resourcesNote && (
-                <div className="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <span className="font-bold">📖 المصادر والكتب:</span> {previewPlanItem.resourcesNote}
-                </div>
-              )}
+                  {previewPlanItem.vocabulary && previewPlanItem.vocabulary.length > 0 && (
+                    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                      <div className="text-xs font-bold text-slate-700 mb-2">🔤 الكلمات والمصطلحات:</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {previewPlanItem.vocabulary.map((v, i) => (
+                          <span
+                            key={i}
+                            className="bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-800"
+                          >
+                            {v}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              {previewPlanItem.assessmentNote && (
-                <div className="text-xs text-amber-900 bg-amber-50 p-3 rounded-xl border border-amber-200">
-                  <span className="font-bold">📝 التقييم والاختبارات:</span> {previewPlanItem.assessmentNote}
+                  {previewPlanItem.resourcesNote && (
+                    <div className="text-xs text-slate-700 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                      <span className="font-bold">📖 المصادر والكتب:</span> {previewPlanItem.resourcesNote}
+                    </div>
+                  )}
+
+                  {previewPlanItem.assessmentNote && (
+                    <div className="text-xs text-amber-900 bg-amber-50 p-4 rounded-2xl border border-amber-200 shadow-xs">
+                      <span className="font-bold">📝 التقييم والاختبارات:</span> {previewPlanItem.assessmentNote}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+            {/* Footer */}
+            <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleDownloadPlanFile(previewPlanItem)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>تحميل ملف الخطة</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handlePrintSinglePlan(previewPlanItem)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white flex items-center gap-1.5"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>طباعة الخطة</span>
+                  <span>تحميل الملف</span>
                 </button>
               </div>
 
               <button
                 type="button"
                 onClick={() => setPreviewPlanItem(null)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="px-5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
               >
                 إغلاق
               </button>

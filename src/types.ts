@@ -30,6 +30,12 @@ export interface DaySchedule {
 export interface ClassTimetable {
   classId: SchoolClass;
   days: DaySchedule[];
+  // File attachments for timetable sheet/document (PDF, Image, Word)
+  fileName?: string;
+  fileType?: 'pdf' | 'image' | 'word' | 'doc';
+  fileSize?: string;
+  fileDataUrl?: string;
+  uploadedAt?: string;
 }
 
 export interface WeeklyPlanItem {
@@ -43,9 +49,9 @@ export interface WeeklyPlanItem {
   vocabulary?: string[];
   resourcesNote?: string;
   assessmentNote?: string;
-  // File attachments for PDF or Word
+  // File attachments for PDF or Word or image
   fileName?: string;
-  fileType?: 'pdf' | 'word' | 'doc';
+  fileType?: 'pdf' | 'word' | 'doc' | 'image';
   fileSize?: string;
   fileDataUrl?: string;
 }

@@ -8,7 +8,10 @@ import {
   Check,
   UserCheck,
   Building,
-  Coffee
+  Coffee,
+  Eye,
+  FileText,
+  X
 } from 'lucide-react';
 import { ClassTimetable, SchoolClass, UserRole, PeriodSlot, DaySchedule } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
@@ -34,6 +37,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
   const currentTimetable = timetables.find((t) => t.classId === selectedClass) || timetables[0];
   const [activeDayIndex, setActiveDayIndex] = useState<number>(0); // 0 = Sunday
   const [viewMode, setViewMode] = useState<'grid' | 'day'>('grid');
+  const [isDocModalOpen, setIsDocModalOpen] = useState<boolean>(false);
 
   // Admin slot edit modal
   const [editingSlot, setEditingSlot] = useState<{
@@ -206,6 +210,64 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Active Uploaded Document Banner */}
+      {currentTimetable.fileDataUrl && (
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 border-2 border-emerald-300 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black shadow-md shrink-0">
+              <FileText className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-emerald-600 text-white text-[11px] font-black px-2.5 py-0.5 rounded-md">
+                  الجدول المعتمد المرفوع
+                </span>
+                <span className="text-xs font-black text-slate-800">Class {selectedClass}</span>
+              </div>
+              <h3 className="font-black text-base text-slate-900 mt-1 flex items-center gap-2 flex-wrap">
+                <span>{currentTimetable.fileName}</span>
+                <span className="text-[10px] font-bold text-emerald-800 uppercase bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 font-mono">
+                  {currentTimetable.fileType?.toUpperCase()}
+                </span>
+                <span className="text-xs text-slate-500 font-normal">({currentTimetable.fileSize})</span>
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                المستند الرسمي المعتمد لجدول هذا الفصل • تم رفعه واعتماده بتاريخ {currentTimetable.uploadedAt || 'العام الحالي'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsDocModalOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-xs transition-colors cursor-pointer"
+            >
+              <Eye className="w-4 h-4" />
+              <span>معاينة المستند المعتمد</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const printWin = window.open('', '_blank');
+                if (printWin && currentTimetable.fileDataUrl) {
+                  if (currentTimetable.fileType === 'image') {
+                    printWin.document.write(`<html><head><title>جدول حصص Class ${selectedClass}</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${currentTimetable.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
+                    printWin.document.close();
+                  } else {
+                    printWin.location.href = currentTimetable.fileDataUrl;
+                  }
+                }
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+            >
+              <Printer className="w-4 h-4 text-slate-600" />
+              <span>طباعة الملف المعتمد</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* VIEW MODE: FULL GRID */}
       {viewMode === 'grid' && (
@@ -473,6 +535,93 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Document Full Preview Modal */}
+      {isDocModalOpen && currentTimetable.fileDataUrl && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 bg-slate-900 text-white shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm sm:text-base flex items-center gap-2">
+                    <span>مستند جدول حصص Class {selectedClass}</span>
+                    <span className="bg-emerald-500/30 text-emerald-200 text-[10px] px-2 py-0.5 rounded uppercase font-mono">
+                      {currentTimetable.fileType?.toUpperCase()}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    {currentTimetable.fileName} • {currentTimetable.fileSize}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const printWin = window.open('', '_blank');
+                    if (printWin && currentTimetable.fileDataUrl) {
+                      if (currentTimetable.fileType === 'image') {
+                        printWin.document.write(`<html><head><title>جدول حصص Class ${selectedClass}</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${currentTimetable.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
+                        printWin.document.close();
+                      } else {
+                        printWin.location.href = currentTimetable.fileDataUrl;
+                      }
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  title="طباعة الجدول"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">طباعة</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsDocModalOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content Viewer */}
+            <div className="flex-1 bg-slate-100 p-4 overflow-auto flex items-center justify-center">
+              {currentTimetable.fileType === 'image' ? (
+                <img
+                  src={currentTimetable.fileDataUrl}
+                  alt={currentTimetable.fileName || 'جدول الحصص'}
+                  className="max-w-full max-h-full object-contain rounded-xl shadow-lg border border-slate-200"
+                />
+              ) : currentTimetable.fileType === 'pdf' ? (
+                <iframe
+                  src={currentTimetable.fileDataUrl}
+                  title={currentTimetable.fileName || 'جدول الحصص PDF'}
+                  className="w-full h-full rounded-xl border border-slate-200 shadow-sm bg-white"
+                />
+              ) : (
+                <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center max-w-md shadow-sm">
+                  <FileText className="w-12 h-12 text-indigo-500 mx-auto mb-3" />
+                  <h4 className="font-bold text-slate-900 text-sm mb-1">{currentTimetable.fileName}</h4>
+                  <p className="text-xs text-slate-500 mb-4 font-mono">{currentTimetable.fileSize}</p>
+                  <a
+                    href={currentTimetable.fileDataUrl}
+                    download={currentTimetable.fileName}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow-xs"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>تحميل المستند المعتمد</span>
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
