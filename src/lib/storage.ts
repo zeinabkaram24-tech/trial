@@ -20,7 +20,7 @@ const STORAGE_KEYS = {
   DAILY_FOLLOW_UPS: 'nile_minya_daily_follow_ups_v1',
   STUDENT_TASKS: 'nile_minya_student_tasks_v1',
   COMPLETED_HW: 'nile_minya_completed_hw_v1',
-  MATERIALS: 'nile_minya_materials_v2',
+  MATERIALS: 'nile_minya_materials_v3',
   CURRENT_BLOCK: 'nile_minya_cur_block',
   CURRENT_WEEK: 'nile_minya_cur_week',
   SELECTED_CLASS: 'nile_minya_cur_class',
@@ -119,17 +119,30 @@ export const saveStoredCompletedHw = (data: Record<string, boolean>): void => {
 
 export const getStoredMaterials = (): SchoolMaterialFile[] => {
   try {
+    // Purge any old cache keys that had dummy materials for Block 2 & Block 3
+    localStorage.removeItem('nile_minya_materials_v1');
+    localStorage.removeItem('nile_minya_materials_v2');
+
     const raw = localStorage.getItem(STORAGE_KEYS.MATERIALS);
     if (raw) {
       const list: SchoolMaterialFile[] = JSON.parse(raw);
       // Strictly remove any unrequested materials (PE, ethics/religion, art)
-      const cleanList = list.filter((m) => !['pe', 'ethics', 'religion', 'art'].includes(m.subjectId));
+      // And strictly ensure Block 2, 3, 4 are empty unless user actually uploaded a custom file
+      const cleanList = list.filter((m) => {
+        if (['pe', 'ethics', 'religion', 'art'].includes(m.subjectId)) return false;
+        // User requested: Block 2 and Block 3 must be completely empty until user uploads
+        if (m.blockId === 'block2' || m.blockId === 'block3' || m.blockId === 'block4') {
+          return Boolean(m.fileDataUrl); // Only keep if user manually uploaded a real file
+        }
+        return true;
+      });
       if (cleanList.length > 0) return cleanList;
     }
   } catch (e) {
     console.error('Failed to load materials from storage', e);
   }
-  return INITIAL_MATERIALS;
+  // Default: INITIAL_MATERIALS only has block1 items; blocks 2, 3, 4 are completely empty
+  return INITIAL_MATERIALS.filter((m) => m.blockId === 'block1');
 };
 
 export const saveStoredMaterials = (data: SchoolMaterialFile[]): void => {

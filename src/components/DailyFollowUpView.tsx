@@ -17,7 +17,11 @@ import {
   ChevronRight,
   ChevronLeft,
   RotateCcw,
-  Check
+  Check,
+  Table,
+  LayoutGrid,
+  Layers,
+  FileSpreadsheet
 } from 'lucide-react';
 import {
   DailyFollowUp,
@@ -190,6 +194,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   const bagReadyPercent = tomorrowPeriods.length > 0 ? Math.round((packedTomorrowCount / tomorrowPeriods.length) * 100) : 0;
 
   const [activeSection, setActiveSection] = useState<'all' | 'classwork' | 'homework' | 'preparations'>('all');
+  const [followUpLayoutMode, setFollowUpLayoutMode] = useState<'columns' | 'table'>('columns');
 
   // Admin Modal States
   const [editingCw, setEditingCw] = useState<{ isOpen: boolean; item?: ClassworkRecord }>({ isOpen: false });
@@ -380,372 +385,329 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner Card for Daily Follow-up */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* ================= UNIFIED FRAME (الفريم الموحد للهوم ورك والكلاس ورك وتجهيزات الغد) ================= */}
+      <div id="unified-daily-frame" className="bg-white rounded-3xl border-2 border-slate-300 shadow-md overflow-hidden">
+        
+        {/* Frame Master Header Bar */}
+        <div className="bg-slate-900 text-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 border-b-2 border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-700 border border-sky-100 flex items-center justify-center font-bold">
-              <Calendar className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-xs">
+              <Layers className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black text-slate-900">
-                  تقرير المتابعة اليومية - Class {selectedClass}
-                </h2>
-                <span className="bg-sky-100 text-sky-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
-                  {currentRecord.dayNameAr}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-lg font-black text-white">
+                  الفريم الموحد لسجل المتابعة اليومية
+                </h3>
+                <span className="bg-sky-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
+                  Class {selectedClass}
+                </span>
+                <span className="bg-slate-800 text-amber-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-slate-700">
+                  {currentRecord.dayNameAr} ({currentRecord.date})
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                مدرسة النيل المصرية الدولية فرع المنيا • جريد 2 • التاريخ: {currentRecord.date}
-              </p>
             </div>
           </div>
 
-          {/* Quick Filter Pill Buttons (All, Homework, Classwork, Tomorrow Prep) */}
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          <div className="flex items-center gap-2">
+            {/* View Mode Switcher: 3-Column Frame vs Official Table Sheet */}
+            <div className="bg-slate-800 p-1 rounded-xl border border-slate-700 flex items-center gap-1 text-xs">
+              <button
+                id="view-mode-columns-btn"
+                type="button"
+                onClick={() => setFollowUpLayoutMode('columns')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  followUpLayoutMode === 'columns'
+                    ? 'bg-amber-400 text-slate-950 shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="عرض الفريم الثلاثي المتكامل"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>الفريم الثلاثي الموحد</span>
+              </button>
+              <button
+                id="view-mode-table-btn"
+                type="button"
+                onClick={() => setFollowUpLayoutMode('table')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all ${
+                  followUpLayoutMode === 'table'
+                    ? 'bg-amber-400 text-slate-950 shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="عرض شيت الجدول المنسق كما في الملف المعتمد"
+              >
+                <Table className="w-3.5 h-3.5" />
+                <span>شيت الجدول المنسق</span>
+              </button>
+            </div>
+
             <button
-              id="filter-all-btn"
+              id="frame-print-btn"
               type="button"
-              onClick={() => setActiveSection('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeSection === 'all'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              onClick={onOpenPrint}
+              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-600 transition-colors"
+              title="طباعة الفريم الموحد"
             >
-              عرض الكل ({cwCount + hwCount + prepCount})
-            </button>
-            <button
-              id="filter-homework-btn"
-              type="button"
-              onClick={() => setActiveSection('homework')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeSection === 'homework'
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Homework ({hwCount})
-            </button>
-            <button
-              id="filter-classwork-btn"
-              type="button"
-              onClick={() => setActiveSection('classwork')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeSection === 'classwork'
-                  ? 'bg-sky-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Classwork ({cwCount})
-            </button>
-            <button
-              id="filter-prep-btn"
-              type="button"
-              onClick={() => setActiveSection('preparations')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeSection === 'preparations'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              تجهيزات الغد ({prepCount})
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">طباعة الفريم</span>
             </button>
           </div>
         </div>
 
-        {/* Student Homework Progress Bar if student role or student name present */}
-        {currentRole === 'student' && hwCount > 0 && (
-          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <div>
-                <span className="text-xs font-bold text-slate-800">
-                  إنجاز واجبات اليوم يا {studentName || 'بطل'}:
-                </span>
-                <span className="text-xs font-black text-emerald-700 mr-2">
-                  {completedHwCount} من أصل {hwCount} واجبات مكتملة
-                </span>
-              </div>
-            </div>
-            <div className="w-48 bg-slate-200 rounded-full h-2.5 overflow-hidden">
-              <div
-                className="bg-emerald-600 h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${Math.round((completedHwCount / hwCount) * 100)}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-      </div>
+        {/* View Mode 1: 3 Columns sharing the same frame container down to the bottom */}
+        {followUpLayoutMode === 'columns' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x lg:divide-x-reverse divide-slate-200 bg-slate-50/20">
+            
+            {/* ================= COLUMN 1: جزء خاص بـ Homework ================= */}
+            <div className="flex flex-col h-full bg-white">
+              <div className="bg-red-700 text-white p-4 flex items-center justify-between border-b border-red-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-red-800 text-white flex items-center justify-center font-bold shadow-xs">
+                    <CheckSquare className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-black text-sm text-white">
+                    الهوم ورك ({hwCount})
+                  </h3>
+                </div>
 
-      {/* Grid of the 3 Requested Core Modules (Order: 1. Homework, 2. Classwork, 3. Preparations) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* ================= SECTION 1: جزء خاص بـ Homework ================= */}
-        {(activeSection === 'all' || activeSection === 'homework') && (
-          <div className={`space-y-4 ${activeSection === 'homework' ? 'lg:col-span-3' : ''}`}>
-            <div className="bg-amber-800 text-white p-4 rounded-2xl flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-amber-700 text-amber-200 flex items-center justify-center font-bold">
-                  <CheckSquare className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm">1. Homework</h3>
-                  <p className="text-[11px] text-amber-200">الواجبات والمهام المطلوبة ومواعيد التسليم</p>
-                </div>
+                {currentRole === 'admin' && (
+                  <button
+                    id="admin-add-hw-btn"
+                    type="button"
+                    onClick={() => {
+                      setEditingHw({ isOpen: true });
+                      setHwSubject(SUBJECTS[0].id);
+                      setHwAssignment('');
+                      setHwDueDate('غداً');
+                      setHwPages('');
+                      setHwInstructions('');
+                    }}
+                    className="flex items-center gap-1 bg-red-800 hover:bg-red-900 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors border border-red-600"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>إضافة واجب</span>
+                  </button>
+                )}
               </div>
 
-              {currentRole === 'admin' && (
-                <button
-                  id="admin-add-hw-btn"
-                  type="button"
-                  onClick={() => {
-                    setEditingHw({ isOpen: true });
-                    setHwSubject(SUBJECTS[0].id);
-                    setHwAssignment('');
-                    setHwDueDate('غداً');
-                    setHwPages('');
-                    setHwInstructions('');
-                  }}
-                  className="flex items-center gap-1 bg-amber-300 hover:bg-amber-200 text-slate-950 font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>إضافة واجب</span>
-                </button>
-              )}
+              {/* Homework Items List extending down */}
+              <div className="p-4 space-y-3 flex-1 bg-slate-50/30">
+                {currentRecord.homework?.length === 0 ? (
+                  <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
+                    لا توجد واجبات منزلية مسجلة اليوم.
+                  </div>
+                ) : (
+                  currentRecord.homework?.map((hw) => {
+                    const isDone = completedHwMap[hw.id];
+                    return (
+                      <div
+                        key={hw.id}
+                        className={`bg-white rounded-xl p-3.5 border transition-all shadow-xs ${
+                          isDone
+                            ? 'border-emerald-300 bg-emerald-50/20'
+                            : 'border-slate-200 hover:border-red-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <SubjectBadge subjectId={hw.subjectId} size="sm" />
+
+                          <div className="flex items-center gap-1.5">
+                            {hw.dueDate && (
+                              <span className="text-[10px] font-bold bg-amber-50 text-amber-900 px-2 py-0.5 rounded border border-amber-200">
+                                {hw.dueDate}
+                              </span>
+                            )}
+
+                            {currentRole === 'admin' && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingHw({ isOpen: true, item: hw });
+                                    setHwSubject(hw.subjectId);
+                                    setHwAssignment(hw.assignment);
+                                    setHwDueDate(hw.dueDate || 'غداً');
+                                    setHwPages(hw.pages || '');
+                                    setHwInstructions(hw.instructions || '');
+                                  }}
+                                  className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded"
+                                  title="تعديل الواجب"
+                                >
+                                  <Edit2 className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteHw(hw.id)}
+                                  className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded"
+                                  title="حذف الواجب"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Homework description from weekly plan */}
+                        <p className={`text-xs font-semibold leading-relaxed ${isDone ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                          {hw.assignment}
+                        </p>
+
+                        {hw.pages && hw.pages !== hw.assignment && (
+                          <div className="mt-1.5">
+                            <span className="text-[11px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-100">
+                              {hw.pages}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Interactive Student Checkbox */}
+                        {currentRole === 'student' && (
+                          <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-end">
+                            <button
+                              type="button"
+                              onClick={() => onToggleHwCompletion(hw.id)}
+                              className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors ${
+                                isDone
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800'
+                              }`}
+                            >
+                              {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                              <span>{isDone ? 'تم الحل ✓' : 'تأشير الإنجاز'}</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
 
-            {/* Homework Items List */}
-            <div className="space-y-3">
-              {currentRecord.homework?.length === 0 ? (
-                <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
-                  لا توجد واجبات منزلية مسجلة اليوم.
+            {/* ================= COLUMN 2: الكلاس ورك (Classwork) ================= */}
+            <div className="flex flex-col h-full bg-white">
+              <div className="bg-sky-800 text-white p-4 flex items-center justify-between border-b border-sky-900">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-sky-900 text-sky-200 flex items-center justify-center font-bold shadow-xs">
+                    <BookOpen className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-black text-sm text-white">
+                    الكلاس ورك ({cwCount})
+                  </h3>
                 </div>
-              ) : (
-                currentRecord.homework?.map((hw) => {
-                  const isDone = completedHwMap[hw.id];
-                  return (
+
+                {currentRole === 'admin' && (
+                  <button
+                    id="admin-add-cw-btn"
+                    type="button"
+                    onClick={() => {
+                      setEditingCw({ isOpen: true });
+                      setCwSubject(SUBJECTS[0].id);
+                      setCwTitle('');
+                      setCwDetails('');
+                      setCwPages('');
+                    }}
+                    className="flex items-center gap-1 bg-sky-900 hover:bg-sky-950 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors border border-sky-700"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>إضافة درس</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Classwork Items List extending down */}
+              <div className="p-4 space-y-3 flex-1 bg-slate-50/30">
+                {currentRecord.classwork?.length === 0 ? (
+                  <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
+                    لم يتم رصد دروس اليوم بعد.
+                  </div>
+                ) : (
+                  currentRecord.classwork?.map((cw) => (
                     <div
-                      key={hw.id}
-                      className={`bg-white rounded-xl p-4 border transition-all shadow-xs group ${
-                        isDone
-                          ? 'border-emerald-300 bg-emerald-50/20'
-                          : 'border-slate-200 hover:border-amber-300'
+                      key={cw.id}
+                      className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-xs hover:border-sky-300 transition-all group"
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <SubjectBadge subjectId={cw.subjectId} size="sm" />
+                        {currentRole === 'admin' && (
+                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCw({ isOpen: true, item: cw });
+                                setCwSubject(cw.subjectId);
+                                setCwTitle(cw.lessonTitle);
+                                setCwDetails(cw.details);
+                                setCwPages(cw.pages || '');
+                              }}
+                              className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md"
+                              title="تعديل الدرس"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCw(cw.id)}
+                              className="p-1 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-md"
+                              title="حذف الدرس"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <h4 className="font-bold text-slate-900 text-xs mb-1">{cw.lessonTitle}</h4>
+                      {cw.details && <p className="text-[11px] text-slate-600 leading-relaxed mb-1.5">{cw.details}</p>}
+
+                      {cw.pages && (
+                        <div className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded-md">
+                          <span>الصفحات:</span>
+                          <span className="text-slate-900 font-bold">{cw.pages}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* ================= COLUMN 3: تجهيزات ومستلزمات الغد ================= */}
+            <div className="flex flex-col h-full bg-white">
+              {/* Header with Day Selector */}
+              <div className="bg-emerald-800 text-white p-4 flex flex-wrap items-center justify-between gap-2 border-b border-emerald-900">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-900 text-emerald-200 flex items-center justify-center font-bold shadow-xs">
+                    <Package className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-black text-sm text-white">
+                    تجهيزات الغد ({tomorrowPeriods.length})
+                  </h3>
+                </div>
+
+                {/* Day Selector for Tomorrow's Schedule */}
+                <div className="flex items-center gap-1 bg-emerald-950/60 p-1 rounded-xl">
+                  {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setSelectedTomorrowDay(day)}
+                      className={`px-2 py-0.5 text-[11px] font-bold rounded-lg transition-colors ${
+                        selectedTomorrowDay === day
+                          ? 'bg-amber-400 text-slate-950 shadow-xs'
+                          : 'text-emerald-200 hover:text-white hover:bg-emerald-800/60'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <SubjectBadge subjectId={hw.subjectId} size="sm" />
-
-                        <div className="flex items-center gap-2">
-                          {hw.dueDate && (
-                            <span className="text-[11px] font-semibold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
-                              التسليم: {hw.dueDate}
-                            </span>
-                          )}
-
-                          {currentRole === 'admin' && (
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingHw({ isOpen: true, item: hw });
-                                  setHwSubject(hw.subjectId);
-                                  setHwAssignment(hw.assignment);
-                                  setHwDueDate(hw.dueDate || 'غداً');
-                                  setHwPages(hw.pages || '');
-                                  setHwInstructions(hw.instructions || '');
-                                }}
-                                className="p-1 text-slate-500 hover:text-amber-700 hover:bg-amber-50 rounded-md"
-                                title="تعديل الواجب"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteHw(hw.id)}
-                                className="p-1 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-md"
-                                title="حذف الواجب"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Assignment Content */}
-                      <p className={`text-xs font-semibold leading-relaxed mb-2 ${isDone ? 'line-through text-slate-500' : 'text-slate-800'}`}>
-                        {hw.assignment}
-                      </p>
-
-                      {hw.instructions && (
-                        <p className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 mb-2">
-                          💡 <span className="font-semibold">إرشاد للمعلم/ولي الأمر:</span> {hw.instructions}
-                        </p>
-                      )}
-
-                      {/* Interactive Student Checkbox */}
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                        {currentRole === 'student' ? (
-                          <button
-                            type="button"
-                            onClick={() => onToggleHwCompletion(hw.id)}
-                            className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg transition-colors ${
-                              isDone
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-slate-100 text-slate-700 hover:bg-emerald-100 hover:text-emerald-800'
-                            }`}
-                          >
-                            {isDone ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
-                            <span>{isDone ? 'تم حل الواجب بنجاح ✓' : 'اضغط للتأشير عند الانتهاء'}</span>
-                          </button>
-                        ) : (
-                          <span className="text-[11px] text-slate-400">
-                            {currentRole === 'visitor' ? 'وضع الزائر: للعرض فقط' : 'مسجل في تقرير المتابعة'}
-                          </span>
-                        )}
-
-                        {hw.pages && (
-                          <span className="text-[11px] text-slate-500 font-medium">
-                            {hw.pages}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ================= SECTION 2: Classwork ================= */}
-        {(activeSection === 'all' || activeSection === 'classwork') && (
-          <div className={`space-y-4 ${activeSection === 'classwork' ? 'lg:col-span-3' : ''}`}>
-            <div className="bg-sky-900 text-white p-4 rounded-2xl flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-sky-800 text-sky-200 flex items-center justify-center font-bold">
-                  <BookOpen className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm">2. Classwork</h3>
-                  <p className="text-[11px] text-sky-200">الدروس والأنشطة التي نُفذت داخل الحصة</p>
+                      {day}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {currentRole === 'admin' && (
-                <button
-                  id="admin-add-cw-btn"
-                  type="button"
-                  onClick={() => {
-                    setEditingCw({ isOpen: true });
-                    setCwSubject(SUBJECTS[0].id);
-                    setCwTitle('');
-                    setCwDetails('');
-                    setCwPages('');
-                  }}
-                  className="flex items-center gap-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-2.5 py-1 rounded-lg text-xs shadow-xs transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>إضافة درس</span>
-                </button>
-              )}
-            </div>
-
-            {/* Classwork Items List */}
-            <div className="space-y-3">
-              {currentRecord.classwork?.length === 0 ? (
-                <div className="bg-white rounded-xl p-6 text-center text-xs text-slate-400 border border-slate-200">
-                  لم يتم رصد دروس اليوم بعد.
-                </div>
-              ) : (
-                currentRecord.classwork?.map((cw) => (
-                  <div
-                    key={cw.id}
-                    className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs hover:border-sky-300 transition-all group"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <SubjectBadge subjectId={cw.subjectId} size="sm" />
-                      {currentRole === 'admin' && (
-                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingCw({ isOpen: true, item: cw });
-                              setCwSubject(cw.subjectId);
-                              setCwTitle(cw.lessonTitle);
-                              setCwDetails(cw.details);
-                              setCwPages(cw.pages || '');
-                            }}
-                            className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md"
-                            title="تعديل الدرس"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCw(cw.id)}
-                            className="p-1 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-md"
-                            title="حذف الدرس"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    <h4 className="font-bold text-slate-900 text-sm mb-1">{cw.lessonTitle}</h4>
-                    <p className="text-xs text-slate-600 leading-relaxed mb-2">{cw.details}</p>
-
-                    {cw.pages && (
-                      <div className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 text-[11px] font-semibold px-2.5 py-1 rounded-md">
-                        <span>الصفحات:</span>
-                        <span className="text-slate-900 font-bold">{cw.pages}</span>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ================= SECTION 3: جزء تجهيزات لغد وجدول الحقيبة المدرسية ================= */}
-        {(activeSection === 'all' || activeSection === 'preparations') && (
-          <div className={`space-y-4 ${activeSection === 'preparations' ? 'lg:col-span-3' : ''}`}>
-            {/* Header with Day Selector */}
-            <div className="bg-emerald-900 text-white p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-800 text-emerald-200 flex items-center justify-center font-bold">
-                  <Package className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm">3. تجهيزات لغد وجدول الحقيبة المدرسية</h3>
-                  <p className="text-[11px] text-emerald-200">
-                    جدول حصص الغد بالترتيب والكتب والكشاكيل والأدوات المطلوبة لترتيب الحقيبة
-                  </p>
-                </div>
-              </div>
-
-              {/* Day Selector for Tomorrow's Schedule */}
-              <div className="flex items-center gap-1 bg-emerald-950/60 p-1 rounded-xl">
-                {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => (
-                  <button
-                    key={day}
-                    type="button"
-                    onClick={() => setSelectedTomorrowDay(day)}
-                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-colors ${
-                      selectedTomorrowDay === day
-                        ? 'bg-amber-400 text-slate-950 shadow-xs'
-                        : 'text-emerald-200 hover:text-white hover:bg-emerald-800/60'
-                    }`}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Content area stretching down */}
+            <div className="p-4 space-y-4 flex-1 bg-slate-50/30">
 
             {/* Bag Readiness Progress & Quick Batch Actions */}
             <div className="bg-white rounded-2xl p-4 border border-emerald-200 shadow-xs">
@@ -1042,9 +1004,166 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
               </div>
             </div>
           </div>
-        )}
-
+        </div>
       </div>
+    ) : (
+    /* ================= VIEW MODE 2: EXACT OFFICIAL SHEET TABLE FORMAT ================= */
+    <div className="p-4 sm:p-6 bg-white overflow-x-auto">
+      <div className="text-center mb-4 pb-3 border-b border-slate-200">
+        <h4 className="font-black text-slate-900 text-base">
+          مدارس النيل المصرية الدولية - فرع المنيا (Nile Egyptian Schools)
+        </h4>
+        <p className="text-xs text-slate-600 font-semibold mt-1">
+          سجل المتابعة اليومية الرسمي للصف الثاني الابتدائي • فصل {selectedClass} • يوم {currentRecord.dayNameAr} ({currentRecord.date})
+        </p>
+      </div>
+
+      <table className="w-full border-collapse border-2 border-slate-300 text-right text-xs">
+        <thead>
+          <tr className="bg-slate-800 text-white font-black text-center">
+            <th className="border-2 border-slate-400 p-2.5 w-36">المادة الدراسية</th>
+            <th className="border-2 border-slate-400 p-2.5">ما تم تدريسه داخل الفصل (Classwork)</th>
+            <th className="border-2 border-slate-400 p-2.5">الواجبات المنزلية المطلوبة (Homework)</th>
+            <th className="border-2 border-slate-400 p-2.5 w-72">تجهيزات ومستلزمات الغد (الكتب والكشاكيل)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from(
+            new Set([
+              ...currentRecord.classwork.map((c) => c.subjectId),
+              ...currentRecord.homework.map((h) => h.subjectId)
+            ])
+          ).map((subId, idx) => {
+            const cw = currentRecord.classwork.find((c) => c.subjectId === subId);
+            const hw = currentRecord.homework.find((h) => h.subjectId === subId);
+            const kit = SUBJECT_PACKING_KIT[subId] || {
+              book: 'كتاب المادة',
+              notebook: 'كشكول الحصة',
+              tools: 'الأدوات المقررة'
+            };
+            const isDone = hw ? completedHwMap[hw.id] : false;
+
+            return (
+              <tr
+                key={subId}
+                className={`hover:bg-slate-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
+              >
+                {/* Subject Column */}
+                <td className="border-2 border-slate-300 p-3 align-top font-bold">
+                  <SubjectBadge subjectId={subId} size="md" />
+                </td>
+
+                {/* Classwork Column */}
+                <td className="border-2 border-slate-300 p-3 align-top">
+                  {cw ? (
+                    <div className="space-y-1">
+                      <p className="font-bold text-slate-900">{cw.lessonTitle}</p>
+                      <p className="text-slate-600 leading-relaxed text-[11px]">{cw.details}</p>
+                      {cw.pages && (
+                        <span className="inline-block bg-sky-50 text-sky-800 text-[10px] font-bold px-2 py-0.5 rounded-md border border-sky-200 mt-1">
+                          {cw.pages}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-slate-400 italic text-[11px]">- لا يوجد رصد للحصة -</span>
+                  )}
+                </td>
+
+                {/* Homework Column */}
+                <td className="border-2 border-slate-300 p-3 align-top">
+                  {hw ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-1 flex-wrap mb-1">
+                        <p className={`font-bold text-slate-900 ${isDone ? 'line-through text-slate-400' : ''}`}>
+                          {hw.assignment}
+                        </p>
+                        {hw.dueDate && (
+                          <span className="bg-amber-100 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                            تسليم: {hw.dueDate}
+                          </span>
+                        )}
+                      </div>
+
+                        {hw.pages && (
+                          <p className="text-[10px] text-slate-600 font-semibold">{hw.pages}</p>
+                        )}
+
+                      {currentRole === 'student' && (
+                        <button
+                          type="button"
+                          onClick={() => onToggleHwCompletion(hw.id)}
+                          className={`mt-2 flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors ${
+                            isDone
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-100 text-slate-700 hover:bg-emerald-50'
+                          }`}
+                        >
+                          {isDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                          <span>{isDone ? 'تم الحل بنجاح ✓' : 'تأشير إتمام الواجب'}</span>
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-slate-400 italic text-[11px]">- لا يوجد واجب منزلي -</span>
+                  )}
+                </td>
+
+                {/* Tomorrow Kit Column */}
+                <td className="border-2 border-slate-300 p-3 align-top">
+                  <div className="space-y-1 text-[11px]">
+                    <div className="flex items-center gap-1.5 text-slate-700">
+                      <span className="font-bold text-slate-900">📚 الكتاب:</span>
+                      <span>{kit.book}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-700">
+                      <span className="font-bold text-slate-900">📓 الكشكول:</span>
+                      <span>{kit.notebook}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-700">
+                      <span className="font-bold text-slate-900">✏️ الأدوات:</span>
+                      <span>{kit.tools}</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+        <tfoot>
+          <tr className="bg-slate-100 font-bold text-slate-700 text-center border-t-2 border-slate-300">
+            <td colSpan={4} className="p-3 text-xs">
+              <div className="flex flex-wrap items-center justify-around gap-4">
+                <div>توقيع المعلم المختص: ..............................</div>
+                <div>توقيع ولي الأمر: ..............................</div>
+                <div>اعتماد إدارة مدرسة النيل بالمنيا: [ختم رسمي متاح]</div>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  )}
+
+  {/* Frame Master Footer Bar */}
+  <div className="bg-slate-100 px-5 py-3 border-t-2 border-slate-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-3">
+    <div className="flex items-center gap-2">
+      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span className="font-bold text-slate-800">
+        سجل المتابعة اليومي معتمد ومحدث لفرع المنيا
+      </span>
+      <span className="text-slate-400">|</span>
+      <span>
+        إجمالي: {cwCount} كلاس ورك • {hwCount} واجبات • {tomorrowPeriods.length} حصص غداً
+      </span>
+    </div>
+
+    <div className="text-[11px] font-semibold text-slate-500">
+      فصل {selectedClass} • نظام المتابعة الإلكترونية الموحدة لمدارس النيل
+    </div>
+  </div>
+
+</div>
 
       {/* ================= ADMIN MODALS ================= */}
 

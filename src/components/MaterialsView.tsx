@@ -24,7 +24,8 @@ import {
   FileCheck,
   Calendar,
   ExternalLink,
-  Maximize2
+  Maximize2,
+  Lock
 } from 'lucide-react';
 import { SchoolMaterialFile, SchoolClass, UserRole } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
@@ -661,7 +662,8 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
         {/* 4 Large Block Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
           {BLOCKS.map((block) => {
-            const count = materials.filter((m) => (m.blockId || 'block1') === block.id).length;
+            const count = materials.filter((m) => m.blockId === block.id).length;
+            const isLocked = count === 0 && block.id !== 'block1';
             const isActive = activeBlock === block.id;
 
             return (
@@ -676,29 +678,41 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                 className={`p-4 rounded-xl border text-right transition-all flex flex-col justify-between relative overflow-hidden ${
                   isActive
                     ? 'bg-purple-50/80 border-purple-500 shadow-sm ring-2 ring-purple-500/20'
+                    : isLocked
+                    ? 'bg-slate-100/60 border-slate-200 hover:bg-slate-100 text-slate-400'
                     : 'bg-slate-50/70 border-slate-200 hover:bg-slate-100/70 hover:border-slate-300'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Layers className={`w-4 h-4 ${isActive ? 'text-purple-600' : 'text-slate-400'}`} />
-                    <span className={`text-sm font-black ${isActive ? 'text-purple-900' : 'text-slate-800'}`}>
+                    {isLocked ? (
+                      <Lock className="w-4 h-4 text-slate-400" />
+                    ) : (
+                      <Layers className={`w-4 h-4 ${isActive ? 'text-purple-600' : 'text-slate-400'}`} />
+                    )}
+                    <span className={`text-sm font-black ${isActive ? 'text-purple-900' : isLocked ? 'text-slate-600' : 'text-slate-800'}`}>
                       {block.nameAr}
                     </span>
                   </div>
-                  {isActive && (
+                  {isActive ? (
                     <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-pulse"></span>
-                  )}
+                  ) : isLocked ? (
+                    <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold">مقفول</span>
+                  ) : null}
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
                   <span className="font-semibold text-[11px]">
-                    {count} {count === 1 ? 'شيت متاح' : 'شيتات ومذكرات'}
+                    {count === 0 ? 'مقفول وفارغ (0)' : `${count} ${count === 1 ? 'شيت متاح' : 'شيتات ومذكرات'}`}
                   </span>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                    isActive ? 'bg-purple-200/80 text-purple-900' : 'bg-slate-200/60 text-slate-600'
+                    isActive
+                      ? 'bg-purple-200/80 text-purple-900'
+                      : isLocked
+                      ? 'bg-slate-200 text-slate-600'
+                      : 'bg-slate-200/60 text-slate-600'
                   }`}>
-                    {isActive ? 'مفتوح الآن' : 'انقر للفتح'}
+                    {isActive ? 'مفتوح الآن' : isLocked ? 'فارغ ومغلق' : 'انقر للفتح'}
                   </span>
                 </div>
               </button>
@@ -751,22 +765,27 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
       {/* ================= LEVEL 3: SUBJECTS & THEIR SHEETS INSIDE THE BLOCK ================= */}
       {blockMaterials.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-xs">
-          <div className="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-3">
-            <FolderOpen className="w-8 h-8" />
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-3">
+            <Lock className="w-8 h-8" />
           </div>
-          <h3 className="font-bold text-slate-800 text-base mb-1">
-            لا توجد شيتات حالياً في {getBlockName(activeBlock)}
+          <h3 className="font-black text-slate-800 text-base mb-1">
+            {activeBlock !== 'block1'
+              ? `${getBlockName(activeBlock)} مقفول وفارغ تماماً (0 شيتات)`
+              : `لا توجد شيتات حالياً في ${getBlockName(activeBlock)}`}
           </h3>
-          <p className="text-xs text-slate-500 max-w-md mx-auto mb-4">
-            يمكن للأدمن رفع شيتات لكل مادة (عربي، ماث، إنجليزي، ساينس، دراسات، إلخ) بضغطة زر.
+          <p className="text-xs text-slate-500 max-w-md mx-auto mb-4 leading-relaxed">
+            {activeBlock !== 'block1'
+              ? 'هذا البلوك فارغ تماماً ومغلق حالياً، ولن يتم تنزيل أو عرض أي شيتات فيه حتى تبدأ الإدارة في تحميلها ورفعها مباشرة.'
+              : 'يمكن للأدمن رفع شيتات لكل مادة (عربي، ماث، إنجليزي، ساينس، دراسات، إلخ) بضغطة زر.'}
           </p>
           {currentRole === 'admin' && (
             <button
               type="button"
               onClick={() => handleOpenAddModal()}
-              className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs"
+              className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs inline-flex items-center gap-1.5 transition-colors"
             >
-              + إضافة أول شيت في {getBlockName(activeBlock)}
+              <Plus className="w-4 h-4" />
+              <span>تحميل ورفع شيت في {getBlockName(activeBlock)}</span>
             </button>
           )}
         </div>

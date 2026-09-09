@@ -192,18 +192,6 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
             </div>
-
-            {/* Print Button */}
-            <button
-              id="header-print-btn"
-              type="button"
-              onClick={onOpenPrint}
-              className="flex items-center gap-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition-colors"
-              title="طباعة تقرير المتابعة"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">طباعة</span>
-            </button>
           </div>
         </div>
       </div>
