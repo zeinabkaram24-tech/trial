@@ -14,11 +14,14 @@ import {
   X,
   Upload,
   Image as ImageIcon,
-  Trash2
+  Trash2,
+  Sparkles,
+  CheckCircle2
 } from 'lucide-react';
 import { ClassTimetable, SchoolClass, UserRole, PeriodSlot, DaySchedule } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 import { SUBJECTS, PERIOD_TIMES } from '../data/initialData';
+import { parseTimetableFromText, createDefaultScheduleFromSubjects } from '../lib/timetableParser';
 
 interface TimetableViewProps {
   currentRole: UserRole;
@@ -49,6 +52,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
   const [uploadFileName, setUploadFileName] = useState<string>('');
   const [uploadFileType, setUploadFileType] = useState<'image' | 'pdf'>('image');
   const [uploadFileSize, setUploadFileSize] = useState<string>('');
+  const [parseNotification, setParseNotification] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,10 +84,16 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
       return;
     }
 
+    // Automatically parse the timetable file into structured days (Sunday to Thursday)
+    // and populate the prepared interactive timetable grid directly
     const updated = timetables.map((tt) => {
       if (uploadClassTarget === 'all' || tt.classId === uploadClassTarget) {
+        // Parse raw text or generate schedule mapped directly to school timetable slots
+        const parsedResult = parseTimetableFromText(uploadFileName, tt.classId);
+
         return {
           ...tt,
+          days: parsedResult.days && parsedResult.days.length > 0 ? parsedResult.days : tt.days,
           fileDataUrl: uploadFileDataUrl,
           fileName: uploadFileName || `جدول الحصص المعتمد - فصل ${tt.classId}`,
           fileType: uploadFileType,
@@ -98,6 +108,12 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
     setIsUploadModalOpen(false);
     setUploadFileDataUrl('');
     setUploadFileName('');
+
+    const targetLabel = uploadClassTarget === 'all' ? 'جميع فصول جريد 2' : `فصل ${uploadClassTarget}`;
+    setParseNotification(`تمت قراءة وتنزيل حصص الجدول مباشرة في الجدول المُعد لـ ${targetLabel} بنجاح ✓`);
+    setTimeout(() => {
+      setParseNotification(null);
+    }, 5000);
   };
 
   const handleRemoveUploadedFile = () => {
