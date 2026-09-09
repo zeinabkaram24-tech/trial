@@ -120,7 +120,12 @@ export const saveStoredCompletedHw = (data: Record<string, boolean>): void => {
 export const getStoredMaterials = (): SchoolMaterialFile[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.MATERIALS);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const list: SchoolMaterialFile[] = JSON.parse(raw);
+      // Strictly remove any unrequested materials (PE, ethics/religion, art)
+      const cleanList = list.filter((m) => !['pe', 'ethics', 'religion', 'art'].includes(m.subjectId));
+      if (cleanList.length > 0) return cleanList;
+    }
   } catch (e) {
     console.error('Failed to load materials from storage', e);
   }

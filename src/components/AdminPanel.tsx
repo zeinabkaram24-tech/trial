@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ShieldCheck,
   Download,
@@ -28,7 +28,10 @@ import {
   File,
   ExternalLink,
   Printer,
-  Maximize2
+  Maximize2,
+  Users,
+  UserCheck,
+  Activity
 } from 'lucide-react';
 import {
   SchoolClass,
@@ -39,6 +42,7 @@ import {
   PeriodSlot
 } from '../types';
 import { exportAllDataToJSON } from '../lib/storage';
+import { getStoredVisitorStats, resetDailyVisitorStats, DailyVisitorStats } from '../lib/visitorTracking';
 import { SUBJECTS, BLOCKS, WEEKS, PERIOD_TIMES, INITIAL_TIMETABLES } from '../data/initialData';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 
@@ -129,7 +133,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onUpdateMaterials
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [adminTab, setAdminTab] = useState<'materials' | 'plans' | 'timetables' | 'overview'>('materials');
+  const [adminTab, setAdminTab] = useState<'timetables' | 'materials' | 'plans' | 'visitors' | 'overview'>('timetables');
+
+  // Visitor Tracking States (12:00 AM to 12:00 AM)
+  const [visitorStats, setVisitorStats] = useState<DailyVisitorStats>(() => getStoredVisitorStats());
+
+  useEffect(() => {
+    const handleVisitorUpdate = (e: any) => {
+      if (e?.detail) {
+        setVisitorStats(e.detail);
+      } else {
+        setVisitorStats(getStoredVisitorStats());
+      }
+    };
+    window.addEventListener('nile_minya_visitor_update', handleVisitorUpdate);
+    return () => {
+      window.removeEventListener('nile_minya_visitor_update', handleVisitorUpdate);
+    };
+  }, []);
+
+  const handleManualResetVisitors = () => {
+    if (window.confirm('هل أنت متأكد من تصفير إحصائيات الزوار لهذا اليوم؟ (ملاحظة: النظام يقوم تلقائياً بالتصفير يومياً عند الساعة 12:00 منتصف الليل)')) {
+      const fresh = resetDailyVisitorStats();
+      setVisitorStats(fresh);
+      triggerSyncAlert('تم تصفير سجل زوار اليوم بنجاح ✓');
+    }
+  };
 
   // Live Sync feedback alert
   const [syncAlert, setSyncAlert] = useState<string | null>(null);
@@ -987,6 +1016,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             adminTab === 'plans' ? 'bg-emerald-800 text-white' : 'bg-slate-100 text-slate-600'
           }`}>
             {weeklyPlans.length}
+          </span>
+        </button>
+
+        <button
+          id="admin-tab-visitors"
+          type="button"
+          onClick={() => setAdminTab('visitors')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            adminTab === 'visitors'
+              ? 'bg-sky-700 text-white shadow-xs'
+              : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>بيان زوار الموقع (من 12 إلى 12)</span>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+            adminTab === 'visitors' ? 'bg-sky-900 text-white' : 'bg-sky-100 text-sky-800'
+          }`}>
+            {visitorStats.totalVisits} زيارة
           </span>
         </button>
 

@@ -27,8 +27,8 @@ interface HeaderProps {
   onSelectWeek: (w: string) => void;
   studentProfile: StudentProfile | null;
   onUpdateStudentProfile: (profile: StudentProfile | null) => void;
-  activeTab: 'daily' | 'weekly' | 'timetable' | 'materials' | 'student' | 'admin';
-  onChangeTab: (tab: 'daily' | 'weekly' | 'timetable' | 'materials' | 'student' | 'admin') => void;
+  activeTab: 'tasks' | 'weekly' | 'timetable' | 'materials' | 'admin' | 'daily' | 'student';
+  onChangeTab: (tab: 'tasks' | 'weekly' | 'timetable' | 'materials' | 'admin') => void;
   onOpenPrint: () => void;
 }
 
@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
     onSelectClass(studentClassInput);
     onChangeRole('student');
     setShowStudentLoginModal(false);
-    onChangeTab('student');
+    onChangeTab('tasks');
   };
 
   return (
@@ -286,17 +286,22 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="border-t border-slate-200 bg-slate-50/70">
         <div className="max-w-7xl mx-auto px-4 flex items-center overflow-x-auto gap-2 py-1.5 scrollbar-none">
           <button
-            id="tab-daily-followup"
+            id="tab-tasks"
             type="button"
-            onClick={() => onChangeTab('daily')}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
-              activeTab === 'daily'
+            onClick={() => onChangeTab('tasks')}
+            className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
+              activeTab === 'tasks' || activeTab === 'daily' || activeTab === 'student'
                 ? 'bg-white text-sky-800 shadow-xs border border-slate-200'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-sky-600"></span>
-            <span>المتابعة اليومية (الدروس والواجبات والتجهيزات)</span>
+            <CheckSquare className="w-4 h-4 text-amber-600" />
+            <span>Tasks</span>
+            {studentProfile && (
+              <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">
+                {studentProfile.name.split(' ')[0]}
+              </span>
+            )}
           </button>
 
           <button
@@ -339,31 +344,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <FolderOpen className="w-4 h-4 text-purple-600" />
             <span>Materials</span>
-          </button>
-
-          <button
-            id="tab-student-space"
-            type="button"
-            onClick={() => {
-              if (!studentProfile && currentRole !== 'student') {
-                setShowStudentLoginModal(true);
-              } else {
-                onChangeTab('student');
-              }
-            }}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
-              activeTab === 'student'
-                ? 'bg-white text-emerald-800 shadow-xs border border-emerald-200'
-                : 'text-slate-600 hover:text-emerald-700 hover:bg-slate-100'
-            }`}
-          >
-            <User className="w-4 h-4 text-emerald-600" />
-            <span>Tasks</span>
-            {studentProfile && (
-              <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">
-                {studentProfile.name.split(' ')[0]}
-              </span>
-            )}
           </button>
 
           {currentRole === 'admin' && (
