@@ -255,6 +255,7 @@ export default function App() {
             onOpenPrint={() => setIsPrintModalOpen(true)}
             timetables={timetables}
             weeklyPlans={weeklyPlans}
+            onUpdateWeeklyPlans={setWeeklyPlans}
             materials={materials}
           />
         )}

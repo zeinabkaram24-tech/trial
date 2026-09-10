@@ -22,6 +22,9 @@ import {
   LayoutGrid,
   Layers,
   FileSpreadsheet
+  ,Mic
+  ,Square
+  ,Save
 } from 'lucide-react';
 import {
   DailyFollowUp,
@@ -121,6 +124,7 @@ interface DailyFollowUpViewProps {
   timetables?: ClassTimetable[];
   weeklyPlans?: WeeklyPlanItem[];
   materials?: SchoolMaterialFile[];
+  onUpdateWeeklyPlans?: (data: WeeklyPlanItem[]) => void;
 }
 
 export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
@@ -137,6 +141,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   timetables,
   weeklyPlans,
   materials
+  ,onUpdateWeeklyPlans
 }) => {
   // Find current follow-up or create one
   const currentRecord = dailyFollowUps.find(
@@ -350,6 +355,57 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
   const [activeSection, setActiveSection] = useState<'all' | 'classwork' | 'homework' | 'preparations'>('all');
   const [followUpLayoutMode, setFollowUpLayoutMode] = useState<'columns' | 'table'>('columns');
+  const [voiceLanguage, setVoiceLanguage] = useState<'ar-EG' | 'en-US'>('ar-EG');
+  const [voiceField, setVoiceField] = useState<'classwork' | 'homework' | 'tomorrow' | null>(null);
+  const [voiceSubject, setVoiceSubject] = useState(SUBJECTS[0].id);
+  const [voiceClasswork, setVoiceClasswork] = useState('');
+  const [voiceHomework, setVoiceHomework] = useState('');
+  const [voiceTomorrow, setVoiceTomorrow] = useState('');
+  const voiceRecognitionRef = React.useRef<any>(null);
+
+  const stopInlineVoice = () => {
+    voiceRecognitionRef.current?.stop?.();
+    voiceRecognitionRef.current = null;
+    setVoiceField(null);
+  };
+
+  const startInlineVoice = (field: 'classwork' | 'homework' | 'tomorrow') => {
+    if (voiceField) return stopInlineVoice();
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('الإدخال الصوتي يحتاج إلى Google Chrome أو Microsoft Edge.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = voiceLanguage;
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event: any) => {
+      const text = event.results?.[0]?.[0]?.transcript?.trim() || '';
+      const append = (value: string) => `${value}${value ? ' ' : ''}${text}`;
+      if (field === 'classwork') setVoiceClasswork(append);
+      if (field === 'homework') setVoiceHomework(append);
+      if (field === 'tomorrow') setVoiceTomorrow(append);
+    };
+    recognition.onerror = () => stopInlineVoice();
+    recognition.onend = () => { voiceRecognitionRef.current = null; setVoiceField(null); };
+    voiceRecognitionRef.current = recognition;
+    setVoiceField(field);
+    recognition.start();
+  };
+
+  const saveInlineVoiceEntry = () => {
+    if (!onUpdateWeeklyPlans || (!voiceClasswork.trim() && !voiceHomework.trim() && !voiceTomorrow.trim())) return;
+    const dayKey = `${selectedFollowUpDay}|${voiceSubject}`;
+    const plan = (weeklyPlans || []).find((item) => item.blockId === selectedBlock && item.weekId === selectedWeek && item.classId === selectedClass && item.subjectId === voiceSubject);
+    if (plan) {
+      const dayContent = { ...(plan.dayContent || {}), [dayKey]: { classworkNote: voiceClasswork.trim() || undefined, homeworkNote: voiceHomework.trim() || undefined, tomorrowNote: voiceTomorrow.trim() || undefined } };
+      onUpdateWeeklyPlans((weeklyPlans || []).map((item) => item.id === plan.id ? { ...item, dayContent } : item));
+    } else {
+      onUpdateWeeklyPlans([...(weeklyPlans || []), { id: `plan-${Date.now()}`, blockId: selectedBlock, weekId: selectedWeek, classId: selectedClass, subjectId: voiceSubject, unitOrTheme: `Daily entry - ${selectedFollowUpDay}`, learningObjectives: [], dayContent: { [dayKey]: { classworkNote: voiceClasswork.trim() || undefined, homeworkNote: voiceHomework.trim() || undefined, tomorrowNote: voiceTomorrow.trim() || undefined } } }]);
+    }
+    setVoiceClasswork(''); setVoiceHomework(''); setVoiceTomorrow('');
+  };
 
   // Admin Modal States
   const [editingCw, setEditingCw] = useState<{ isOpen: boolean; item?: ClassworkRecord }>({ isOpen: false });
@@ -607,6 +663,39 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           </button>
         ))}
       </div>
+
+      {currentRole === 'admin' && (
+        <div className="bg-slate-900 rounded-3xl border border-slate-700 p-4 text-white shadow-md">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div>
+              <h3 className="font-black text-sm flex items-center gap-2"><Mic className="w-4 h-4 text-amber-300" /> إضافة مباشرة لليوم الحالي</h3>
+              <p className="text-[11px] text-slate-300 mt-1">يمكنك الكتابة يدويًا أو التحدث بالعربية أو الإنجليزية، ثم الحفظ لتحديث واجهات الطالب والزائر فورًا.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <select value={voiceLanguage} onChange={(e) => setVoiceLanguage(e.target.value as 'ar-EG' | 'en-US')} className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-xs font-bold text-white">
+                <option value="ar-EG" className="text-slate-900">العربية</option>
+                <option value="en-US" className="text-slate-900">English</option>
+              </select>
+              <select value={voiceSubject} onChange={(e) => setVoiceSubject(e.target.value)} className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-xs font-bold text-white">
+                {SUBJECTS.map((subject) => <option key={subject.id} value={subject.id} className="text-slate-900">{subject.nameEn}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            {([
+              ['classwork', 'Classwork', voiceClasswork, setVoiceClasswork],
+              ['homework', 'Homework', voiceHomework, setVoiceHomework],
+              ['tomorrow', 'Tomorrow', voiceTomorrow, setVoiceTomorrow]
+            ] as const).map(([field, label, value, setter]) => (
+              <div key={field} className="rounded-2xl bg-white/5 border border-white/10 p-3">
+                <div className="flex items-center justify-between mb-2"><span className="text-xs font-black">{label}</span><button type="button" onClick={() => startInlineVoice(field)} className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-black ${voiceField === field ? 'bg-red-600 animate-pulse' : 'bg-white/10 hover:bg-white/20'}`}>{voiceField === field ? <Square className="w-3 h-3" /> : <Mic className="w-3 h-3" />}{voiceField === field ? 'Stop' : 'Voice'}</button></div>
+                <textarea value={value} onChange={(e) => setter(e.target.value)} rows={2} placeholder={`اكتب ${label} أو تحدث...`} className="w-full resize-none rounded-xl bg-white text-slate-900 px-3 py-2 text-xs outline-none" />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end mt-3"><button type="button" onClick={saveInlineVoiceEntry} className="flex items-center gap-2 rounded-xl bg-amber-400 text-slate-950 px-4 py-2 text-xs font-black hover:bg-amber-300"><Save className="w-3.5 h-3.5" /> Save / حفظ وتحديث الآن</button></div>
+        </div>
+      )}
 
       {/* Compact daily timetable: the reference project's icon cards live inside Daily Tasks. */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
