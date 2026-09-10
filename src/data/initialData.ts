@@ -232,65 +232,70 @@ export const INITIAL_TIMETABLES: ClassTimetable[] = [
         dayNameAr: 'الأحد',
         dayNameEn: 'Sunday',
         periods: [
-          { id: 'p-2b-sun-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'arabic' },
-          { id: 'p-2b-sun-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'english' },
-          { id: 'p-2b-sun-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'math' },
-          { id: 'p-2b-sun-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'ict' },
-          { id: 'p-2b-sun-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'science' },
-          { id: 'p-2b-sun-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'social' },
-          { id: 'p-2b-sun-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'ethics' }
+          { id: 'p-2b-sun-1', periodNum: 1, time: '07:45 - 08:35', subjectId: 'french' },
+          { id: 'p-2b-sun-2', periodNum: 2, time: '08:35 - 09:25', subjectId: 'math' },
+          { id: 'p-2b-sun-3', periodNum: 3, time: '09:45 - 10:35', subjectId: 'arabic' },
+          { id: 'p-2b-sun-4', periodNum: 4, time: '10:35 - 11:25', subjectId: 'science' },
+          { id: 'p-2b-sun-5', periodNum: 5, time: '11:25 - 12:15', subjectId: 'english' },
+          { id: 'p-2b-sun-6', periodNum: 6, time: '12:15 - 13:05', subjectId: 'english' },
+          { id: 'p-2b-sun-7', periodNum: 7, time: '13:25 - 14:15', subjectId: 'ict' },
+          { id: 'p-2b-sun-8', periodNum: 8, time: '14:15 - 15:05', subjectId: 'music' }
         ]
       },
       {
         dayNameAr: 'الإثنين',
         dayNameEn: 'Monday',
         periods: [
-          { id: 'p-2b-mon-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'english' },
-          { id: 'p-2b-mon-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'math' },
-          { id: 'p-2b-mon-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'arabic' },
-          { id: 'p-2b-mon-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'french' },
-          { id: 'p-2b-mon-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'science' },
-          { id: 'p-2b-mon-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'pe' },
-          { id: 'p-2b-mon-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'art' }
+          { id: 'p-2b-mon-1', periodNum: 1, time: '07:45 - 08:35', subjectId: 'social' },
+          { id: 'p-2b-mon-2', periodNum: 2, time: '08:35 - 09:25', subjectId: 'pe' },
+          { id: 'p-2b-mon-3', periodNum: 3, time: '09:45 - 10:35', subjectId: 'english' },
+          { id: 'p-2b-mon-4', periodNum: 4, time: '10:35 - 11:25', subjectId: 'english' },
+          { id: 'p-2b-mon-5', periodNum: 5, time: '11:25 - 12:15', subjectId: 'math' },
+          { id: 'p-2b-mon-6', periodNum: 6, time: '12:15 - 13:05', subjectId: 'math' },
+          { id: 'p-2b-mon-7', periodNum: 7, time: '13:25 - 14:15', subjectId: 'arabic' },
+          { id: 'p-2b-mon-8', periodNum: 8, time: '14:15 - 15:05', subjectId: 'arabic' }
         ]
       },
       {
         dayNameAr: 'الثلاثاء',
         dayNameEn: 'Tuesday',
         periods: [
-          { id: 'p-2b-tue-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'science' },
-          { id: 'p-2b-tue-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'arabic' },
-          { id: 'p-2b-tue-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'english' },
-          { id: 'p-2b-tue-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'math' },
-          { id: 'p-2b-tue-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'french' },
-          { id: 'p-2b-tue-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'ict' },
-          { id: 'p-2b-tue-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'social' }
+          { id: 'p-2b-tue-1', periodNum: 1, time: '07:45 - 08:35', subjectId: 'math' },
+          { id: 'p-2b-tue-2', periodNum: 2, time: '08:35 - 09:25', subjectId: 'ict' },
+          { id: 'p-2b-tue-3', periodNum: 3, time: '09:45 - 10:35', subjectId: 'art' },
+          { id: 'p-2b-tue-4', periodNum: 4, time: '10:35 - 11:25', subjectId: 'french' },
+          { id: 'p-2b-tue-5', periodNum: 5, time: '11:25 - 12:15', subjectId: 'ethics' },
+          { id: 'p-2b-tue-6', periodNum: 6, time: '12:15 - 13:05', subjectId: 'english' },
+          { id: 'p-2b-tue-7', periodNum: 7, time: '13:25 - 14:15', subjectId: 'music' },
+          { id: 'p-2b-tue-8', periodNum: 8, time: '14:15 - 15:05', subjectId: 'arabic' }
         ]
       },
       {
         dayNameAr: 'الأربعاء',
         dayNameEn: 'Wednesday',
         periods: [
-          { id: 'p-2b-wed-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'math' },
-          { id: 'p-2b-wed-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'science' },
-          { id: 'p-2b-wed-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'arabic' },
-          { id: 'p-2b-wed-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'english' },
-          { id: 'p-2b-wed-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'art' },
-          { id: 'p-2b-wed-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'english' },
-          { id: 'p-2b-wed-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'math' }
+          { id: 'p-2b-wed-1', periodNum: 1, time: '07:45 - 08:35', subjectId: 'english' },
+          { id: 'p-2b-wed-2', periodNum: 2, time: '08:35 - 09:25', subjectId: 'social' },
+          { id: 'p-2b-wed-3', periodNum: 3, time: '09:45 - 10:35', subjectId: 'pe' },
+          { id: 'p-2b-wed-4', periodNum: 4, time: '10:35 - 11:25', subjectId: 'arabic' },
+          { id: 'p-2b-wed-5', periodNum: 5, time: '11:25 - 12:15', subjectId: 'math' },
+          { id: 'p-2b-wed-6', periodNum: 6, time: '12:15 - 13:05', subjectId: 'french' },
+          { id: 'p-2b-wed-7', periodNum: 7, time: '13:25 - 14:15', subjectId: 'science' },
+          { id: 'p-2b-wed-8', periodNum: 8, time: '14:15 - 15:05', subjectId: 'art' }
         ]
       },
       {
         dayNameAr: 'الخميس',
         dayNameEn: 'Thursday',
         periods: [
-          { id: 'p-2b-thu-1', periodNum: 1, time: '08:00 - 08:45', subjectId: 'arabic' },
-          { id: 'p-2b-thu-2', periodNum: 2, time: '08:45 - 09:30', subjectId: 'english' },
-          { id: 'p-2b-thu-3', periodNum: 3, time: '10:00 - 10:45', subjectId: 'science' },
-          { id: 'p-2b-thu-4', periodNum: 4, time: '10:45 - 11:30', subjectId: 'math' },
-          { id: 'p-2b-thu-5', periodNum: 5, time: '11:30 - 12:15', subjectId: 'social' },
-          { id: 'p-2b-thu-6', periodNum: 6, time: '12:45 - 01:30', subjectId: 'pe' },
-          { id: 'p-2b-thu-7', periodNum: 7, time: '01:30 - 02:15', subjectId: 'french' }
+          { id: 'p-2b-thu-1', periodNum: 1, time: '07:45 - 08:35', subjectId: 'arabic' },
+          { id: 'p-2b-thu-2', periodNum: 2, time: '08:35 - 09:25', subjectId: 'social' },
+          { id: 'p-2b-thu-3', periodNum: 3, time: '09:45 - 10:35', subjectId: 'ethics' },
+          { id: 'p-2b-thu-4', periodNum: 4, time: '10:35 - 11:25', subjectId: 'math' },
+          { id: 'p-2b-thu-5', periodNum: 5, time: '11:25 - 12:15', subjectId: 'english' },
+          { id: 'p-2b-thu-6', periodNum: 6, time: '12:15 - 13:05', subjectId: 'english' },
+          { id: 'p-2b-thu-7', periodNum: 7, time: '13:25 - 14:15', subjectId: 'science' },
+          { id: 'p-2b-thu-8', periodNum: 8, time: '14:15 - 15:05', subjectId: 'ict' }
         ]
       }
     ]

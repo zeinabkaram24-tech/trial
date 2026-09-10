@@ -101,7 +101,7 @@ export default function App() {
   useEffect(() => {
     const handleStorageEvent = (e: StorageEvent) => {
       try {
-        if (e.key === 'nile_minya_timetables_v2' && e.newValue) {
+        if ((e.key === 'nile_minya_timetables_v3' || e.key === 'nile_minya_timetables_v2') && e.newValue) {
           setTimetables(JSON.parse(e.newValue));
         } else if (e.key === 'nile_minya_weekly_plans_v1' && e.newValue) {
           setWeeklyPlans(JSON.parse(e.newValue));

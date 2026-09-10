@@ -23,7 +23,7 @@ import {
 import { WeeklyPlanItem, SchoolClass, UserRole } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 import { SUBJECTS, BLOCKS, WEEKS } from '../data/initialData';
-import { extractWeeklyPlanText, parseWeeklyPlanText } from '../lib/weeklyPlanParser';
+import { extractWeeklyPlanText, parseWeeklyPlanText, WEEKLY_PLAN_PARSER_VERSION } from '../lib/weeklyPlanParser';
 
 interface WeeklyPlanViewProps {
   currentRole: UserRole;
@@ -80,13 +80,13 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    const pending = weeklyPlans.filter((plan) => (plan.fileType === 'pdf' || plan.fileType === 'word' || plan.fileType === 'doc') && plan.fileDataUrl && !plan.extractedText);
+    const pending = weeklyPlans.filter((plan) => (plan.fileType === 'pdf' || plan.fileType === 'word' || plan.fileType === 'doc') && plan.fileDataUrl && plan.extractionVersion !== WEEKLY_PLAN_PARSER_VERSION);
     if (!pending.length) return;
     void Promise.all(pending.map(async (plan) => {
       try {
         const text = await extractWeeklyPlanText(plan.fileDataUrl!, plan.fileType);
         const extracted = parseWeeklyPlanText(text);
-        return { ...plan, extractedText: extracted.extractedText, classworkNote: extracted.classworkNote, homeworkNote: extracted.homeworkNote || plan.homeworkNote, tomorrowNote: extracted.tomorrowNote, dayContent: extracted.dayContent };
+        return { ...plan, extractedText: extracted.extractedText, extractionVersion: WEEKLY_PLAN_PARSER_VERSION, classworkNote: extracted.classworkNote || plan.classworkNote, homeworkNote: extracted.homeworkNote || plan.homeworkNote, tomorrowNote: extracted.tomorrowNote || plan.tomorrowNote, dayContent: extracted.dayContent };
       } catch {
         return plan;
       }
@@ -229,6 +229,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
       classworkNote: formClasswork.trim() || undefined,
       tomorrowNote: formTomorrowNote.trim() || undefined,
       extractedText: formExtractedText.trim() || undefined,
+      extractionVersion: formExtractedText.trim() ? WEEKLY_PLAN_PARSER_VERSION : undefined,
       dayContent: formDayContent,
       fileName: formFileName.trim() || `${formSubject}_Plan_${selectedBlock}_${selectedWeek}.${formFileType === 'word' ? 'docx' : 'pdf'}`,
       fileType: formFileType,
