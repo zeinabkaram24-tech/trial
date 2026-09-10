@@ -605,7 +605,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         <div className="px-4 py-3 bg-slate-100/80 border-b border-slate-200 flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-indigo-600" />
-            <span className="text-sm font-black text-slate-900">المتابعة اليومية</span>
+            <span className="text-sm font-black text-slate-900">Daily Tasks</span>
           </div>
         </div>
         <div className="p-3 grid grid-cols-2 sm:grid-cols-4 gap-2">

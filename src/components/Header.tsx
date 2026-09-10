@@ -296,7 +296,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <CheckSquare className="w-4 h-4 text-amber-600" />
-            <span>المتابعة اليومية (Daily Tasks)</span>
+            <span>Daily Tasks</span>
           </button>
 
           {(studentProfile || currentRole === 'student') && (

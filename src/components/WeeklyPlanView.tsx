@@ -314,6 +314,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
       <html lang="ar" dir="rtl">
       <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
         <title>خطة ${plan.unitOrTheme} - مدارس النيل المصرية الدولية</title>
         <style>
           @page { size: A4 portrait; margin: 15mm; }

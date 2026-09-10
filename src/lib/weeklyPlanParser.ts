@@ -5,7 +5,7 @@ import { extractTextFromPdf } from './timetableParser';
 
 GlobalWorkerOptions.workerSrc = pdfWorker;
 
-export const WEEKLY_PLAN_PARSER_VERSION = 6;
+export const WEEKLY_PLAN_PARSER_VERSION = 7;
 
 export interface WeeklyPlanDayContent {
   classworkNote?: string;
@@ -153,10 +153,40 @@ function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
   return bytes.buffer;
 }
 
+function dataUrlToText(dataUrl: string): string {
+  const comma = dataUrl.indexOf(',');
+  const header = comma >= 0 ? dataUrl.slice(0, comma) : '';
+  const raw = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+  if (/;base64/i.test(header)) {
+    return new TextDecoder().decode(Uint8Array.from(atob(raw), (char) => char.charCodeAt(0)));
+  }
+  return decodeURIComponent(raw);
+}
+
+function htmlToReadableText(html: string): string {
+  // Preserve table rows and paragraphs before stripping markup so the same
+  // day/header parser works for HTML exports as it does for PDF rows.
+  const withBreaks = html
+    .replace(/<\/(?:tr|p|div|li|h[1-6])\s*>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n');
+  if (typeof DOMParser !== 'undefined') {
+    const doc = new DOMParser().parseFromString(withBreaks, 'text/html');
+    return doc.body.textContent || '';
+  }
+  return withBreaks.replace(/<[^>]+>/g, ' ');
+}
+
 export async function extractWeeklyPlanText(dataUrl: string, fileType?: string): Promise<string> {
+  const mime = dataUrl.match(/^data:([^;,]+)/i)?.[1]?.toLowerCase() || '';
+  if (fileType === 'text' || fileType === 'txt' || mime.startsWith('text/plain')) {
+    return normalize(dataUrlToText(dataUrl));
+  }
+  if (fileType === 'html' || fileType === 'htm' || mime.includes('html')) {
+    return normalize(htmlToReadableText(dataUrlToText(dataUrl)));
+  }
   if (fileType === 'word' || fileType === 'doc' || /word|document|msword/i.test(dataUrl.slice(0, 100))) {
     const result = await mammoth.extractRawText({ arrayBuffer: dataUrlToArrayBuffer(dataUrl) });
-    return result.value;
+    return normalize(result.value);
   }
   try {
     const rowsText = await extractWeeklyPlanPdfRows(dataUrl);
@@ -169,5 +199,7 @@ export async function extractWeeklyPlanText(dataUrl: string, fileType?: string):
 }
 
 export function buildClassworkFromWeeklyPlan(plan: { classworkNote?: string; unitOrTheme: string }): string {
-  return plan.classworkNote || plan.unitOrTheme;
+  // A plan title is metadata, not classwork. Never manufacture a lesson from
+  // the file name or unit title when the source has no explicit classwork.
+  return plan.classworkNote?.trim() || '';
 }

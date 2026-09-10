@@ -320,7 +320,8 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
       <!DOCTYPE html>
       <html dir="rtl">
       <head>
-        <meta charset="utf-8">
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
         <title>جدول حصص الصف الثاني - فصل ${selectedClass}</title>
         <style>
           @page { size: landscape; margin: 12mm; }
@@ -685,7 +686,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                 const printWin = window.open('', '_blank');
                 if (printWin && currentTimetable.fileDataUrl) {
                   if (currentTimetable.fileType === 'image') {
-                    printWin.document.write(`<html><head><title>جدول حصص Class ${selectedClass}</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${currentTimetable.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
+                    printWin.document.write(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"><title>جدول حصص Class ${selectedClass}</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${currentTimetable.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
                     printWin.document.close();
                   } else {
                     printWin.location.href = currentTimetable.fileDataUrl;
@@ -725,7 +726,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                   const printWin = window.open('', '_blank');
                   if (printWin && currentTimetable.fileDataUrl) {
                     if (currentTimetable.fileType === 'image') {
-                      printWin.document.write(`<html><head><title>جدول حصص Class ${selectedClass}</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;"><img src="${currentTimetable.fileDataUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" onload="window.print();" /></body></html>`);
+                      printWin.document.write(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"><title>جدول حصص Class ${selectedClass}</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;"><img src="${currentTimetable.fileDataUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" onload="window.print();" /></body></html>`);
                       printWin.document.close();
                     } else {
                       printWin.location.href = currentTimetable.fileDataUrl;
@@ -1039,7 +1040,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                     const printWin = window.open('', '_blank');
                     if (printWin && currentTimetable.fileDataUrl) {
                       if (currentTimetable.fileType === 'image') {
-                        printWin.document.write(`<html><head><title>جدول حصص Class ${selectedClass}</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${currentTimetable.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
+                        printWin.document.write(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"><title>جدول حصص Class ${selectedClass}</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${currentTimetable.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
                         printWin.document.close();
                       } else {
                         printWin.location.href = currentTimetable.fileDataUrl;

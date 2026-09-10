@@ -375,6 +375,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>Weekly Plan - ${sub.nameEn}</title>
   <style>
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #1e293b; padding: 24px; margin: 0; line-height: 1.6; }
@@ -2653,7 +2654,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     const printWin = window.open('', '_blank');
                     if (printWin && previewTimetableDoc.fileDataUrl) {
                       if (previewTimetableDoc.fileType === 'image') {
-                        printWin.document.write(`<html><head><title>طباعة الجدول</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${previewTimetableDoc.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
+                        printWin.document.write(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"><title>طباعة الجدول</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${previewTimetableDoc.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
                         printWin.document.close();
                       } else {
                         printWin.location.href = previewTimetableDoc.fileDataUrl;
@@ -2743,7 +2744,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     const printWin = window.open('', '_blank');
                     if (printWin) {
                       if (previewPlan.fileDataUrl && previewPlan.fileType === 'image') {
-                        printWin.document.write(`<html><head><title>طباعة الخطة الأسبوعية</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${previewPlan.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
+                        printWin.document.write(`<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"><title>طباعة الخطة الأسبوعية</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;"><img src="${previewPlan.fileDataUrl}" style="max-width:100%;" onload="window.print();window.close();" /></body></html>`);
                         printWin.document.close();
                       } else if (previewPlan.fileDataUrl) {
                         printWin.location.href = previewPlan.fileDataUrl;

@@ -99,7 +99,7 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>${file.title} - Nile Egyptian Schools</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
@@ -437,7 +437,7 @@ ${file.previewSummary || file.description || 'محتوى معتمد من إدا�
           printWindow.document.write(`
             <!DOCTYPE html>
             <html>
-              <head><title>${file.title}</title></head>
+              <head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"><title>${file.title}</title></head>
               <body style="margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#fff;">
                 <img src="${file.fileDataUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" onload="window.print();" />
               </body>
@@ -464,6 +464,7 @@ ${file.previewSummary || file.description || 'محتوى معتمد من إدا�
       <html lang="ar" dir="rtl">
       <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
         <title>${file.title} - مدارس النيل المصرية الدولية</title>
         <style>
           @page { size: A4 portrait; margin: 15mm; }
