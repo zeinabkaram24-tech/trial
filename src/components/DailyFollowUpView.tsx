@@ -35,7 +35,7 @@ import {
   WeeklyPlanItem,
   SchoolMaterialFile
 } from '../types';
-import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
+import { SubjectBadge, getSubjectInfo, RenderSubjectIcon } from './SubjectBadge';
 import { SUBJECTS, INITIAL_TIMETABLES } from '../data/initialData';
 
 const NEXT_DAY_MAP: Record<string, string> = {
@@ -603,6 +603,34 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         ))}
       </div>
 
+      {/* Compact daily timetable: the reference project's icon cards live inside Daily Tasks. */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div className="px-4 py-3 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-indigo-600" />
+            <span className="text-sm font-black text-slate-900">حصص {currentRecord.dayNameAr}</span>
+          </div>
+          <span className="text-[11px] text-slate-500 font-sans">Daily Timetable</span>
+        </div>
+        <div className="p-3 flex gap-2 overflow-x-auto">
+          {todayPeriodsList.map((period) => {
+            const subject = getSubjectInfo(period.subjectId);
+            return (
+              <div
+                key={period.id}
+                className={`min-w-[92px] flex-1 p-2.5 rounded-2xl border text-center ${subject.borderColor} ${subject.color}`}
+              >
+                <div className={`w-7 h-7 mx-auto mb-1 rounded-xl bg-white/80 flex items-center justify-center ${subject.textColor}`}>
+                  <RenderSubjectIcon iconName={subject.iconName} className="w-4 h-4" />
+                </div>
+                <div className={`text-[11px] font-black truncate ${subject.textColor}`}>{subject.nameEn}</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">حصة {period.period}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* View Mode 1: 3 Separate Distinct Boxes in a Responsive Grid */}
       {followUpLayoutMode === 'columns' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -815,10 +843,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                     </div>
 
                     <div className="text-xs font-bold text-slate-800 space-y-1.5">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-sky-800 font-black text-[11px] shrink-0">Lesson Plan:</span>
-                        <span className="text-slate-900 leading-snug">{cw.lessonTopic}</span>
-                      </div>
+                      <span className="text-slate-900 leading-snug">{cw.lessonTopic}</span>
                     </div>
                   </div>
                 ))
@@ -955,12 +980,12 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                 </div>
               </div>
 
-              {/* Weekly Plan Notes at bottom of Tomorrow Box */}
+              {/* Additional tomorrow preparation notes */}
               {weeklyPlanNotes.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-emerald-200/80 bg-white/90 border border-emerald-200 rounded-2xl p-3 space-y-2 shadow-2xs">
                   <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
                     <AlertCircle className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span>Weekly Plan Notes:</span>
+                    <span>Tomorrow&apos;s Preparation:</span>
                   </div>
                   <div className="space-y-1.5">
                     {weeklyPlanNotes.map((noteItem) => (

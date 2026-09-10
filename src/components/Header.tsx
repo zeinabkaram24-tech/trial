@@ -335,20 +335,6 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <button
-            id="tab-timetable"
-            type="button"
-            onClick={() => onChangeTab('timetable')}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
-              activeTab === 'timetable'
-                ? 'bg-white text-indigo-800 shadow-xs border border-indigo-200'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-            }`}
-          >
-            <Calendar className="w-4 h-4 text-indigo-600" />
-            <span>Schedule</span>
-          </button>
-
-          <button
             id="tab-materials"
             type="button"
             onClick={() => onChangeTab('materials')}

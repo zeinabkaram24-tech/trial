@@ -284,19 +284,13 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
       const win = window.open();
       if (win) {
         if (file.fileDataUrl.startsWith('data:application/pdf') || file.fileType === 'pdf') {
-          win.document.write(`
-            <!DOCTYPE html>
-            <html>
-              <head><title>${file.title}</title><style>html,body{margin:0;height:100%;overflow:hidden;background:#333;}</style></head>
-              <body>
-                <iframe src="${previewObjectUrl || file.fileDataUrl}" width="100%" height="100%" frameborder="0" style="border:none;"></iframe>
-              </body>
-            </html>
-          `);
+          // Let the browser's native PDF viewer handle the original document.
+          // Wrapping it in another iframe causes a compressed view on mobile
+          // and on some desktop browsers.
+          win.location.href = file.fileDataUrl;
         } else {
           win.location.href = previewObjectUrl || file.fileDataUrl;
         }
-        win.document.close();
       }
       return;
     }
