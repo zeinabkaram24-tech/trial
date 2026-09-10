@@ -221,7 +221,18 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           rawRecord: null
         };
       });
-    if (dictations.length || planned.length) return [...dictations, ...planned];
+    const scheduledSubjects: string[] = Array.from(new Set((activeTimetable?.days.find((day) => day.dayNameAr === selectedFollowUpDay)?.periods || []).filter((period) => !SESSION_SUBJECTS.has(period.subjectId)).map((period) => period.subjectId as string)));
+    const scheduledPlaceholders = scheduledSubjects
+      .filter((subjectId) => !planned.some((item) => item.subjectId === subjectId) && !dictations.some((item) => item.subjectId === subjectId))
+      .map((subjectId) => ({
+        id: `scheduled-homework-${selectedFollowUpDay}-${subjectId}`,
+        subjectId,
+        subjectName: getSubjectInfo(subjectId).nameEn,
+        homeworkText: '',
+        pageNumber: '',
+        rawRecord: null
+      }));
+    if (dictations.length || planned.length || scheduledPlaceholders.length) return [...dictations, ...planned, ...scheduledPlaceholders];
 
     const legacyPlanned = weekPlans
       .filter((wp) => wp.homeworkNote && wp.homeworkNote.trim().length > 0)
@@ -252,7 +263,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         };
       });
     }
-  }, [currentRecord.homework, weekPlans, materials, selectedBlock, selectedWeek, selectedFollowUpDay]);
+  }, [currentRecord.homework, weekPlans, materials, selectedBlock, selectedWeek, selectedFollowUpDay, activeTimetable]);
 
   // Today's timetable schedule in the exact order of the selected class.
   const todayDaySchedule = useMemo(() => {
@@ -286,7 +297,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         lessonTopic,
         existingCw
       };
-    }).filter((item) => item.lessonTopic.trim().length > 0 || item.existingCw);
+    });
   }, [todayPeriodsList, weekPlans, currentRecord.classwork, selectedFollowUpDay]);
 
   // Weekly Plan notes for Tomorrow: resources and assessment notes are both actionable.
@@ -503,6 +514,40 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     setVoiceClasswork(''); setVoiceHomework(''); setVoiceTomorrow('');
   };
 
+  const updatePlanNote = (subjectId: string, field: 'classworkNote' | 'homeworkNote' | 'tomorrowNote', text: string, day = selectedFollowUpDay) => {
+    if (!onUpdateWeeklyPlans) return;
+    const dayKey = `${day}|${subjectId}`;
+    const index = (weeklyPlans || []).findIndex((item) => item.blockId === selectedBlock && item.weekId === selectedWeek && item.classId === selectedClass && item.subjectId === subjectId);
+    const current = index >= 0 ? (weeklyPlans || [])[index] : undefined;
+    const nextDay = { ...(current?.dayContent?.[dayKey] || {}), [field]: text.trim() || undefined };
+    const nextPlan: WeeklyPlanItem = current
+      ? { ...current, dayContent: { ...(current.dayContent || {}), [dayKey]: nextDay } }
+      : { id: `plan-${Date.now()}`, blockId: selectedBlock, weekId: selectedWeek, classId: selectedClass, subjectId, unitOrTheme: `Daily entry - ${day}`, learningObjectives: [], dayContent: { [dayKey]: nextDay } };
+    const next = [...(weeklyPlans || [])];
+    if (index >= 0) next[index] = nextPlan; else next.unshift(nextPlan);
+    onUpdateWeeklyPlans(next);
+  };
+
+  const editCardNote = (subjectId: string, field: 'classworkNote' | 'homeworkNote' | 'tomorrowNote', currentText: string, day = selectedFollowUpDay) => {
+    const text = window.prompt('اكتب النص المطلوب حفظه لهذه المادة:', currentText || '');
+    if (text !== null) updatePlanNote(subjectId, field, text, day);
+  };
+
+  const deleteCardNote = (subjectId: string, field: 'classworkNote' | 'homeworkNote' | 'tomorrowNote', day = selectedFollowUpDay) => {
+    if (window.confirm('هل تريد حذف النص الخاص بهذه المادة؟')) updatePlanNote(subjectId, field, '', day);
+  };
+
+  const startCardVoice = (subjectId: string, field: 'classworkNote' | 'homeworkNote' | 'tomorrowNote', day = selectedFollowUpDay) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return alert('الإدخال الصوتي يحتاج إلى Google Chrome أو Microsoft Edge.');
+    const recognition = new SpeechRecognition();
+    recognition.lang = voiceLanguage;
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event: any) => updatePlanNote(subjectId, field, event.results?.[0]?.[0]?.transcript || '', day);
+    recognition.start();
+  };
+
   // Admin Modal States
   const [editingCw, setEditingCw] = useState<{ isOpen: boolean; item?: ClassworkRecord }>({ isOpen: false });
   const [editingHw, setEditingHw] = useState<{ isOpen: boolean; item?: HomeworkRecord }>({ isOpen: false });
@@ -692,61 +737,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Subheader: Class, Date, Layout Selector, and Print */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="bg-sky-600 text-white text-xs font-bold px-3 py-1 rounded-xl">
-            Class {selectedClass}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* View Mode Switcher: Cards View vs Table Sheet */}
-          <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 text-xs">
-            <button
-              id="view-mode-columns-btn"
-              type="button"
-              onClick={() => setFollowUpLayoutMode('columns')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                followUpLayoutMode === 'columns'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Cards View"
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Cards View</span>
-            </button>
-            <button
-              id="view-mode-table-btn"
-              type="button"
-              onClick={() => setFollowUpLayoutMode('table')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                followUpLayoutMode === 'table'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Table Sheet"
-            >
-              <Table className="w-3.5 h-3.5" />
-              <span>Table Sheet</span>
-            </button>
-          </div>
-
-          <button
-            id="frame-print-btn"
-            type="button"
-            onClick={onOpenPrint}
-            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer border border-slate-200"
-            title="Print"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200 p-3 flex items-center gap-2 overflow-x-auto">
+      <div className="sticky top-0 z-30 bg-white rounded-2xl border border-slate-200 p-3 flex items-center gap-2 overflow-x-auto shadow-md">
         <span className="text-xs font-black text-slate-500 shrink-0">Day:</span>
         {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => (
           <button
@@ -758,73 +749,6 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
             {day}
           </button>
         ))}
-      </div>
-
-      {currentRole === 'admin' && (
-        <div className="bg-slate-900 rounded-3xl border border-slate-700 p-4 text-white shadow-md">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <div>
-              <h3 className="font-black text-sm flex items-center gap-2"><Mic className="w-4 h-4 text-amber-300" /> إضافة مباشرة لليوم الحالي</h3>
-              <p className="text-[11px] text-slate-300 mt-1">يمكنك الكتابة يدويًا، أو تشغيل المساعد مرة واحدة والتحدث بجمل طبيعية ليحدد النوع واليوم والفصل والمادة ويحفظ تلقائيًا.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <select value={voiceLanguage} onChange={(e) => setVoiceLanguage(e.target.value as 'ar-EG' | 'en-US')} className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-xs font-bold text-white">
-                <option value="ar-EG" className="text-slate-900">العربية</option>
-                <option value="en-US" className="text-slate-900">English</option>
-              </select>
-              <select value={voiceSubject} onChange={(e) => setVoiceSubject(e.target.value)} className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-xs font-bold text-white">
-                {SUBJECTS.map((subject) => <option key={subject.id} value={subject.id} className="text-slate-900">{subject.nameEn}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300/30 bg-amber-300/10 p-3">
-            <button type="button" onClick={assistantListening ? stopVoiceAssistant : startVoiceAssistant} className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black ${assistantListening ? 'bg-red-600 text-white animate-pulse' : 'bg-amber-400 text-slate-950 hover:bg-amber-300'}`}>
-              {assistantListening ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              {assistantListening ? 'إيقاف المساعد' : 'تشغيل المساعد الصوتي المستمر'}
-            </button>
-            <span className="text-[11px] text-amber-100">{assistantStatus}</span>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            {([
-              ['classwork', 'Classwork', voiceClasswork, setVoiceClasswork],
-              ['homework', 'Homework', voiceHomework, setVoiceHomework],
-              ['tomorrow', 'Tomorrow', voiceTomorrow, setVoiceTomorrow]
-            ] as const).map(([field, label, value, setter]) => (
-              <div key={field} className="rounded-2xl bg-white/5 border border-white/10 p-3">
-                <div className="flex items-center justify-between mb-2"><span className="text-xs font-black">{label}</span><button type="button" onClick={() => startInlineVoice(field)} className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-black ${voiceField === field ? 'bg-red-600 animate-pulse' : 'bg-white/10 hover:bg-white/20'}`}>{voiceField === field ? <Square className="w-3 h-3" /> : <Mic className="w-3 h-3" />}{voiceField === field ? 'Stop' : 'Voice'}</button></div>
-                <textarea value={value} onChange={(e) => setter(e.target.value)} rows={2} placeholder={`اكتب ${label} أو تحدث...`} className="w-full resize-none rounded-xl bg-white text-slate-900 px-3 py-2 text-xs outline-none" />
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-end mt-3"><button type="button" onClick={saveInlineVoiceEntry} className="flex items-center gap-2 rounded-xl bg-amber-400 text-slate-950 px-4 py-2 text-xs font-black hover:bg-amber-300"><Save className="w-3.5 h-3.5" /> Save / حفظ وتحديث الآن</button></div>
-        </div>
-      )}
-
-      {/* Compact daily timetable: the reference project's icon cards live inside Daily Tasks. */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="px-4 py-3 bg-slate-100/80 border-b border-slate-200 flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-indigo-600" />
-            <span className="text-sm font-black text-slate-900">Daily Tasks</span>
-          </div>
-        </div>
-        <div className="p-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {todayPeriodsList.map((period) => {
-            const subject = getSubjectInfo(period.subjectId);
-            return (
-              <div
-                key={period.id}
-                className={`w-full p-2.5 rounded-2xl border text-center ${subject.borderColor} ${subject.color}`}
-              >
-                <div className={`w-7 h-7 mx-auto mb-1 rounded-xl bg-white/80 flex items-center justify-center ${subject.textColor}`}>
-                  <RenderSubjectIcon iconName={subject.iconName} className="w-4 h-4" />
-                </div>
-                <div className={`text-[11px] font-black truncate ${subject.textColor}`}>{subject.nameEn}</div>
-                <div className="text-[10px] text-slate-500 mt-0.5">حصة {period.period}</div>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {/* View Mode 1: 3 Separate Distinct Boxes in a Responsive Grid */}
@@ -896,7 +820,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                             <span>{item.subjectName}</span>
                             <span className="text-slate-400 mx-1.5">-</span>
                             <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 font-bold">
-                              {item.homeworkText}
+                              {item.homeworkText || 'لم يُضاف واجب بعد'}
                             </span>
                           </div>
                         </div>
@@ -943,6 +867,13 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                               >
                                 <Trash2 className="w-3 h-3" />
                               </button>
+                            </div>
+                          )}
+                          {currentRole === 'admin' && !item.rawRecord && (
+                            <div className="flex items-center gap-1">
+                              <button type="button" onClick={() => editCardNote(item.subjectId, 'homeworkNote', item.homeworkText)} className="p-1 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded" title="كتابة Homework"><Edit2 className="w-3 h-3" /></button>
+                              <button type="button" onClick={() => startCardVoice(item.subjectId, 'homeworkNote')} className="p-1 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded" title="إضافة Homework بالصوت"><Mic className="w-3 h-3" /></button>
+                              <button type="button" onClick={() => deleteCardNote(item.subjectId, 'homeworkNote')} className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded" title="حذف Homework"><Trash2 className="w-3 h-3" /></button>
                             </div>
                           )}
                         </div>
@@ -1010,8 +941,12 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                           <div className="text-[10px] text-slate-500">{cw.time}</div>
                         </div>
                       </div>
-                      {currentRole === 'admin' && cw.existingCw && (
+                      {currentRole === 'admin' && (
                         <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <button type="button" onClick={() => editCardNote(cw.subjectId, 'classworkNote', cw.lessonTopic)} className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md" title="كتابة Classwork"><Edit2 className="w-3.5 h-3.5" /></button>
+                          <button type="button" onClick={() => startCardVoice(cw.subjectId, 'classworkNote')} className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md" title="إضافة Classwork بالصوت"><Mic className="w-3.5 h-3.5" /></button>
+                          <button type="button" onClick={() => deleteCardNote(cw.subjectId, 'classworkNote')} className="p-1 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-md" title="حذف Classwork"><Trash2 className="w-3.5 h-3.5" /></button>
+                          {cw.existingCw && <>
                           <button
                             type="button"
                             onClick={() => {
@@ -1034,12 +969,13 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
+                          </>}
                         </div>
                       )}
                     </div>
 
                     <div className="text-xs font-bold text-slate-800 space-y-1.5">
-                      <span className="text-slate-900 leading-snug">{cw.lessonTopic}</span>
+                      <span className="text-slate-900 leading-snug">{cw.lessonTopic || 'لم يُضاف Classwork بعد'}</span>
                     </div>
                   </div>
                 ))
@@ -1120,6 +1056,8 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                   ) : (
                     tomorrowPeriods.map((period) => {
                       const isPeriodPacked = !!packedPeriods[period.id];
+                      const tomorrowPlan = weekPlans.find((plan) => plan.subjectId === period.subjectId);
+                      const tomorrowDayContent = tomorrowPlan?.dayContent?.[`${selectedTomorrowDay}|${period.subjectId}`] || tomorrowPlan?.dayContent?.[selectedTomorrowDay];
                       return (
                         <div
                           key={period.id}
@@ -1137,7 +1075,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                             >
                               {period.periodNum}
                             </div>
-                            <div className="min-w-0">
+                          <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <SubjectBadge subjectId={period.subjectId} size="sm" />
                               </div>
@@ -1151,6 +1089,11 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                                 ) : null;
                               })()}
                             </div>
+                            {currentRole === 'admin' && <div className="flex items-center gap-1 mt-1">
+                              <button type="button" onClick={() => editCardNote(period.subjectId, 'tomorrowNote', tomorrowDayContent?.tomorrowNote || '', selectedTomorrowDay)} className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded" title="كتابة Tomorrow"><Edit2 className="w-3 h-3" /></button>
+                              <button type="button" onClick={() => startCardVoice(period.subjectId, 'tomorrowNote', selectedTomorrowDay)} className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded" title="إضافة Tomorrow بالصوت"><Mic className="w-3 h-3" /></button>
+                              <button type="button" onClick={() => deleteCardNote(period.subjectId, 'tomorrowNote', selectedTomorrowDay)} className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded" title="حذف Tomorrow"><Trash2 className="w-3 h-3" /></button>
+                            </div>}
                           </div>
 
                           <button
