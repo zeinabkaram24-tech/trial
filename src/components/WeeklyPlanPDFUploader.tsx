@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { FileText, Loader2, Upload } from 'lucide-react';
-import { parseWeeklyPlanPDF, ExtractedPlan } from '../services/pdfParser';
+import { extractWeeklyPlanFromFile, WeeklyPlanExtraction } from '../lib/geminiWeeklyPlan';
 
 interface Props {
-  onPlanParsed: (data: ExtractedPlan) => void;
+  onPlanParsed: (data: WeeklyPlanExtraction) => void;
 }
 
 export const WeeklyPlanPDFUploader: React.FC<Props> = ({ onPlanParsed }) => {
@@ -16,7 +16,7 @@ export const WeeklyPlanPDFUploader: React.FC<Props> = ({ onPlanParsed }) => {
     setLoading(true);
     setError(null);
     try {
-      onPlanParsed(await parseWeeklyPlanPDF(file));
+      onPlanParsed(await extractWeeklyPlanFromFile(file));
       event.target.value = '';
     } catch (err) {
       console.error('PDF Parse Error:', err);
@@ -32,7 +32,7 @@ export const WeeklyPlanPDFUploader: React.FC<Props> = ({ onPlanParsed }) => {
         <FileText className="w-4 h-4" />
         <h3 className="text-sm font-black">رفع وتحليل Weekly Plan PDF</h3>
       </div>
-      <p className="text-[11px] text-indigo-700 mb-3">يتم فتح الملف داخل التطبيق واستخراج الـ Classwork والـ Homework تلقائياً.</p>
+      <p className="text-[11px] text-indigo-700 mb-3">يقرأ Gemini الملف كما هو ويصنف كل صف إلى Classwork وHomework وTomorrow/Notes تلقائياً.</p>
       <label className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-white ${loading ? 'bg-indigo-300' : 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer'} transition-colors`}>
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
         <span>{loading ? 'جاري تحليل الملف...' : 'اختيار ملف PDF'}</span>

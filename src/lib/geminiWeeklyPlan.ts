@@ -71,7 +71,9 @@ export async function extractWeeklyPlanWithGemini(
             'Return one item for every visible subject/day combination.',
             'Preserve the original language (Arabic or English).',
             'Do not invent missing values; use an empty string.',
-            'Put lesson explanations in classWork, assignments in homeWork, and remaining information in notes.'
+            'Return exactly three classified fields for every row: classWork, homeWork, and notes (the Tomorrow field).',
+            'Put lesson explanations in classWork, assignments in homeWork, and notes such as tomorrow preparation, materials, pages, or reminders in notes.',
+            'Copy the visible text faithfully; do not summarize, translate, or invent content.'
           ].join(' ')
         },
         { inlineData: { data: stripDataUrl(fileBase64), mimeType } }

@@ -24,7 +24,7 @@ import { WeeklyPlanItem, SchoolClass, UserRole } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 import { SUBJECTS, BLOCKS, WEEKS } from '../data/initialData';
 import { extractWeeklyPlanText, parseWeeklyPlanText, WEEKLY_PLAN_PARSER_VERSION } from '../lib/weeklyPlanParser';
-import { ExtractedPlan } from '../services/pdfParser';
+import { WeeklyPlanExtraction } from '../lib/geminiWeeklyPlan';
 import { WeeklyPlanPDFUploader } from './WeeklyPlanPDFUploader';
 
 interface WeeklyPlanViewProps {
@@ -37,7 +37,7 @@ interface WeeklyPlanViewProps {
   weeklyPlans: WeeklyPlanItem[];
   onUpdateWeeklyPlans: (data: WeeklyPlanItem[]) => void;
   onOpenPrint: () => void;
-  onPlanParsed?: (data: ExtractedPlan) => void;
+  onPlanParsed?: (data: WeeklyPlanExtraction) => void;
 }
 
 export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({

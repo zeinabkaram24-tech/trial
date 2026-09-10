@@ -39,7 +39,7 @@ import { StudentSpace } from './components/StudentSpace';
 import { AdminPanel } from './components/AdminPanel';
 import { PrintModal } from './components/PrintModal';
 import { extractWeeklyPlanText, parseWeeklyPlanText, WEEKLY_PLAN_PARSER_VERSION } from './lib/weeklyPlanParser';
-import { ExtractedPlan } from './services/pdfParser';
+import { WeeklyPlanExtraction } from './lib/geminiWeeklyPlan';
 import { SUBJECTS } from './data/initialData';
 import {
   GraduationCap,
@@ -200,41 +200,54 @@ export default function App() {
     }));
   };
 
-  const handleWeeklyPlanPdfParsed = (parsed: ExtractedPlan) => {
+  const handleWeeklyPlanPdfParsed = (parsed: WeeklyPlanExtraction) => {
     const weekNumber = Number(selectedWeek.replace(/\D/g, '')) || 1;
-    const normalizedSubject = parsed.subject?.toLowerCase().trim();
-    const subjectInfo = SUBJECTS.find((subject) =>
-      [subject.id, subject.nameAr, subject.nameEn].some((value) => value.toLowerCase() === normalizedSubject)
-    ) || SUBJECTS[0];
-    const existingIndex = weeklyPlans.findIndex((plan) =>
-      plan.weekId === selectedWeek && plan.subjectId === subjectInfo.id && (plan.classId === 'all' || plan.classId === selectedClass)
-    );
-    const previous = existingIndex >= 0 ? weeklyPlans[existingIndex] : undefined;
-    const updatedPlan: WeeklyPlanItem = {
-      ...(previous || {
-        id: `wp-pdf-${Date.now()}`,
-        blockId: selectedBlock,
-        weekId: selectedWeek,
-        classId: 'all',
-        subjectId: subjectInfo.id,
-        unitOrTheme: 'Imported PDF Weekly Plan',
-        learningObjectives: ['تم استخراج محتوى الخطة الأسبوعية من ملف PDF']
-      }),
-      weekNumber,
-      day: previous?.day || 'Sunday',
-      subject: parsed.subject || subjectInfo.nameEn,
-      classwork: parsed.classwork,
-      homework: parsed.homework,
-      classworkNote: parsed.classwork,
-      homeworkNote: parsed.homework,
-      extractedText: parsed.rawText,
-      extractionVersion: WEEKLY_PLAN_PARSER_VERSION
+    const normalize = (value: string) => value.toLowerCase().replace(/[\s_-]+/g, '').trim();
+    const dayAliases: Record<string, string> = {
+      sunday: 'Sunday', sun: 'Sunday', 'الأحد': 'Sunday', الاحد: 'Sunday',
+      monday: 'Monday', mon: 'Monday', 'الإثنين': 'Monday', الاثنين: 'Monday',
+      tuesday: 'Tuesday', tue: 'Tuesday', 'الثلاثاء': 'Tuesday',
+      wednesday: 'Wednesday', wed: 'Wednesday', 'الأربعاء': 'Wednesday', الاربعاء: 'Wednesday',
+      thursday: 'Thursday', thu: 'Thursday', 'الخميس': 'Thursday'
     };
+    const resolveSubject = (value: string) => SUBJECTS.find((subject) =>
+      [subject.id, subject.nameAr, subject.nameEn].some((name) => normalize(name) === normalize(value))
+    ) || SUBJECTS[0];
     const nextPlans = [...weeklyPlans];
-    if (existingIndex >= 0) nextPlans[existingIndex] = updatedPlan;
-    else nextPlans.unshift(updatedPlan);
+    parsed.items.forEach((item, index) => {
+      const subjectInfo = resolveSubject(item.subject);
+      const day = dayAliases[normalize(item.day)] || item.day || 'Sunday';
+      const existingIndex = nextPlans.findIndex((plan) =>
+        plan.weekId === selectedWeek && plan.day === day && plan.subjectId === subjectInfo.id &&
+        (plan.classId === 'all' || plan.classId === selectedClass)
+      );
+      const previous = existingIndex >= 0 ? nextPlans[existingIndex] : undefined;
+      const updatedPlan: WeeklyPlanItem = {
+        ...(previous || {
+          id: `wp-gemini-${Date.now()}-${index}`,
+          blockId: selectedBlock,
+          weekId: selectedWeek,
+          classId: 'all',
+          subjectId: subjectInfo.id,
+          unitOrTheme: 'Gemini Weekly Plan Import',
+          learningObjectives: ['تم استخراج محتوى الخطة الأسبوعية بواسطة Gemini']
+        }),
+        weekNumber,
+        day,
+        subject: item.subject || subjectInfo.nameEn,
+        classwork: item.classWork,
+        homework: item.homeWork,
+        classworkNote: item.classWork || undefined,
+        homeworkNote: item.homeWork || undefined,
+        tomorrowNote: item.notes || undefined,
+        extractedText: [item.classWork, item.homeWork, item.notes].filter(Boolean).join('\n'),
+        extractionVersion: WEEKLY_PLAN_PARSER_VERSION
+      };
+      if (existingIndex >= 0) nextPlans[existingIndex] = updatedPlan;
+      else nextPlans.unshift(updatedPlan);
+    });
     setWeeklyPlans(nextPlans);
-    alert('تم تحليل ملف PDF وتحديث بيانات الـ Classwork والـ Homework بنجاح.');
+    alert(`تمت قراءة الملف بواسطة Gemini وتوزيع ${parsed.items.length} سجلًا على Classwork وHomework وTomorrow.`);
   };
 
   // Reset to default
