@@ -1,7 +1,11 @@
 import mammoth from 'mammoth';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { extractTextFromPdf } from './timetableParser';
 
-export const WEEKLY_PLAN_PARSER_VERSION = 4;
+GlobalWorkerOptions.workerSrc = pdfWorker;
+
+export const WEEKLY_PLAN_PARSER_VERSION = 6;
 
 export interface WeeklyPlanDayContent {
   classworkNote?: string;
@@ -27,13 +31,45 @@ const DAY_NAMES = [
 
 const HEADER_PATTERNS = {
   homework: /(?:h\s*o\s*m\s*e\s*w\s*o\s*r\s*k|home\s*work|assignment|واجب(?:ات)?|الواجب(?:ات)?|hw)\s*[:：\-–]?/i,
-  tomorrow: /(?:t\s*o\s*m\s*o\s*r\s*r\s*o\s*w|next\s*day|preparation|notes?|materials?\s*(?:needed|required)|ملاحظات|تجهيزات|مستلزمات|غدًا|غدا|اليوم\s*التالي)\s*[:：\-–]?/i,
+  tomorrow: /(?:t\s*o\s*m\s*o\s*r\s*r\s*o\s*w(?:['’]s)?|next\s*day|preparation|what\s*to\s*bring|please\s+bring|\bbring\b|school\s*bag|notes?|materials?\s*(?:needed|required)|تجهيزات\s*(?:الغد|لبكرة)|مستلزمات\s*(?:الغد|لبكرة)|ملاحظات(?:\s*الغد)?|يرجى\s*إحضار|إحضار|احضار|غدًا|غدا|اليوم\s*التالي)\s*[:：\-–]?/i,
   // Do not match generic words such as "lesson" or "session": they often
   // occur in the PDF title and caused the title/details to be misclassified.
   classwork: /(?:c\s*l\s*a\s*s\s*s\s*w\s*o\s*r\s*k|class\s*work|what\s+we\s+learned|تم\s*تدريسه|ما\s*تم\s*تدريسه|نشاط\s*اليوم)\s*[:：\-–]?/i
 };
 
 const ALL_HEADERS = Object.values(HEADER_PATTERNS);
+
+/**
+ * PDF text items are not returned in visual reading order. The reference
+ * project first groups items by their Y coordinate and rebuilds visual rows;
+ * this is the important part of its script, not the uploaded PDF itself.
+ */
+async function extractWeeklyPlanPdfRows(dataUrl: string): Promise<string> {
+  const raw = dataUrl.split(',')[1] || dataUrl;
+  const bytes = Uint8Array.from(atob(raw), (char) => char.charCodeAt(0));
+  const pdf = await getDocument({ data: bytes }).promise;
+  const pages: string[] = [];
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    const rows = new Map<number, Array<{ x: number; text: string }>>();
+    for (const item of content.items as Array<{ str?: string; transform?: number[] }>) {
+      if (!item.str?.trim()) continue;
+      const y = Math.round(item.transform?.[5] ?? 0);
+      const x = item.transform?.[4] ?? 0;
+      const row = rows.get(y) || [];
+      row.push({ x, text: item.str.trim() });
+      rows.set(y, row);
+    }
+    pages.push([...rows.entries()]
+      .sort((a, b) => b[0] - a[0])
+      .map(([, parts]) => parts.sort((a, b) => a.x - b.x).map((part) => part.text).join(' ').trim())
+      .filter(Boolean)
+      .join('\n'));
+  }
+  return pages.join('\n').trim();
+}
 
 function normalize(text: string): string {
   return text
@@ -122,7 +158,14 @@ export async function extractWeeklyPlanText(dataUrl: string, fileType?: string):
     const result = await mammoth.extractRawText({ arrayBuffer: dataUrlToArrayBuffer(dataUrl) });
     return result.value;
   }
-  return extractTextFromPdf(dataUrl);
+  try {
+    const rowsText = await extractWeeklyPlanPdfRows(dataUrl);
+    // Scanned PDFs have no meaningful text layer. Keep the existing OCR
+    // fallback for those files.
+    return rowsText.length >= 40 ? rowsText : extractTextFromPdf(dataUrl);
+  } catch {
+    return extractTextFromPdf(dataUrl);
+  }
 }
 
 export function buildClassworkFromWeeklyPlan(plan: { classworkNote?: string; unitOrTheme: string }): string {
