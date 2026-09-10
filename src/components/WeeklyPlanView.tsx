@@ -692,6 +692,15 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                         </div>
                       </div>
                     )}
+
+                    {(plan.classworkNote || plan.homeworkNote || plan.tomorrowNote) && (
+                      <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-3 space-y-2">
+                        <div className="text-xs font-black text-sky-900">التفاصيل المقروءة من الملف:</div>
+                        {plan.classworkNote && <div className="text-xs text-slate-700"><strong>Classwork:</strong> {plan.classworkNote}</div>}
+                        {plan.homeworkNote && <div className="text-xs text-slate-700"><strong>Homework:</strong> {plan.homeworkNote}</div>}
+                        {plan.tomorrowNote && <div className="text-xs text-slate-700"><strong>Tomorrow / تجهيزات الغد:</strong> {plan.tomorrowNote}</div>}
+                      </div>
+                    )}
                   </div>
                 </div>
 
