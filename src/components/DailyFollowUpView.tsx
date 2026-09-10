@@ -538,9 +538,6 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           <span className="bg-sky-600 text-white text-xs font-bold px-3 py-1 rounded-xl">
             Class {selectedClass}
           </span>
-          <span className="bg-slate-100 text-slate-800 text-xs font-bold px-3 py-1 rounded-xl border border-slate-200">
-            {currentRecord.dayNameAr} ({currentRecord.date})
-          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -605,20 +602,19 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
       {/* Compact daily timetable: the reference project's icon cards live inside Daily Tasks. */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="px-4 py-3 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between gap-3">
+        <div className="px-4 py-3 bg-slate-100/80 border-b border-slate-200 flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-indigo-600" />
-            <span className="text-sm font-black text-slate-900">حصص {currentRecord.dayNameAr}</span>
+            <span className="text-sm font-black text-slate-900">المتابعة اليومية</span>
           </div>
-          <span className="text-[11px] text-slate-500 font-sans">Daily Timetable</span>
         </div>
-        <div className="p-3 flex gap-2 overflow-x-auto">
+        <div className="p-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {todayPeriodsList.map((period) => {
             const subject = getSubjectInfo(period.subjectId);
             return (
               <div
                 key={period.id}
-                className={`min-w-[92px] flex-1 p-2.5 rounded-2xl border text-center ${subject.borderColor} ${subject.color}`}
+                className={`w-full p-2.5 rounded-2xl border text-center ${subject.borderColor} ${subject.color}`}
               >
                 <div className={`w-7 h-7 mx-auto mb-1 rounded-xl bg-white/80 flex items-center justify-center ${subject.textColor}`}>
                   <RenderSubjectIcon iconName={subject.iconName} className="w-4 h-4" />
@@ -1013,7 +1009,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           مدارس النيل المصرية الدولية - فرع المنيا (Nile Egyptian Schools)
         </h4>
         <p className="text-xs text-slate-600 font-semibold mt-1">
-          سجل المتابعة اليومية الرسمي للصف الثاني الابتدائي • فصل {selectedClass} • يوم {currentRecord.dayNameAr} ({currentRecord.date})
+          سجل المتابعة اليومية الرسمي للصف الثاني الابتدائي • فصل {selectedClass}
         </p>
       </div>
 
