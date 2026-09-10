@@ -19,7 +19,6 @@ import {
   Sparkles,
   Paperclip,
   Copy
-  ,CheckSquare
 } from 'lucide-react';
 import { WeeklyPlanItem, SchoolClass, UserRole } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
@@ -54,7 +53,6 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
   onPlanParsed
 }) => {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
-  const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>([]);
 
   // Admin Modal
   const [editingPlan, setEditingPlan] = useState<{ isOpen: boolean; item?: WeeklyPlanItem }>({ isOpen: false });
@@ -112,27 +110,6 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
     const matchSubject = selectedSubjectFilter === 'all' || p.subjectId === selectedSubjectFilter;
     return matchBlock && matchWeek && matchClass && matchSubject;
   });
-
-  const togglePlanSelection = (id: string) => {
-    setSelectedPlanIds((current) => current.includes(id)
-      ? current.filter((selectedId) => selectedId !== id)
-      : [...current, id]);
-  };
-
-  const toggleSelectVisiblePlans = () => {
-    const visibleIds = filteredPlans.map((plan) => plan.id);
-    const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedPlanIds.includes(id));
-    setSelectedPlanIds((current) => allVisibleSelected
-      ? current.filter((id) => !visibleIds.includes(id))
-      : Array.from(new Set([...current, ...visibleIds])));
-  };
-
-  const handleDeleteSelectedPlans = () => {
-    if (!selectedPlanIds.length) return;
-    if (!window.confirm(`هل أنت متأكد من حذف ${selectedPlanIds.length} خطة محددة؟`)) return;
-    onUpdateWeeklyPlans(weeklyPlans.filter((plan) => !selectedPlanIds.includes(plan.id)));
-    setSelectedPlanIds([]);
-  };
 
   const handleOpenAddModal = (asFileUpload = false) => {
     setEditingPlan({ isOpen: true });
@@ -446,6 +423,18 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
 
             {currentRole === 'admin' && (
               <>
+                {/* File upload button explicitly requested by user */}
+                <button
+                  id="btn-add-plan-file"
+                  type="button"
+                  onClick={() => handleOpenAddModal(true)}
+                  className="bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="رفع ملف PDF أو Word"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>+ رفع ملف (PDF / Word)</span>
+                </button>
+
                 <button
                   id="btn-add-plan-item"
                   type="button"
@@ -549,29 +538,6 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
             );
           })}
         </div>
-
-        {currentRole === 'admin' && (
-          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleSelectVisiblePlans}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700"
-            >
-              <CheckSquare className="w-3.5 h-3.5" />
-              {filteredPlans.length > 0 && filteredPlans.every((plan) => selectedPlanIds.includes(plan.id)) ? 'إلغاء تحديد الظاهر' : 'تحديد كل الظاهر'}
-            </button>
-            <button
-              type="button"
-              onClick={handleDeleteSelectedPlans}
-              disabled={selectedPlanIds.length === 0}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-bold disabled:cursor-not-allowed"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              حذف المحدد ({selectedPlanIds.length})
-            </button>
-            {selectedPlanIds.length > 0 && <span className="text-[11px] text-slate-500">يمكن تحديد خطة أو خطتين أو أكثر ثم حذفها دفعة واحدة.</span>}
-          </div>
-        )}
       </div>
 
       {/* Weekly Plan Cards Grid */}
@@ -587,6 +553,14 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
             </p>
             {currentRole === 'admin' && (
               <div className="flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleOpenAddModal(true)}
+                  className="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs flex items-center gap-1.5"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>+ رفع خطة كملف (PDF / Word)</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => handleOpenAddModal(false)}
@@ -610,16 +584,6 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                   {/* Card Header */}
                   <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {currentRole === 'admin' && (
-                        <button
-                          type="button"
-                          onClick={() => togglePlanSelection(plan.id)}
-                          className={`w-5 h-5 rounded border flex items-center justify-center ${selectedPlanIds.includes(plan.id) ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-300 text-transparent'}`}
-                          aria-label={selectedPlanIds.includes(plan.id) ? 'إلغاء تحديد الخطة' : 'تحديد الخطة'}
-                        >
-                          <CheckSquare className="w-3.5 h-3.5" />
-                        </button>
-                      )}
                       <SubjectBadge subjectId={plan.subjectId} size="md" />
                       <span className="text-[11px] font-bold text-slate-400">
                         {plan.classId === 'all' ? 'All Classes (Grade 2)' : `Class ${plan.classId}`}
@@ -655,7 +619,6 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                       <h3 className="font-extrabold text-slate-900 text-base leading-snug">
                         Weekly Plan - {sub.nameEn} ({plan.unitOrTheme})
                       </h3>
-                      <p className="text-xs text-slate-500 mt-1 font-sans">{plan.day || 'Sunday'}</p>
                     </div>
 
                     {/* Attached File Badge / Box (PDF or Word) */}

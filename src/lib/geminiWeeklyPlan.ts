@@ -1,82 +1,163 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { WeeklyPlanItem } from '../types';
+import { GoogleGenAI, Type } from '@google/genai';
+import { useMemo, useState } from 'react';
 
-// استدعاء مفتاح الـ API من ملف البيئة
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(apiKey);
+export interface WeeklyPlanRow {
+  day: string;
+  subject: string;
+  classWork: string;
+  homeWork: string;
+  notes: string;
+}
+
+export interface WeeklyPlanExtraction {
+  items: WeeklyPlanRow[];
+}
+
+export type WeeklyPlanMimeType = 'application/pdf' | 'image/png' | 'image/jpeg' | 'image/webp';
+
+/** JSON schema returned by Gemini for every uploaded weekly-plan document. */
+export const WEEKLY_PLAN_RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    items: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          day: { type: Type.STRING, description: 'Day name exactly as visible in the document.' },
+          subject: { type: Type.STRING, description: 'Subject name exactly as visible in the document.' },
+          classWork: { type: Type.STRING, description: 'Classwork or lesson content. Empty string when absent.' },
+          homeWork: { type: Type.STRING, description: 'Homework content. Empty string when absent.' },
+          notes: { type: Type.STRING, description: 'Other notes, materials, pages, or preparation. Empty string when absent.' }
+        },
+        required: ['day', 'subject', 'classWork', 'homeWork', 'notes'],
+        propertyOrdering: ['day', 'subject', 'classWork', 'homeWork', 'notes']
+      }
+    }
+  },
+  required: ['items'],
+  propertyOrdering: ['items']
+} as const;
+
+function getGeminiClient(): GoogleGenAI {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing VITE_GEMINI_API_KEY. Add it to .env.local before analyzing a file.');
+  }
+  return new GoogleGenAI({ apiKey });
+}
+
+function stripDataUrl(base64: string): string {
+  return base64.includes(',') ? base64.slice(base64.indexOf(',') + 1) : base64;
+}
 
 /**
- * دالة إرسال نص أو صورة الخطة الأسبوعية إلى Gemini لاستخراج Classwork و Homework
+ * Sends a PDF or Base64 image to Gemini 2.5 Flash and returns strict structured JSON.
+ * The browser client requires the API key to be supplied through VITE_GEMINI_API_KEY.
  */
-export async function parseWeeklyPlanWithGemini(
-  fileOrText: { base64Data?: string; mimeType?: string; rawText?: string },
-  grade: string,
-  weekNumber: number
-): Promise<WeeklyPlanItem[]> {
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-    const prompt = `
-أنت مساعد ذكي متخصص في تحليل الخطط الأسبوعية المدرسية (Weekly Plans).
-المطلوب منك استخراج الجدول وتصنيفه إلى قائمة JSON بالصيغة التالية تماماً وبدون أي نصوص إضافية:
-
-[
-  {
-    "day": "الأحد", // أو Sunday
-    "subject": "Math",
-    "classwork": "نص الكلاس وورك المستخرج",
-    "homework": "نص الهوم وورك المستخرج"
-  }
-]
-
-المرحلة الدراسية: ${grade}
-الأسبوع رقم: ${weekNumber}
-
-ملاحظات هامة جداً:
-1. استخرج الكلاس وورك والواجب المنزلي (Homework) بدقة لكل مادة ولكل يوم.
-2. إذا لم يكن هناك واجب اكتب "لا يوجد واجب".
-3. أرجع النتيجة فقط بصيغة JSON Array صالحة.
-`;
-
-    let response;
-    if (fileOrUrl.base64Data && fileOrUrl.mimeType) {
-      // إذا كان الملف عبارة عن صورة أو PDF مصور
-      response = await model.generateContent([
-        prompt,
+export async function extractWeeklyPlanWithGemini(
+  fileBase64: string,
+  mimeType: WeeklyPlanMimeType
+): Promise<WeeklyPlanExtraction> {
+  const ai = getGeminiClient();
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: [{
+      role: 'user',
+      parts: [
         {
-          inlineData: {
-            data: fileOrUrl.base64Data,
-            mimeType: fileOrUrl.mimeType
-          }
-        }
-      ]);
-    } else {
-      // إذا كان نصاً مستخرجاً
-      response = await model.generateContent([prompt, fileOrUrl.rawText || '']);
+          text: [
+            'Read the uploaded weekly school plan carefully.',
+            'Return one item for every visible subject/day combination.',
+            'Preserve the original language (Arabic or English).',
+            'Do not invent missing values; use an empty string.',
+            'Return exactly three classified fields for every row: classWork, homeWork, and notes (the Tomorrow field).',
+            'Put lesson explanations in classWork, assignments in homeWork, and notes such as tomorrow preparation, materials, pages, or reminders in notes.',
+            'Copy the visible text faithfully; do not summarize, translate, or invent content.'
+          ].join(' ')
+        },
+        { inlineData: { data: stripDataUrl(fileBase64), mimeType } }
+      ]
+    }],
+    config: {
+      responseMimeType: 'application/json',
+      responseSchema: WEEKLY_PLAN_RESPONSE_SCHEMA,
+      temperature: 0
     }
+  });
 
-    const textResult = response.response.text();
-    // تنظيف النتيجة لاستخراج الـ JSON
-    const jsonMatch = textResult.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      throw new Error("لم يتمكن الذكاء الاصطناعي من تنسيق البيانات بشكل صحيح.");
-    }
-
-    const parsedItems = JSON.parse(jsonMatch[0]);
-
-    // تحويل البيانات إلى Structure التطبيق الرسمية
-    return parsedItems.map((item: any, index: number) => ({
-      id: `plan-${weekNumber}-${index}-${Date.now()}`,
-      weekNumber: weekNumber,
-      grade: grade,
-      day: item.day,
-      subject: item.subject,
-      classwork: item.classwork || '',
-      homework: item.homework || ''
-    }));
-
-  } catch (error) {
-    console.error("خطأ في تحليل الخطة عبر Gemini:", error);
-    throw error;
-  }
+  const text = response.text?.trim();
+  if (!text) throw new Error('Gemini returned an empty extraction response.');
+  const parsed = JSON.parse(text) as WeeklyPlanExtraction;
+  return {
+    items: (parsed.items || []).map((item) => ({
+      day: String(item.day || '').trim(),
+      subject: String(item.subject || '').trim(),
+      classWork: String(item.classWork || '').trim(),
+      homeWork: String(item.homeWork || '').trim(),
+      notes: String(item.notes || '').trim()
+    }))
+  };
 }
+
+/** Returns rows for the next school day relative to the supplied date. */
+export function getTomorrowPlan(items: WeeklyPlanRow[], today = new Date()): WeeklyPlanRow[] {
+  const schoolDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+  const arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+  const dayIndex = today.getDay();
+  const tomorrowIndex = schoolDays.indexOf(schoolDays[dayIndex]) >= 0
+    ? (schoolDays.indexOf(schoolDays[dayIndex]) + 1) % schoolDays.length
+    : 0;
+  const targets = [schoolDays[tomorrowIndex].toLowerCase(), arabicDays[tomorrowIndex]];
+  return items.filter((item) => targets.some((target) => item.day.toLowerCase().includes(target.toLowerCase())));
+}
+
+export function splitWeeklyPlanForState(items: WeeklyPlanRow[]) {
+  return {
+    classWork: items.filter((item) => item.classWork.trim()),
+    homeWork: items.filter((item) => item.homeWork.trim()),
+    notes: items.filter((item) => item.notes.trim())
+  };
+}
+
+export function useWeeklyPlanGemini() {
+  const [items, setItems] = useState<WeeklyPlanRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sourceFileName, setSourceFileName] = useState<string | null>(null);
+
+  const analyzeFile = async (file: File) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await extractWeeklyPlanFromFile(file);
+      setItems(result.items);
+      setSourceFileName(file.name);
+      return result.items;
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Could not analyze the weekly plan.';
+      setError(message);
+      throw cause;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const tomorrow = useMemo(() => getTomorrowPlan(items), [items]);
+  const sections = useMemo(() => splitWeeklyPlanForState(items), [items]);
+
+  return { items, setItems, sections, tomorrow, loading, error, sourceFileName, analyzeFile };
+}
+
+export async function extractWeeklyPlanFromFile(file: File): Promise<WeeklyPlanExtraction> {
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error || new Error('Could not read file.'));
+    reader.readAsDataURL(file);
+  });
+  const mimeType = (file.type || 'application/pdf') as WeeklyPlanMimeType;
+  return extractWeeklyPlanWithGemini(base64, mimeType);
+}
+
+export default extractWeeklyPlanWithGemini;
