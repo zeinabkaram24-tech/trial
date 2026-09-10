@@ -85,6 +85,7 @@ export interface WeeklyPlanItem {
   classwork?: string;
   homework?: string;
   pdfUrl?: string;
+  links?: string[];
 }
 
 export interface ClassworkRecord {

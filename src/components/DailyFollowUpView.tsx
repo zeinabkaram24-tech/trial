@@ -21,11 +21,12 @@ import {
   Table,
   LayoutGrid,
   Layers,
-  FileSpreadsheet
-  ,Mic
-  ,Square
-  ,MicOff
-  ,Save
+  FileSpreadsheet,
+  Mic,
+  Square,
+  MicOff,
+  Save,
+  Link as LinkIcon
 } from 'lucide-react';
 import {
   DailyFollowUp,
@@ -167,7 +168,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     timetables?.find((t) => t.classId === selectedClass) ||
     INITIAL_TIMETABLES.find((t) => t.classId === selectedClass);
   const tomorrowDaySchedule = activeTimetable?.days.find((d) => d.dayNameAr === selectedTomorrowDay);
-  const tomorrowPeriods = tomorrowDaySchedule?.periods || [];
+  const scheduledTomorrowPeriods = tomorrowDaySchedule?.periods || [];
 
   // Weekly plans matching current block and week
   const weekPlans = useMemo(() => {
@@ -179,6 +180,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     );
   }, [weeklyPlans, selectedBlock, selectedWeek, selectedClass]);
 
+
   // Clean page extraction helper
   const extractPageNumber = (str?: string): string => {
     if (!str) return '24';
@@ -187,6 +189,8 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     const numMatch = str.match(/\b\d+(?:[-–]\d+)?\b/);
     return numMatch ? numMatch[0] : str.replace(/[^0-9\-–]/g, '') || '24';
   };
+
+  const hasActualHomework = (value?: string) => Boolean(value && !/^(?:no\s+homework(?:\s+recorded)?|no\s+additional\s+homework(?:\s+recorded)?|none|لا\s*يوجد(?:\s+واجب)?)[.\s،،]*$/i.test(value.trim()));
 
   const getDayPlanContent = (plan: WeeklyPlanItem | undefined, day: string, subjectId?: string) => {
     if (!plan?.dayContent) return undefined;
@@ -203,6 +207,20 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     return keys.map((key) => plan.dayContent?.[key]).find(Boolean);
   };
 
+  const getIctSession = (day: string): number | undefined => {
+    const sessions: Record<SchoolClass, Record<string, number>> = {
+      '2A': { 'الأحد': 1, 'الإثنين': 2, 'الأربعاء': 3 },
+      '2B': { 'الأحد': 1, 'الثلاثاء': 2, 'الخميس': 3 },
+      '2C': { 'الأحد': 1, 'الثلاثاء': 2, 'الخميس': 3 }
+    };
+    return sessions[selectedClass][day];
+  };
+
+  const tomorrowPeriods = scheduledTomorrowPeriods.filter((period) => {
+    const plan = weekPlans.find((item) => item.subjectId === period.subjectId);
+    return Boolean(getDayPlanContent(plan, selectedTomorrowDay, period.subjectId)?.tomorrowNote || plan?.tomorrowNote);
+  });
+
   // Homework: Weekly Plan is the source of truth; saved daily homework is only a fallback.
   const homeworkItems = useMemo(() => {
     const dictations = (materials || [])
@@ -218,12 +236,15 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     const planned = weekPlans
       .filter((wp) => {
         const dayPlan = getDayPlanContent(wp, selectedFollowUpDay, wp.subjectId);
-        return (dayPlan?.homeworkNote || wp.homeworkNote) || wp.dictationFileName;
+        if (wp.subjectId === 'ict' && getIctSession(selectedFollowUpDay) !== 3) return false;
+        return hasActualHomework(dayPlan?.homeworkNote || wp.homeworkNote) || wp.dictationFileName;
       })
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
         const dayPlan = getDayPlanContent(wp, selectedFollowUpDay, wp.subjectId);
-        const dayHomework = dayPlan?.homeworkNote;
+        const ictSession = wp.subjectId === 'ict' ? getIctSession(selectedFollowUpDay) : undefined;
+        const rawHomework = wp.subjectId === 'ict' && ictSession === 3 ? wp.homeworkNote : (dayPlan?.homeworkNote || wp.homeworkNote);
+        const dayHomework = hasActualHomework(rawHomework) ? rawHomework : undefined;
         const parts = [
           (dayHomework || wp.homeworkNote)?.trim(),
           wp.dictationFileName ? `Dictation: ${wp.dictationFileName}` : undefined
@@ -237,18 +258,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           rawRecord: null
         };
       });
-    const scheduledSubjects: string[] = Array.from(new Set((activeTimetable?.days.find((day) => day.dayNameAr === selectedFollowUpDay)?.periods || []).filter((period) => !SESSION_SUBJECTS.has(period.subjectId)).map((period) => period.subjectId as string)));
-    const scheduledPlaceholders = scheduledSubjects
-      .filter((subjectId) => !planned.some((item) => item.subjectId === subjectId) && !dictations.some((item) => item.subjectId === subjectId))
-      .map((subjectId) => ({
-        id: `scheduled-homework-${selectedFollowUpDay}-${subjectId}`,
-        subjectId,
-        subjectName: getSubjectInfo(subjectId).nameEn,
-        homeworkText: '',
-        pageNumber: '',
-        rawRecord: null
-      }));
-    if (dictations.length || planned.length || scheduledPlaceholders.length) return [...dictations, ...planned, ...scheduledPlaceholders];
+    if (dictations.length || planned.length) return [...dictations, ...planned];
 
     const legacyPlanned = weekPlans
       .filter((wp) => wp.homeworkNote && wp.homeworkNote.trim().length > 0)
@@ -266,7 +276,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     if (legacyPlanned.length > 0) return legacyPlanned;
 
     if (currentRecord.homework?.length > 0) {
-      return currentRecord.homework.map((hw) => {
+      return currentRecord.homework.filter((hw) => hw.assignment?.trim()).map((hw) => {
         const sub = getSubjectInfo(hw.subjectId);
         const pageNum = hw.pages ? extractPageNumber(hw.pages) : extractPageNumber(hw.assignment);
         return {
@@ -302,7 +312,10 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     }).map((period) => {
       const sub = getSubjectInfo(period.subjectId);
       const wp = weekPlans.find((p) => p.subjectId === period.subjectId);
-      const dayPlan = getDayPlanContent(wp, selectedFollowUpDay, period.subjectId);
+      const ictSession = period.subjectId === 'ict' ? getIctSession(selectedFollowUpDay) : undefined;
+      const dayPlan = period.subjectId === 'ict' && ictSession
+        ? wp?.dayContent?.[`Session ${ictSession}`]
+        : getDayPlanContent(wp, selectedFollowUpDay, period.subjectId);
       const existingCw = currentRecord.classwork?.find((c) => c.subjectId === period.subjectId);
       const lessonTopic = dayPlan?.classworkNote || wp?.classworkNote || existingCw?.lessonTitle || '';
       return {
@@ -310,7 +323,8 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         periodNum: period.periodNum,
         subjectId: period.subjectId,
         subjectName: sub.nameEn,
-        lessonTopic,
+        lessonTopic: lessonTopic || (period.subjectId === 'ict' ? `ICT Session ${ictSession || ''}` : ''),
+        links: wp?.links || [],
         existingCw
       };
     });
@@ -321,7 +335,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     return weekPlans
       .filter((wp) => {
         const dayPlan = getDayPlanContent(wp, selectedTomorrowDay, wp.subjectId);
-        return dayPlan?.tomorrowNote || wp.tomorrowNote || wp.resourcesNote || wp.assessmentNote;
+        return dayPlan?.tomorrowNote || wp.tomorrowNote;
       })
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
@@ -331,7 +345,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           id: wp.id,
           subjectId: wp.subjectId,
           subjectName: sub.nameEn,
-          note: [dayNote || wp.tomorrowNote, wp.resourcesNote, wp.assessmentNote].filter(Boolean).join(' • ')
+          note: dayNote || wp.tomorrowNote || ''
         };
       });
   }, [weekPlans, selectedTomorrowDay]);
@@ -760,14 +774,14 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     <div className="space-y-6">
       <div className="sticky top-[205px] md:top-[178px] z-30 bg-white rounded-2xl border border-slate-200 p-3 flex items-center gap-2 overflow-x-auto shadow-md">
         <span className="text-xs font-black text-slate-500 shrink-0">Day:</span>
-        {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => (
+        {(['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'] as const).map((day, index) => (
           <button
             key={day}
             type="button"
             onClick={() => { setSelectedFollowUpDay(day); setSelectedTomorrowDay(NEXT_DAY_MAP[day]); }}
             className={`px-4 py-2 rounded-xl text-xs font-black shrink-0 border transition-colors ${selectedFollowUpDay === day ? 'bg-sky-600 text-white border-sky-700' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-sky-50'}`}
           >
-            {day}
+            {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'][index]}
           </button>
         ))}
       </div>
@@ -957,8 +971,15 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                         <span className="bg-sky-100 text-sky-900 border border-sky-200 rounded-lg px-2 py-1 text-[11px] font-black">
                           الحصة {cw.periodNum}
                         </span>
-                        <div>
-                          <div className="text-xs font-black text-slate-900">{cw.subjectName}</div>
+                              <div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="text-xs font-black text-slate-900">{cw.subjectName}</div>
+                            {cw.links.map((url: string, linkIndex: number) => (
+                              <a key={`${url}-${linkIndex}`} href={url} target="_blank" rel="noreferrer" title="Open Weekly Plan link" className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white transition-colors">
+                                <LinkIcon className="w-3 h-3" />
+                              </a>
+                            ))}
+                          </div>
                           <div className="text-[10px] text-slate-500">{cw.time}</div>
                         </div>
                       </div>
@@ -1022,7 +1043,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
               {/* Day Selector for Tomorrow */}
               <div className="flex items-center gap-1 bg-white/80 p-1 rounded-xl border border-emerald-200">
-                {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => (
+                {(['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'] as const).map((day, index) => (
                   <button
                     key={day}
                     type="button"
@@ -1033,7 +1054,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                         : 'text-emerald-800 hover:bg-emerald-100'
                     }`}
                   >
-                    {day}
+                    {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'][index]}
                   </button>
                 ))}
               </div>
@@ -1100,15 +1121,9 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <SubjectBadge subjectId={period.subjectId} size="sm" />
                               </div>
-                              {(() => {
-                                const plan = weekPlans.find((wp) => wp.subjectId === period.subjectId);
-                                const notes = [plan?.resourcesNote, plan?.assessmentNote]
-                                  .filter((note): note is string => Boolean(note && note.trim()))
-                                  .join(' • ');
-                                return notes ? (
-                                  <div className="text-[10px] text-slate-600 mt-1 leading-relaxed">{notes}</div>
-                                ) : null;
-                              })()}
+                              {tomorrowDayContent?.tomorrowNote && (
+                                <div className="text-[10px] text-slate-600 mt-1 leading-relaxed">{tomorrowDayContent.tomorrowNote}</div>
+                              )}
                             </div>
                             {currentRole === 'admin' && <div className="flex items-center gap-1 mt-1">
                               <button type="button" onClick={() => editCardNote(period.subjectId, 'tomorrowNote', tomorrowDayContent?.tomorrowNote || '', selectedTomorrowDay)} className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded" title="كتابة Tomorrow"><Edit2 className="w-3 h-3" /></button>

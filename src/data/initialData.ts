@@ -495,6 +495,11 @@ export const INITIAL_WEEKLY_PLANS: WeeklyPlanItem[] = [
     homework: 'Week 1 pages 10 and 12. Page 14.',
     homeworkNote: 'Week 1 pages 10 and 12. Page 14.',
     tomorrowNote: 'Video resources: keyboard and home-row links included in the uploaded ICT plan.',
+    links: [
+      'https://www.youtube.com/watch?v=6unZgmlAavQ',
+      'https://youtu.be/Jbgv_XPoPnk?si=CGtLbxGDK1v82cB2',
+      'https://youtu.be/6unZgmlAavQ?si=Dx3Oo2cXlXrqQVXS'
+    ],
     fileName: 'Weekly Plan ICT - B1 - W1 - Minia.pdf', fileType: 'pdf', fileSize: 'Uploaded source plan',
     dayContent: {
       'Session 1': { classworkNote: 'Introducing the keyboard; identify keyboard parts and describe special keys including enter, space bar, shift, control, backspace and caps lock/delete.', homeworkNote: 'Week 1 pages 10 and 12.', tomorrowNote: 'Video resources included in the plan.' },
