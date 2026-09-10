@@ -24,6 +24,7 @@ import {
   FileSpreadsheet
   ,Mic
   ,Square
+  ,MicOff
   ,Save
 } from 'lucide-react';
 import {
@@ -372,6 +373,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   const [voiceClasswork, setVoiceClasswork] = useState('');
   const [voiceHomework, setVoiceHomework] = useState('');
   const [voiceTomorrow, setVoiceTomorrow] = useState('');
+  const [activeCardVoice, setActiveCardVoice] = useState<string | null>(null);
   const voiceRecognitionRef = React.useRef<any>(null);
   const [assistantListening, setAssistantListening] = useState(false);
   const [assistantStatus, setAssistantStatus] = useState('اضغط تشغيل ثم تحدث بجملة طبيعية');
@@ -541,10 +543,14 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return alert('الإدخال الصوتي يحتاج إلى Google Chrome أو Microsoft Edge.');
     const recognition = new SpeechRecognition();
+    const targetKey = `${subjectId}-${field}-${day}`;
+    setActiveCardVoice(targetKey);
     recognition.lang = voiceLanguage;
     recognition.interimResults = false;
     recognition.continuous = false;
     recognition.onresult = (event: any) => updatePlanNote(subjectId, field, event.results?.[0]?.[0]?.transcript || '', day);
+    recognition.onend = () => setActiveCardVoice(null);
+    recognition.onerror = () => setActiveCardVoice(null);
     recognition.start();
   };
 
@@ -737,7 +743,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-30 bg-white rounded-2xl border border-slate-200 p-3 flex items-center gap-2 overflow-x-auto shadow-md">
+      <div className="sticky top-[205px] md:top-[178px] z-30 bg-white rounded-2xl border border-slate-200 p-3 flex items-center gap-2 overflow-x-auto shadow-md">
         <span className="text-xs font-black text-slate-500 shrink-0">Day:</span>
         {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => (
           <button
@@ -872,7 +878,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                           {currentRole === 'admin' && !item.rawRecord && (
                             <div className="flex items-center gap-1">
                               <button type="button" onClick={() => editCardNote(item.subjectId, 'homeworkNote', item.homeworkText)} className="p-1 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded" title="كتابة Homework"><Edit2 className="w-3 h-3" /></button>
-                              <button type="button" onClick={() => startCardVoice(item.subjectId, 'homeworkNote')} className="p-1 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded" title="إضافة Homework بالصوت"><Mic className="w-3 h-3" /></button>
+                              <button type="button" onClick={() => startCardVoice(item.subjectId, 'homeworkNote')} className={`p-1 rounded ${activeCardVoice === `${item.subjectId}-homeworkNote-${selectedFollowUpDay}` ? 'text-red-600 bg-red-50 animate-pulse' : 'text-slate-400 hover:text-rose-700 hover:bg-rose-50'}`} title="إضافة Homework بالصوت">{activeCardVoice === `${item.subjectId}-homeworkNote-${selectedFollowUpDay}` ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}</button>
                               <button type="button" onClick={() => deleteCardNote(item.subjectId, 'homeworkNote')} className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded" title="حذف Homework"><Trash2 className="w-3 h-3" /></button>
                             </div>
                           )}
@@ -944,7 +950,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                       {currentRole === 'admin' && (
                         <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                           <button type="button" onClick={() => editCardNote(cw.subjectId, 'classworkNote', cw.lessonTopic)} className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md" title="كتابة Classwork"><Edit2 className="w-3.5 h-3.5" /></button>
-                          <button type="button" onClick={() => startCardVoice(cw.subjectId, 'classworkNote')} className="p-1 text-slate-500 hover:text-sky-700 hover:bg-sky-50 rounded-md" title="إضافة Classwork بالصوت"><Mic className="w-3.5 h-3.5" /></button>
+                          <button type="button" onClick={() => startCardVoice(cw.subjectId, 'classworkNote')} className={`p-1 rounded-md ${activeCardVoice === `${cw.subjectId}-classworkNote-${selectedFollowUpDay}` ? 'text-red-600 bg-red-50 animate-pulse' : 'text-slate-500 hover:text-sky-700 hover:bg-sky-50'}`} title="إضافة Classwork بالصوت">{activeCardVoice === `${cw.subjectId}-classworkNote-${selectedFollowUpDay}` ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}</button>
                           <button type="button" onClick={() => deleteCardNote(cw.subjectId, 'classworkNote')} className="p-1 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-md" title="حذف Classwork"><Trash2 className="w-3.5 h-3.5" /></button>
                           {cw.existingCw && <>
                           <button
@@ -1091,7 +1097,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                             </div>
                             {currentRole === 'admin' && <div className="flex items-center gap-1 mt-1">
                               <button type="button" onClick={() => editCardNote(period.subjectId, 'tomorrowNote', tomorrowDayContent?.tomorrowNote || '', selectedTomorrowDay)} className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded" title="كتابة Tomorrow"><Edit2 className="w-3 h-3" /></button>
-                              <button type="button" onClick={() => startCardVoice(period.subjectId, 'tomorrowNote', selectedTomorrowDay)} className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded" title="إضافة Tomorrow بالصوت"><Mic className="w-3 h-3" /></button>
+                              <button type="button" onClick={() => startCardVoice(period.subjectId, 'tomorrowNote', selectedTomorrowDay)} className={`p-1 rounded ${activeCardVoice === `${period.subjectId}-tomorrowNote-${selectedTomorrowDay}` ? 'text-red-600 bg-red-50 animate-pulse' : 'text-slate-400 hover:text-emerald-700 hover:bg-emerald-50'}`} title="إضافة Tomorrow بالصوت">{activeCardVoice === `${period.subjectId}-tomorrowNote-${selectedTomorrowDay}` ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}</button>
                               <button type="button" onClick={() => deleteCardNote(period.subjectId, 'tomorrowNote', selectedTomorrowDay)} className="p-1 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded" title="حذف Tomorrow"><Trash2 className="w-3 h-3" /></button>
                             </div>}
                           </div>
