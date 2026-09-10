@@ -38,6 +38,18 @@ export interface ClassTimetable {
   uploadedAt?: string;
 }
 
+/**
+ * A compact homework item shape used by integrations and lightweight views.
+ * The richer HomeworkRecord below remains the persisted daily-follow-up model.
+ */
+export interface HomeworkItem {
+  id: string;
+  day: string;
+  subject: string;
+  assignment: string;
+  dueDate?: string;
+}
+
 export interface WeeklyPlanItem {
   id: string;
   blockId: string; // 'block1' | 'block2' | 'block3' | 'block4'
@@ -64,6 +76,15 @@ export interface WeeklyPlanItem {
   fileType?: 'pdf' | 'word' | 'doc' | 'image';
   fileSize?: string;
   fileDataUrl?: string;
+
+  // Compact weekly-plan fields used by imports and external integrations.
+  // Existing fields above remain the canonical persisted representation.
+  weekNumber?: number;
+  day?: string;
+  subject?: string;
+  classwork?: string;
+  homework?: string;
+  pdfUrl?: string;
 }
 
 export interface ClassworkRecord {
