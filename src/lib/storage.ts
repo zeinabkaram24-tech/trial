@@ -24,7 +24,8 @@ const STORAGE_KEYS = {
   CURRENT_BLOCK: 'nile_minya_cur_block',
   CURRENT_WEEK: 'nile_minya_cur_week',
   SELECTED_CLASS: 'nile_minya_cur_class',
-  CURRENT_STUDENT: 'nile_minya_cur_student'
+  CURRENT_STUDENT: 'nile_minya_cur_student',
+  UPLOADED_B1_W1: 'nile_minya_uploaded_b1_w1_v1'
 };
 
 const FILE_DB_NAME = 'nile_minya_file_store';
@@ -102,7 +103,18 @@ export const saveStoredTimetables = (data: ClassTimetable[]): void => {
 export const getStoredWeeklyPlans = (): WeeklyPlanItem[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.WEEKLY_PLANS);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const stored = JSON.parse(raw) as WeeklyPlanItem[];
+      if (!localStorage.getItem(STORAGE_KEYS.UPLOADED_B1_W1)) {
+        const uploaded = INITIAL_WEEKLY_PLANS.filter((plan) => plan.id.includes('-w1-'));
+        const existingIds = new Set(stored.map((plan) => plan.id));
+        const merged = [...stored, ...uploaded.filter((plan) => !existingIds.has(plan.id))];
+        localStorage.setItem(STORAGE_KEYS.UPLOADED_B1_W1, '1');
+        return merged;
+      }
+      return stored;
+    }
+    localStorage.setItem(STORAGE_KEYS.UPLOADED_B1_W1, '1');
   } catch (e) {
     console.error('Failed to load weekly plans from storage', e);
   }
@@ -228,6 +240,7 @@ export const exportAllDataToJSON = (): void => {
 export const resetAllDataToDefault = (): void => {
   localStorage.removeItem(STORAGE_KEYS.TIMETABLES);
   localStorage.removeItem(STORAGE_KEYS.WEEKLY_PLANS);
+  localStorage.removeItem(STORAGE_KEYS.UPLOADED_B1_W1);
   localStorage.removeItem(STORAGE_KEYS.DAILY_FOLLOW_UPS);
   localStorage.removeItem(STORAGE_KEYS.STUDENT_TASKS);
   localStorage.removeItem(STORAGE_KEYS.COMPLETED_HW);

@@ -384,6 +384,124 @@ export const INITIAL_TIMETABLES: ClassTimetable[] = [
 ];
 
 export const INITIAL_WEEKLY_PLANS: WeeklyPlanItem[] = [
+  // Uploaded source plans: Block 1 - Week 1 (6/9/2026 - 10/9/2026)
+  {
+    id: 'wp-b1-w1-english-uploaded',
+    blockId: 'block1', weekId: 'week1', classId: 'all', subjectId: 'english',
+    weekNumber: 1, day: 'Sunday', subject: 'English',
+    unitOrTheme: 'Welcome, Orientation and Previously Taught Review',
+    learningObjectives: ['Welcome and orient students', 'Complete diagnostic assessment', 'Review previously taught content'],
+    resourcesNote: 'English Weekly Plan PDF - Minya - Block 1 Week 1',
+    classwork: 'Welcome Day and Orientation; Diagnostic Test; Previously Taught Review.',
+    homework: 'No homework on most days. Monday: From page 1 to page 3 for Class 2B. Thursday: pages 56 and 58 for Class 2B.',
+    homeworkNote: 'No homework on most days. Monday: From page 1 to page 3 for Class 2B. Thursday: pages 56 and 58 for Class 2B.',
+    tomorrowNote: 'Any changes may happen due to changes in schedules.',
+    fileName: 'Weekly Plan English - B1 - W1 - Minia.pdf', fileType: 'pdf', fileSize: 'Uploaded source plan',
+    dayContent: {
+      Sunday: { classworkNote: 'Welcome Day and Orientation for classes 2A, 2B and 2C.', homeworkNote: 'No homework.', tomorrowNote: 'Any changes may happen due to changes in schedules.' },
+      Monday: { classworkNote: 'Diagnostic Test for 2A and 2C; Previously Taught Review and Orientation for 2B.', homeworkNote: 'From page 1 to page 3 for Class 2B.', tomorrowNote: 'Any changes may happen due to changes in schedules.' },
+      Tuesday: { classworkNote: 'Previously Taught Review: 2A pages 1-5, 2B pages 4-5, 2C pages 1-3.', homeworkNote: 'No homework.', tomorrowNote: 'Any changes may happen due to changes in schedules.' },
+      Wednesday: { classworkNote: 'Previously Taught Review: pages 6-10 for classes 2A, 2B and 2C.', homeworkNote: 'No homework recorded.', tomorrowNote: 'Any changes may happen due to changes in schedules.' },
+      Thursday: { classworkNote: 'Previously Taught Review: pages 10-12 for classes 2A, 2B and 2C.', homeworkNote: 'Pages 56 and 58 for Class 2B.', tomorrowNote: 'Any changes may happen due to changes in schedules.' }
+    }
+  },
+  {
+    id: 'wp-b1-w1-math-uploaded',
+    blockId: 'block1', weekId: 'week1', classId: 'all', subjectId: 'math',
+    weekNumber: 1, day: 'Sunday', subject: 'Math',
+    unitOrTheme: 'Unit 1: Number and Place Value',
+    learningObjectives: ['Count numbers up to 100', 'Understand place value', 'Compare and order numbers', 'Use 1 more and 1 less in estimation'],
+    resourcesNote: 'Maths-Grade2-B1-All-Sheet1 - Main',
+    classwork: 'Welcome Day; Counting numbers up to 100; Place value and partition/recombine; Comparing and ordering numbers; 1 more / 1 less estimation.',
+    homework: 'Tuesday: Page 81. Thursday: Page 80 to 84, Question 1 only.',
+    homeworkNote: 'Tuesday: Page 81. Thursday: Page 80 to 84, Question 1 only.',
+    tomorrowNote: 'Please bring a small whiteboard, marker and 100 chart.',
+    fileName: 'Weekly Plan Maths - B1 - W1 - Minia.pdf', fileType: 'pdf', fileSize: 'Uploaded source plan',
+    dayContent: {
+      Sunday: { classworkNote: 'Welcome Day.', homeworkNote: 'No homework recorded.', tomorrowNote: 'Please bring a small whiteboard, marker and 100 chart.' },
+      Monday: { classworkNote: 'Unit 1: Counting numbers up to 100.', homeworkNote: 'No homework recorded.', tomorrowNote: 'Please bring a small whiteboard, marker and 100 chart.' },
+      Tuesday: { classworkNote: 'Unit 1: Place value and partition and recombine.', homeworkNote: 'Page 81.', tomorrowNote: 'Please bring a small whiteboard, marker and 100 chart.' },
+      Wednesday: { classworkNote: 'Unit 1: Comparing and ordering numbers.', homeworkNote: 'No homework recorded.', tomorrowNote: 'Please bring a small whiteboard, marker and 100 chart.' },
+      Thursday: { classworkNote: 'Unit 1: 1 more / 1 less estimation.', homeworkNote: 'Page 80 to 84, Question 1 only.', tomorrowNote: 'Please bring a small whiteboard, marker and 100 chart.' }
+    }
+  },
+  {
+    id: 'wp-b1-w1-science-uploaded',
+    blockId: 'block1', weekId: 'week1', classId: 'all', subjectId: 'science',
+    weekNumber: 1, day: 'Sunday', subject: 'Science',
+    unitOrTheme: 'Unit 1: Sound Sources',
+    learningObjectives: ['Learn lab safety', 'Understand that sound is a vibration'],
+    resourcesNote: 'Science Weekly Plan PDF - Minya - Block 1 Week 1',
+    classwork: 'Lab Safety; Sound is a vibration.',
+    homework: 'Tuesday: Page 14 for Class 2C. Wednesday: Page 14 for classes 2A-2B and page 16.',
+    homeworkNote: 'Tuesday: Page 14 for Class 2C. Wednesday: Page 14 for classes 2A-2B and page 16.',
+    fileName: 'Weekly Plan Science - B1 - W1 - Minia.pdf', fileType: 'pdf', fileSize: 'Uploaded source plan',
+    dayContent: {
+      Sunday: { classworkNote: 'Unit 1: Sound Sources - Lab Safety for Class 2B.', homeworkNote: 'No homework recorded.' },
+      Monday: { classworkNote: 'Unit 1: Sound Sources - Lab Safety for classes 2A, 2B and 2C.', homeworkNote: 'No homework recorded.' },
+      Tuesday: { classworkNote: 'Unit 1: Sound Sources - Sound is a vibration for Class 2C.', homeworkNote: 'Page 14 for Class 2C.' },
+      Wednesday: { classworkNote: 'Unit 1: Sound Sources - Sound is a vibration for classes 2A and 2B.', homeworkNote: 'Page 14 for classes 2A-2B and page 16.' },
+      Thursday: { classworkNote: 'Unit 1: Sound Sources - Sound is a vibration for classes 2A, 2B and 2C.', homeworkNote: 'No homework recorded.' }
+    }
+  },
+  {
+    id: 'wp-b1-w1-arabic-uploaded',
+    blockId: 'block1', weekId: 'week1', classId: 'all', subjectId: 'arabic',
+    weekNumber: 1, day: 'Sunday', subject: 'Arabic',
+    unitOrTheme: 'الوحدة الأولى: العودة إلى المدرسة',
+    learningObjectives: ['التعرف على قواعد الصف', 'مراجعة الحروف والتحليل الصوتي', 'التمييز بين التاء المربوطة والتاء المفتوحة والهاء', 'التدريب على الإملاء'],
+    resourcesNote: 'فيديو، كراسة نشاط الوحدة الأولى، كراسة الطالب',
+    classwork: 'حصة تعريفية ووضع قواعد الصف؛ مراجعة الحروف؛ مراجعة التحليل الصوتي للكلمات؛ التاء المربوطة والتاء المفتوحة والهاء؛ إملاء.',
+    homework: 'الثلاثاء: كراسة الواجب المنزلي صفحة 45. باقي الأيام: لا يوجد واجب مسجل.',
+    homeworkNote: 'الثلاثاء: كراسة الواجب المنزلي صفحة 45. باقي الأيام: لا يوجد واجب مسجل.',
+    tomorrowNote: 'ملاحظات ومصادر: فيديو وكراسة نشاط. موضوع الأسبوع: العودة إلى المدرسة.',
+    fileName: 'Weekly Plan Arabic - B1 - W1 - Minia.pdf', fileType: 'pdf', fileSize: 'Uploaded source plan',
+    dayContent: {
+      Sunday: { classworkNote: 'حصة تعريفية وترحيبية + وضع قواعد الصف. الوحدة الأولى: العودة إلى المدرسة.', homeworkNote: 'لا يوجد.', tomorrowNote: 'فيديو وأنشطة ترحيبية.' },
+      Monday: { classworkNote: 'مراجعة الحروف. الوحدة الأولى: العودة إلى المدرسة.', homeworkNote: 'لا يوجد.', tomorrowNote: 'كراسة نشاط الوحدة الأولى ص 2-3.' },
+      Tuesday: { classworkNote: 'مراجعة التحليل الصوتي للكلمات.', homeworkNote: 'كراسة الواجب المنزلي صفحة 45.', tomorrowNote: 'فيديو وكراسة نشاط الوحدة الأولى ص 4.' },
+      Wednesday: { classworkNote: 'التاء المربوطة والتاء المفتوحة والهاء. الوحدة الأولى ص 5-6.', homeworkNote: 'لا يوجد.', tomorrowNote: 'فيديو وكراسة نشاط.' },
+      Thursday: { classworkNote: 'إملاء. الوحدة الأولى: العودة إلى المدرسة.', homeworkNote: 'لا يوجد.', tomorrowNote: 'كراسة الطالب.' }
+    }
+  },
+  {
+    id: 'wp-b1-w1-social-uploaded',
+    blockId: 'block1', weekId: 'week1', classId: 'all', subjectId: 'social',
+    weekNumber: 1, day: 'Sunday', subject: 'Social Studies',
+    unitOrTheme: 'الوحدة الأولى: مجتمع الصف الدراسي الثاني',
+    learningObjectives: ['الترحيب بالطلاب', 'استخدام استراتيجيات التعلم النشط', 'وضع قواعد العمل مع الطلاب', 'التعريف بمنهج الصف الثاني', 'التعرف على عنوان الدرس الأول العودة إلى المدرسة'],
+    resourcesNote: 'الخطة الأسبوعية للدراسات الاجتماعية - بلوك 1 - أسبوع 1',
+    classwork: 'ترحيب بالطلاب واستخدام استراتيجيات التعلم النشط ووضع قواعد العمل مع الطلاب والتعريف بمنهج الصف الثاني؛ الاختبار القبلي؛ عنوان الدرس الأول: العودة إلى المدرسة.',
+    homework: 'صفحة 7 يومي Wednesday وThursday.',
+    homeworkNote: 'صفحة 7 يومي Wednesday وThursday.',
+    tomorrowNote: 'يرجى إحضار ألوان خشبية للتلوين والرسم يومي Wednesday وThursday.',
+    fileName: 'Weekly Plan Social Studies - B1 - W1 - Minia.pdf', fileType: 'pdf', fileSize: 'Uploaded source plan',
+    dayContent: {
+      Sunday: { classworkNote: 'ترحيب بالطلاب واستخدام استراتيجيات التعلم النشط ووضع قواعد العمل والتعريف بمنهج الصف الثاني.', homeworkNote: 'لا يوجد.', tomorrowNote: '' },
+      Monday: { classworkNote: 'ترحيب بالطلاب واستخدام استراتيجيات التعلم النشط ووضع قواعد العمل والتعريف بمنهج الصف الثاني.', homeworkNote: 'لا يوجد.', tomorrowNote: '' },
+      Tuesday: { classworkNote: 'الاختبار القبلي.', homeworkNote: 'لا يوجد.', tomorrowNote: '' },
+      Wednesday: { classworkNote: 'الاختبار القبلي للصف 2A و2B؛ عنوان الدرس الأول العودة إلى المدرسة للصف 2C.', homeworkNote: 'صفحة 7 للصف 2C.', tomorrowNote: 'يرجى إحضار ألوان خشبية للتلوين والرسم.' },
+      Thursday: { classworkNote: 'عنوان الدرس الأول العودة إلى المدرسة للصفوف 2A و2B؛ الاختبار القبلي للصف 2C.', homeworkNote: 'صفحة 7 للصفوف 2A و2B.', tomorrowNote: 'يرجى إحضار ألوان خشبية للتلوين والرسم.' }
+    }
+  },
+  {
+    id: 'wp-b1-w1-ict-uploaded',
+    blockId: 'block1', weekId: 'week1', classId: 'all', subjectId: 'ict',
+    weekNumber: 1, day: 'Week 1', subject: 'ICT',
+    unitOrTheme: 'Unit 1: Working with Text - Introducing the Keyboard',
+    learningObjectives: ['Identify keyboard parts', 'Explain QWERTY and home-row keys', 'Differentiate Arabic and English keyboard layouts', 'Discuss keyboard health and safety'],
+    resourcesNote: 'ICT Grade 2 B1 All Sheet 1 - Main; video links in the uploaded plan',
+    classwork: 'Session 1: Introducing the keyboard, identify keyboard parts, describe special keys, and practice enter, space bar, shift, control, backspace and caps lock/delete. Session 2: Explain QWERTY and use home-row keys to type fast. Session 3: Differentiate Arabic and English keyboard layouts, switch layouts, and discuss health and safety.',
+    homework: 'Week 1 pages 10 and 12. Page 14.',
+    homeworkNote: 'Week 1 pages 10 and 12. Page 14.',
+    tomorrowNote: 'Video resources: keyboard and home-row links included in the uploaded ICT plan.',
+    fileName: 'Weekly Plan ICT - B1 - W1 - Minia.pdf', fileType: 'pdf', fileSize: 'Uploaded source plan',
+    dayContent: {
+      'Session 1': { classworkNote: 'Introducing the keyboard; identify keyboard parts and describe special keys including enter, space bar, shift, control, backspace and caps lock/delete.', homeworkNote: 'Week 1 pages 10 and 12.', tomorrowNote: 'Video resources included in the plan.' },
+      'Session 2': { classworkNote: 'Explain the meaning of QWERTY keyboard and use the keyboard home row keys to type fast.', homeworkNote: 'Page 14.', tomorrowNote: 'Video resources included in the plan.' },
+      'Session 3': { classworkNote: 'Differentiate between Arabic and English keyboard layouts, switch between layouts, and discuss health and safety aspects when using a keyboard.', homeworkNote: 'No additional homework recorded.', tomorrowNote: 'Video resources included in the plan.' }
+    }
+  },
   // Block 1 - Week 2
   {
     id: 'wp-b1-w2-eng',

@@ -188,6 +188,21 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     return numMatch ? numMatch[0] : str.replace(/[^0-9\-–]/g, '') || '24';
   };
 
+  const getDayPlanContent = (plan: WeeklyPlanItem | undefined, day: string, subjectId?: string) => {
+    if (!plan?.dayContent) return undefined;
+    const aliases: Record<string, string[]> = {
+      'الأحد': ['Sunday'], 'الإثنين': ['Monday'], 'الثلاثاء': ['Tuesday'],
+      'الأربعاء': ['Wednesday'], 'الخميس': ['Thursday'],
+      Sunday: ['الأحد'], Monday: ['الإثنين'], Tuesday: ['الثلاثاء'],
+      Wednesday: ['الأربعاء'], Thursday: ['الخميس']
+    };
+    const keys = [
+      ...(subjectId ? [`${day}|${subjectId}`] : []), day,
+      ...(aliases[day] || []).flatMap((alias) => subjectId ? [`${alias}|${subjectId}`, alias] : [alias])
+    ];
+    return keys.map((key) => plan.dayContent?.[key]).find(Boolean);
+  };
+
   // Homework: Weekly Plan is the source of truth; saved daily homework is only a fallback.
   const homeworkItems = useMemo(() => {
     const dictations = (materials || [])
@@ -202,12 +217,12 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
       }));
     const planned = weekPlans
       .filter((wp) => {
-        const dayPlan = wp.dayContent?.[`${selectedFollowUpDay}|${wp.subjectId}`] || wp.dayContent?.[selectedFollowUpDay];
+        const dayPlan = getDayPlanContent(wp, selectedFollowUpDay, wp.subjectId);
         return (dayPlan?.homeworkNote || wp.homeworkNote) || wp.dictationFileName;
       })
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
-        const dayPlan = wp.dayContent?.[`${selectedFollowUpDay}|${wp.subjectId}`] || wp.dayContent?.[selectedFollowUpDay];
+        const dayPlan = getDayPlanContent(wp, selectedFollowUpDay, wp.subjectId);
         const dayHomework = dayPlan?.homeworkNote;
         const parts = [
           (dayHomework || wp.homeworkNote)?.trim(),
@@ -287,7 +302,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     }).map((period) => {
       const sub = getSubjectInfo(period.subjectId);
       const wp = weekPlans.find((p) => p.subjectId === period.subjectId);
-      const dayPlan = wp?.dayContent?.[`${selectedFollowUpDay}|${period.subjectId}`] || wp?.dayContent?.[selectedFollowUpDay];
+      const dayPlan = getDayPlanContent(wp, selectedFollowUpDay, period.subjectId);
       const existingCw = currentRecord.classwork?.find((c) => c.subjectId === period.subjectId);
       const lessonTopic = dayPlan?.classworkNote || wp?.classworkNote || existingCw?.lessonTitle || '';
       return {
@@ -305,12 +320,12 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   const weeklyPlanNotes = useMemo(() => {
     return weekPlans
       .filter((wp) => {
-        const dayPlan = wp.dayContent?.[`${selectedTomorrowDay}|${wp.subjectId}`] || wp.dayContent?.[selectedTomorrowDay];
+        const dayPlan = getDayPlanContent(wp, selectedTomorrowDay, wp.subjectId);
         return dayPlan?.tomorrowNote || wp.tomorrowNote || wp.resourcesNote || wp.assessmentNote;
       })
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
-        const dayPlan = wp.dayContent?.[`${selectedTomorrowDay}|${wp.subjectId}`] || wp.dayContent?.[selectedTomorrowDay];
+        const dayPlan = getDayPlanContent(wp, selectedTomorrowDay, wp.subjectId);
         const dayNote = dayPlan?.tomorrowNote;
         return {
           id: wp.id,
@@ -1063,7 +1078,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                     tomorrowPeriods.map((period) => {
                       const isPeriodPacked = !!packedPeriods[period.id];
                       const tomorrowPlan = weekPlans.find((plan) => plan.subjectId === period.subjectId);
-                      const tomorrowDayContent = tomorrowPlan?.dayContent?.[`${selectedTomorrowDay}|${period.subjectId}`] || tomorrowPlan?.dayContent?.[selectedTomorrowDay];
+                      const tomorrowDayContent = getDayPlanContent(tomorrowPlan, selectedTomorrowDay, period.subjectId);
                       return (
                         <div
                           key={period.id}
