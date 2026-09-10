@@ -771,66 +771,57 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
 
       {/* VIEW MODE: FULL GRID */}
       {viewMode === 'grid' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse text-sm min-w-[900px]">
+            <table className="w-full text-center border-collapse min-w-[850px]">
               <thead>
-                <tr className="bg-slate-900 text-white">
-                  <th className="p-3.5 font-bold border-b border-slate-800 text-center w-28">
-                    اليوم / الحصة
+                <tr className="bg-slate-100/80 text-slate-700 text-xs font-bold border-b border-slate-200">
+                  <th className="p-4 w-32 border-e border-slate-200">
+                    <span className="block font-black text-slate-900 text-sm">اليوم</span>
+                    <span className="text-[11px] text-slate-400 font-normal font-sans">Day</span>
                   </th>
-                  {PERIOD_TIMES.map((pt, idx) => (
+                  {PERIOD_TIMES.map((pt) => (
                     <th
                       key={pt.periodNum}
-                      className="p-4 font-bold border-b border-slate-800 text-center"
+                      className="p-3 border-e border-slate-200 last:border-e-0"
                     >
-                      <div>الحصة {pt.periodNum}</div>
-                      <div className="text-[10px] font-normal text-slate-300 tracking-tighter">
-                        {pt.time}
-                      </div>
+                      <span className="block font-black text-slate-900 text-sm">الحصة {pt.periodNum}</span>
+                      <span className="text-[10px] text-slate-500 font-mono block font-normal">{pt.time}</span>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {currentTimetable.days.map((day, dIdx) => (
-                  <tr key={day.dayNameAr} className={`transition-colors hover:brightness-[0.98] ${['bg-sky-50', 'bg-emerald-50', 'bg-amber-50', 'bg-violet-50', 'bg-rose-50'][dIdx % 5]}`}>
-                    <td className="p-3.5 font-black text-slate-900 bg-white/65 border-l border-slate-200 text-center">
-                      <div className="text-sm">{day.dayNameAr}</div>
-                      <div className="text-[10px] font-medium text-slate-400">{day.dayNameEn}</div>
+                {currentTimetable.days.map((day) => (
+                  <tr key={day.dayNameAr} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="p-4 bg-slate-50 border-e border-slate-200 text-center font-bold">
+                      <div className="text-slate-900 font-black text-base">{day.dayNameAr}</div>
+                      <div className="text-[11px] text-slate-400 font-sans font-medium">{day.dayNameEn}</div>
                     </td>
 
-                    {day.periods.map((slot) => {
-                      const sub = getSubjectInfo(slot.subjectId);
+                    {PERIOD_TIMES.map((periodTime) => {
+                      const slot = day.periods.find((period) => period.periodNum === periodTime.periodNum);
+                      const sub = slot ? getSubjectInfo(slot.subjectId) : null;
                       return (
-                        <td
-                          key={slot.id}
-                          className="p-3 align-top text-center border-l border-slate-100"
-                        >
-                          <div
-                            onClick={() => handleOpenEditSlot(day.dayNameAr, slot)}
-                            className={`p-2.5 rounded-xl border ${sub.borderColor} ${sub.color} h-full flex flex-col justify-between transition-all ${
-                              currentRole === 'admin'
-                                ? 'cursor-pointer hover:shadow-md hover:scale-[1.02] ring-1 ring-transparent hover:ring-amber-400'
-                                : ''
-                            }`}
-                          >
-                            <div>
-                              <div className="font-black text-xs text-slate-900 mb-0.5">
-                                <span className="inline-flex items-center gap-2 text-sm">
-                                  <RenderSubjectIcon iconName={sub.iconName} className="w-5 h-5" />
-                                  {sub.nameEn}
-                                </span>
+                        <td key={periodTime.periodNum} className="p-2 text-center align-middle border-e border-slate-100 last:border-e-0">
+                          {slot && sub ? (
+                            <div
+                              onClick={() => handleOpenEditSlot(day.dayNameAr, slot)}
+                              className={`w-full p-2.5 rounded-2xl border text-center ${sub.borderColor} ${sub.color} transition-all ${
+                                currentRole === 'admin' ? 'cursor-pointer hover:scale-105 hover:shadow-xs' : ''
+                              }`}
+                              title={currentRole === 'admin' ? 'اضغط لتعديل المادة' : undefined}
+                            >
+                              <div className="flex items-center justify-center mb-1">
+                                <RenderSubjectIcon iconName={sub.iconName} className={`w-4 h-4 ${sub.textColor}`} />
                               </div>
+                              <span className={`text-xs font-bold ${sub.textColor} truncate block font-sans`}>{sub.nameEn}</span>
                             </div>
-
-
-                            {currentRole === 'admin' && (
-                              <div className="mt-1 text-[9px] text-amber-900 font-bold opacity-0 group-hover:opacity-100">
-                                ✎ تعديل
-                              </div>
-                            )}
-                          </div>
+                          ) : (
+                            <div className="w-full p-2.5 rounded-2xl border border-dashed border-slate-100 text-slate-300 text-xs font-medium flex items-center justify-center">
+                              <span>-</span>
+                            </div>
+                          )}
                         </td>
                       );
                     })}
