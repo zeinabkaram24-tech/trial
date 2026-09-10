@@ -240,25 +240,6 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
-        {/* Banner for Visitors informing about view-only nature */}
-        {currentRole === 'visitor' && (
-          <div className="mb-5 bg-sky-50 border border-sky-200 text-sky-900 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-sky-600 shrink-0" />
-              <span>
-                <strong>واجهة الزائر / ولي الأمر مفعلة:</strong> يمكنك تصفح جداول الحصص والخطط الأسبوعية والواجبات المدرسية وتجهيزات الغد لجريد 2 بحرية كاملة، أو تسجيل الدخول كأدمن من الشريط العلوي للتعديل والإضافة.
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsPrintModalOpen(true)}
-              className="bg-white hover:bg-sky-100 text-sky-800 font-bold px-3 py-1.5 rounded-lg border border-sky-300 shadow-2xs transition-colors shrink-0"
-            >
-              طباعة تقرير المتابعة
-            </button>
-          </div>
-        )}
-
         {/* Tab 1: Daily Follow-up */}
         {(activeTab === 'daily' || activeTab === 'tasks') && (
           <DailyFollowUpView

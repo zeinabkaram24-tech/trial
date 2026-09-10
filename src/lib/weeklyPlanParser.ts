@@ -5,7 +5,7 @@ import { extractTextFromPdf } from './timetableParser';
 
 GlobalWorkerOptions.workerSrc = pdfWorker;
 
-export const WEEKLY_PLAN_PARSER_VERSION = 7;
+export const WEEKLY_PLAN_PARSER_VERSION = 8;
 
 export interface WeeklyPlanDayContent {
   classworkNote?: string;
@@ -127,9 +127,47 @@ function splitByDay(text: string): Record<string, WeeklyPlanDayContent> {
   });
   sections.forEach((section, index) => {
     section.end = sections[index + 1]?.start ?? lines.length;
-    const dayText = lines.slice(section.start + 1, section.end).join('\n');
+    const dayLines = lines.slice(section.start + 1, section.end);
+    const dayText = dayLines.join('\n');
     const content = classify(dayText);
     if (content.classworkNote || content.homeworkNote || content.tomorrowNote) result[section.day] = content;
+
+    // Structured row support: when a table export contains several subjects
+    // under one day, keep each subject block separately instead of merging it
+    // into one day's text. Keys are consumed as `${day}|${subjectId}`.
+    const subjectPatterns: Array<[string, RegExp]> = [
+      ['math', /\bmath(?:ematics)?\b|رياضيات|حساب/i],
+      ['english', /\benglish\b|انجليزي|إنجليزي|connect/i],
+      ['science', /\bscience\b|علوم|discover/i],
+      ['arabic', /\barabic\b|عربي|لغة عربية/i],
+      ['french', /\bfrench\b|français|فرنسي|فرنساوي/i],
+      ['social_studies', /social\s*studies|دراسات اجتماعية/i],
+      ['religion', /religion|islamic|دين|تربية دينية/i],
+      ['ict', /\bict\b|computer|حاسب|تكنولوجيا/i],
+      ['arts', /\bart\b|رسم|فنية/i],
+      ['music', /\bmusic\b|موسيقى/i],
+      ['pe', /\bpe\b|physical education|رياضة|بدنية/i]
+    ];
+    let subjectId: string | undefined;
+    let subjectStart = 0;
+    dayLines.forEach((line, lineIndex) => {
+      const detected = subjectPatterns.find(([, pattern]) => pattern.test(line))?.[0];
+      if (!detected || detected === subjectId) return;
+      if (subjectId) {
+        const subjectContent = classify(dayLines.slice(subjectStart, lineIndex).join('\n'));
+        if (subjectContent.classworkNote || subjectContent.homeworkNote || subjectContent.tomorrowNote) {
+          result[`${section.day}|${subjectId}`] = subjectContent;
+        }
+      }
+      subjectId = detected;
+      subjectStart = lineIndex;
+    });
+    if (subjectId) {
+      const subjectContent = classify(dayLines.slice(subjectStart).join('\n'));
+      if (subjectContent.classworkNote || subjectContent.homeworkNote || subjectContent.tomorrowNote) {
+        result[`${section.day}|${subjectId}`] = subjectContent;
+      }
+    }
   });
   return result;
 }

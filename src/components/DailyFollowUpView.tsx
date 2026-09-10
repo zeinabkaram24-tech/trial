@@ -195,10 +195,14 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         rawRecord: null
       }));
     const planned = weekPlans
-      .filter((wp) => (wp.dayContent?.[selectedFollowUpDay]?.homeworkNote || (!wp.dayContent && wp.homeworkNote)) || wp.dictationFileName)
+      .filter((wp) => {
+        const dayPlan = wp.dayContent?.[`${selectedFollowUpDay}|${wp.subjectId}`] || wp.dayContent?.[selectedFollowUpDay];
+        return (dayPlan?.homeworkNote || wp.homeworkNote) || wp.dictationFileName;
+      })
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
-        const dayHomework = wp.dayContent?.[selectedFollowUpDay]?.homeworkNote;
+        const dayPlan = wp.dayContent?.[`${selectedFollowUpDay}|${wp.subjectId}`] || wp.dayContent?.[selectedFollowUpDay];
+        const dayHomework = dayPlan?.homeworkNote;
         const parts = [
           (dayHomework || wp.homeworkNote)?.trim(),
           wp.dictationFileName ? `Dictation: ${wp.dictationFileName}` : undefined
@@ -266,9 +270,9 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
     }).map((period) => {
       const sub = getSubjectInfo(period.subjectId);
       const wp = weekPlans.find((p) => p.subjectId === period.subjectId);
-      const dayPlan = wp?.dayContent?.[selectedFollowUpDay];
+      const dayPlan = wp?.dayContent?.[`${selectedFollowUpDay}|${period.subjectId}`] || wp?.dayContent?.[selectedFollowUpDay];
       const existingCw = currentRecord.classwork?.find((c) => c.subjectId === period.subjectId);
-      const lessonTopic = dayPlan?.classworkNote || (!wp?.dayContent ? wp?.classworkNote : '') || existingCw?.lessonTitle || '';
+      const lessonTopic = dayPlan?.classworkNote || wp?.classworkNote || existingCw?.lessonTitle || '';
       return {
         id: `${period.id}-${existingCw?.id || 'lesson'}`,
         periodNum: period.periodNum,
@@ -283,10 +287,14 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   // Weekly Plan notes for Tomorrow: resources and assessment notes are both actionable.
   const weeklyPlanNotes = useMemo(() => {
     return weekPlans
-      .filter((wp) => wp.dayContent?.[selectedTomorrowDay]?.tomorrowNote || (!wp.dayContent && (wp.tomorrowNote || wp.resourcesNote || wp.assessmentNote)))
+      .filter((wp) => {
+        const dayPlan = wp.dayContent?.[`${selectedTomorrowDay}|${wp.subjectId}`] || wp.dayContent?.[selectedTomorrowDay];
+        return dayPlan?.tomorrowNote || wp.tomorrowNote || wp.resourcesNote || wp.assessmentNote;
+      })
       .map((wp) => {
         const sub = getSubjectInfo(wp.subjectId);
-        const dayNote = wp.dayContent?.[selectedTomorrowDay]?.tomorrowNote;
+        const dayPlan = wp.dayContent?.[`${selectedTomorrowDay}|${wp.subjectId}`] || wp.dayContent?.[selectedTomorrowDay];
+        const dayNote = dayPlan?.tomorrowNote;
         return {
           id: wp.id,
           subjectId: wp.subjectId,
