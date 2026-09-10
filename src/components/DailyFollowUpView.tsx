@@ -384,40 +384,44 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
 
   const saveAssistantCommand = (spokenText: string) => {
     if (!onUpdateWeeklyPlans) return;
-    const normalized = spokenText.trim();
+    const normalized = spokenText.trim().replace(/[،,؛;]/g, ' ');
     if (!normalized) return;
     const fieldPatterns: Array<{ field: 'classwork' | 'homework' | 'tomorrow'; pattern: RegExp }> = [
-      { field: 'classwork', pattern: /class\s*work|classwork|كلاس\s*وورك|class work|عمل\s*الفصل|شرح/i },
-      { field: 'homework', pattern: /home\s*work|homework|هوم\s*وورك|واجب|الواجب/i },
-      { field: 'tomorrow', pattern: /tomorrow|تومورو|غدًا|غدا|بكرة|تحضير/i }
+      { field: 'classwork', pattern: /class\s*work|classwork|كلاس\s*وورك|عمل\s*الفصل|شرح/i },
+      { field: 'homework', pattern: /home\s*work|homework|هوم\s*وورك|واجب/i },
+      { field: 'tomorrow', pattern: /tomorrow|تومورو|غد[ًاا]|بكرة|تحضير/i }
     ];
-    const matchedFields = fieldPatterns.filter((item) => item.pattern.test(normalized));
-    const targets = matchedFields.length ? matchedFields : [{ field: 'classwork' as const, pattern: /$^/ }];
-    const detectedDay = Object.keys(dayAliases).find((alias) => normalized.toLowerCase().includes(alias.toLowerCase()));
-    const detectedClass = normalized.match(/\b(2\s*[abc])\b/i)?.[1]?.replace(/\s+/g, '').toUpperCase() as SchoolClass | undefined;
-    const detectedSubjectAlias = Object.keys(subjectAliases).find((alias) => normalized.toLowerCase().includes(alias.toLowerCase()));
+    const targets = fieldPatterns.filter(({ pattern }) => pattern.test(normalized));
+    const activeTargets = targets.length ? targets : [{ field: 'classwork' as const, pattern: /$^/ }];
+    const lowered = normalized.toLowerCase();
+    const detectedDay = Object.keys(dayAliases).find((alias) => lowered.includes(alias.toLowerCase()));
+    const detectedClass = normalized.match(/(?:class|فصل|كلاس)\s*(2\s*[abc])\b/i)?.[1]?.replace(/\s+/g, '').toUpperCase() as SchoolClass | undefined;
+    const fallbackClass = normalized.match(/\b(2\s*[abc])\b/i)?.[1]?.replace(/\s+/g, '').toUpperCase() as SchoolClass | undefined;
+    const detectedSubjectAlias = Object.keys(subjectAliases).sort((a, b) => b.length - a.length).find((alias) => lowered.includes(alias.toLowerCase()));
     const targetDay = detectedDay ? dayAliases[detectedDay] : selectedFollowUpDay;
-    const targetClass = detectedClass || selectedClass;
+    const targetClass = detectedClass || fallbackClass || selectedClass;
     const targetSubject = detectedSubjectAlias ? subjectAliases[detectedSubjectAlias] : voiceSubject;
-
-    targets.forEach(({ field }, index) => {
-      const currentMarker = fieldPatterns.find((item) => item.field === field)!.pattern;
-      const markerMatch = currentMarker.exec(normalized);
-      const start = markerMatch ? (markerMatch.index || 0) + markerMatch[0].length : 0;
-      const nextMarkerPositions = fieldPatterns
-        .filter((item) => item.field !== field)
-        .map((item) => item.pattern.exec(normalized.slice(start))?.index)
-        .filter((position): position is number => position !== undefined);
-      const end = nextMarkerPositions.length ? start + Math.min(...nextMarkerPositions) : normalized.length;
-      const content = normalized.slice(start, end).replace(/^(في|إلى|الى|for|on)\s+/i, '').trim();
+    const routingWords = /^(please\s+)?(ضع|أضف|اضف|سجل|اكتب|add|put|set|update)\s+(في|الى|إلى|to|in|on)?\s*/i;
+    const metadataWords = new RegExp(`\\b(?:${Object.keys(dayAliases).join('|')}|(?:class|فصل|كلاس)\\s*2\\s*[abc]|${Object.keys(subjectAliases).join('|')})\\b`, 'gi');
+    let updatedPlans = [...(weeklyPlans || [])];
+    activeTargets.forEach(({ field }, index) => {
+      const marker = fieldPatterns.find((item) => item.field === field)!.pattern;
+      const match = marker.exec(normalized);
+      const afterMarker = match ? normalized.slice((match.index || 0) + match[0].length) : normalized;
+      const nextMarkers = fieldPatterns.filter((item) => item.field !== field).map((item) => item.pattern.exec(afterMarker)?.index).filter((position): position is number => position !== undefined);
+      const rawContent = afterMarker.slice(0, nextMarkers.length ? Math.min(...nextMarkers) : undefined);
+      const content = rawContent.replace(routingWords, '').replace(metadataWords, '').replace(/\s+/g, ' ').trim().replace(/^(في|إلى|الى|for|to|on|of)\s+/i, '');
       if (!content) return;
       const dayKey = `${targetDay}|${targetSubject}`;
-      const matchingPlan = (weeklyPlans || []).find((item) => item.blockId === selectedBlock && item.weekId === selectedWeek && item.classId === targetClass && item.subjectId === targetSubject);
-      const nextContent = { ...(matchingPlan?.dayContent || {}), [dayKey]: { ...(matchingPlan?.dayContent?.[dayKey] || {}), ...(field === 'classwork' ? { classworkNote: content } : {}), ...(field === 'homework' ? { homeworkNote: content } : {}), ...(field === 'tomorrow' ? { tomorrowNote: content } : {}) } };
-      if (matchingPlan) onUpdateWeeklyPlans((weeklyPlans || []).map((item) => item.id === matchingPlan.id ? { ...item, dayContent: nextContent } : item));
-      else onUpdateWeeklyPlans([...(weeklyPlans || []), { id: `plan-${Date.now()}-${index}`, blockId: selectedBlock, weekId: selectedWeek, classId: targetClass, subjectId: targetSubject, unitOrTheme: `Voice entry - ${targetDay}`, learningObjectives: [], dayContent: nextContent }]);
+      const matchingIndex = updatedPlans.findIndex((item) => item.blockId === selectedBlock && item.weekId === selectedWeek && item.classId === targetClass && item.subjectId === targetSubject);
+      const currentPlan = matchingIndex >= 0 ? updatedPlans[matchingIndex] : undefined;
+      const nextContent = { ...(currentPlan?.dayContent || {}), [dayKey]: { ...(currentPlan?.dayContent?.[dayKey] || {}), ...(field === 'classwork' ? { classworkNote: content } : {}), ...(field === 'homework' ? { homeworkNote: content } : {}), ...(field === 'tomorrow' ? { tomorrowNote: content } : {}) } };
+      const nextPlan: WeeklyPlanItem = currentPlan ? { ...currentPlan, dayContent: nextContent } : { id: `plan-${Date.now()}-${index}`, blockId: selectedBlock, weekId: selectedWeek, classId: targetClass, subjectId: targetSubject, unitOrTheme: `Voice entry - ${targetDay}`, learningObjectives: [], dayContent: nextContent };
+      if (matchingIndex >= 0) updatedPlans[matchingIndex] = nextPlan;
+      else updatedPlans.unshift(nextPlan);
     });
-    setAssistantStatus(`تم الحفظ تلقائيًا: ${targets.map((target) => target.field).join(' + ')} • ${targetDay} • Class ${targetClass}`);
+    onUpdateWeeklyPlans(updatedPlans);
+    setAssistantStatus(`تم الفهم والحفظ: ${activeTargets.map((target) => target.field).join(' + ')} • ${targetDay} • Class ${targetClass}`);
   };
 
   const stopInlineVoice = () => {
