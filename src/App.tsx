@@ -92,7 +92,7 @@ export default function App() {
 
   useEffect(() => {
     const pending = weeklyPlans.filter((plan) =>
-      (plan.fileType === 'pdf' || plan.fileType === 'word' || plan.fileType === 'doc') &&
+      (plan.fileType === 'pdf' || plan.fileType === 'word' || plan.fileType === 'doc' || plan.fileType === 'image') &&
       plan.fileDataUrl && plan.extractionVersion !== WEEKLY_PLAN_PARSER_VERSION
     );
     if (!pending.length) return;

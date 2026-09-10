@@ -5,7 +5,7 @@ import { extractTextFromPdf } from './timetableParser';
 
 GlobalWorkerOptions.workerSrc = pdfWorker;
 
-export const WEEKLY_PLAN_PARSER_VERSION = 8;
+export const WEEKLY_PLAN_PARSER_VERSION = 9;
 
 export interface WeeklyPlanDayContent {
   classworkNote?: string;
@@ -69,6 +69,30 @@ async function extractWeeklyPlanPdfRows(dataUrl: string): Promise<string> {
       .join('\n'));
   }
   return pages.join('\n').trim();
+}
+
+async function extractOcrText(image: HTMLCanvasElement | string): Promise<string> {
+  const { recognize } = await import('tesseract.js');
+  const result = await recognize(image, 'eng+ara', { logger: () => undefined });
+  return result.data.text || '';
+}
+
+async function extractWeeklyPlanOcr(dataUrl: string): Promise<string> {
+  const raw = dataUrl.split(',')[1] || dataUrl;
+  const pdf = await getDocument({ data: Uint8Array.from(atob(raw), (char) => char.charCodeAt(0)) }).promise;
+  const pages: string[] = [];
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 1.8 });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    const context = canvas.getContext('2d');
+    if (!context) continue;
+    await page.render({ canvas, canvasContext: context, viewport }).promise;
+    pages.push(await extractOcrText(canvas));
+  }
+  return pages.join('\n');
 }
 
 function normalize(text: string): string {
@@ -222,6 +246,9 @@ export async function extractWeeklyPlanText(dataUrl: string, fileType?: string):
   if (fileType === 'html' || fileType === 'htm' || mime.includes('html')) {
     return normalize(htmlToReadableText(dataUrlToText(dataUrl)));
   }
+  if (fileType === 'image' || mime.startsWith('image/')) {
+    return normalize(await extractOcrText(dataUrl));
+  }
   if (fileType === 'word' || fileType === 'doc' || /word|document|msword/i.test(dataUrl.slice(0, 100))) {
     const result = await mammoth.extractRawText({ arrayBuffer: dataUrlToArrayBuffer(dataUrl) });
     return normalize(result.value);
@@ -230,9 +257,17 @@ export async function extractWeeklyPlanText(dataUrl: string, fileType?: string):
     const rowsText = await extractWeeklyPlanPdfRows(dataUrl);
     // Scanned PDFs have no meaningful text layer. Keep the existing OCR
     // fallback for those files.
-    return rowsText.length >= 40 ? rowsText : extractTextFromPdf(dataUrl);
+    if (rowsText.length >= 40) return rowsText;
+    const fallbackText = await extractTextFromPdf(dataUrl);
+    if (fallbackText.trim().length >= 40) return fallbackText;
+    return normalize(await extractWeeklyPlanOcr(dataUrl));
   } catch {
-    return extractTextFromPdf(dataUrl);
+    try {
+      const fallbackText = await extractTextFromPdf(dataUrl);
+      return fallbackText.trim().length >= 40 ? fallbackText : normalize(await extractWeeklyPlanOcr(dataUrl));
+    } catch {
+      return '';
+    }
   }
 }
 
