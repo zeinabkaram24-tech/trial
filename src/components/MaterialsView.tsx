@@ -1,8 +1,45 @@
-// Generate authentic high-fidelity printable HTML document with mobile responsiveness
+import React from 'react';
+
+// تعريف واجهة البيانات
+export interface SchoolMaterialFile {
+  id: string;
+  title: string;
+  fileName: string;
+  fileSize: string;
+  fileType: 'pdf' | 'image' | 'doc' | string;
+  fileDataUrl?: string;
+  subjectId?: string;
+  blockId?: string;
+  classId?: string;
+  uploadDate?: string;
+  description?: string;
+  previewSummary?: string;
+}
+
+interface MaterialsViewProps {
+  files?: SchoolMaterialFile[];
+  onOpenFile?: (file: SchoolMaterialFile) => void;
+}
+
+export function MaterialsView({ files = [], onOpenFile }: MaterialsViewProps) {
+  // دالة مساعدة لتوفير بيانات المادة
+  const getSubjectInfo = (subjectId?: string) => {
+    return {
+      nameAr: subjectId || 'المادة الدراسية',
+      nameEn: 'School Subject',
+    };
+  };
+
+  // دالة مساعدة لتوفير اسم البلوك
+  const getBlockName = (blockId?: string) => {
+    return blockId === 'block2' ? 'Block 2' : 'Block 1';
+  };
+
+  // إنشاء هيكل الـ HTML للطباعة والعرض المتجاوب للموبايل
   const generateDocumentHtml = (file: SchoolMaterialFile) => {
     const sub = getSubjectInfo(file.subjectId);
     const blockName = getBlockName(file.blockId || 'block1');
-    const classLabel = file.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${file.classId}`;
+    const classLabel = file.classId === 'all' ? 'All Classes (2A, 2B, 2C)' : `Class ${file.classId || '2A'}`;
 
     return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -75,7 +112,7 @@
       font-size: 12px;
       font-weight: 700;
       text-align: center;
-      shrink: 0;
+      flex-shrink: 0;
     }
     .student-fields {
       display: grid;
@@ -90,7 +127,6 @@
       position: relative;
       z-index: 2;
     }
-    .student-field strong { color: #0f172a; }
     .sheet-title-box {
       background: #f0fdf4;
       border: 1px solid #bbf7d0;
@@ -195,3 +231,99 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
 </body>
 </html>`;
   };
+
+  // فتح الملف في نافذة جديدة مع المحافظة على التنسيق للموبايل
+  const handleOpenInNewTab = (file: SchoolMaterialFile) => {
+    if (onOpenFile) {
+      onOpenFile(file);
+      return;
+    }
+
+    const win = window.open('', '_blank');
+    if (!win) return;
+
+    if (file.fileDataUrl) {
+      if (file.fileDataUrl.startsWith('data:application/pdf') || file.fileType === 'pdf') {
+        win.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${file.title}</title>
+            <style>
+              html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #525659; }
+              iframe { width: 100%; height: 100%; border: none; }
+            </style>
+          </head>
+          <body>
+            <iframe src="${file.fileDataUrl}"></iframe>
+          </body>
+          </html>
+        `);
+        win.document.close();
+      } else if (file.fileType === 'image' || file.fileDataUrl.startsWith('data:image/')) {
+        win.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${file.title}</title>
+            <style>
+              body { margin: 0; padding: 16px; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; box-sizing: border-box; }
+              img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+            </style>
+          </head>
+          <body>
+            <img src="${file.fileDataUrl}" alt="${file.title}" />
+          </body>
+          </html>
+        `);
+        win.document.close();
+      } else {
+        win.location.href = file.fileDataUrl;
+      }
+      return;
+    }
+
+    win.document.write(generateDocumentHtml(file));
+    win.document.close();
+  };
+
+  return (
+    <div style={{ padding: '16px', fontFamily: 'sans-serif', direction: 'rtl' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>المواد والملفات الدراسية</h2>
+      {files.length === 0 ? (
+        <p style={{ color: '#64748b' }}>لا توجد ملفات متاحة حالياً.</p>
+      ) : (
+        <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+          {files.map((file) => (
+            <div 
+              key={file.id} 
+              style={{ border: '1px solid #e2e8f0', padding: '16px', borderRadius: '8px', background: '#fff' }}
+            >
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>{file.title}</h3>
+              <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#64748b' }}>{file.fileName} - {file.fileSize}</p>
+              <button
+                onClick={() => handleOpenInNewTab(file)}
+                style={{
+                  background: '#0284c7',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  width: '100%'
+                }}
+              >
+                عرض الملف
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// التصدير الافتراضي المباشر لحل مشكلة السطر 37
+export default MaterialsView;
