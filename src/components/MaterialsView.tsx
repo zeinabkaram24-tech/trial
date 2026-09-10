@@ -616,9 +616,11 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
     const sizeInMb = (file.size / (1024 * 1024)).toFixed(1);
     setFormFileSize(`${sizeInMb} MB`);
 
-    if (file.type.includes('pdf')) setFormType('pdf');
-    else if (file.type.includes('image')) setFormType('image');
-    else if (file.type.includes('sheet') || file.name.endsWith('.xlsx')) setFormType('sheet');
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf' || file.type.includes('pdf')) setFormType('pdf');
+    else if (['doc', 'docx'].includes(ext || '') || file.type.includes('word') || file.type.includes('document')) setFormType('doc');
+    else if (file.type.includes('image') || ['png', 'jpg', 'jpeg', 'webp'].includes(ext || '')) setFormType('image');
+    else if (file.type.includes('sheet') || ['xlsx', 'xls', 'csv'].includes(ext || '')) setFormType('sheet');
     else setFormType('doc');
 
     const reader = new FileReader();
@@ -899,6 +901,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                     <div className="text-right w-full font-bold text-sky-800 text-sm flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200">
                       <FileText className="w-4 h-4 text-sky-600 shrink-0" />
                       <span className="truncate">{file.title || file.fileName}</span>
+                      <span className="mr-auto text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-white text-slate-500 border border-slate-200">{file.fileType}</span>
                     </div>
                   </div>
 
