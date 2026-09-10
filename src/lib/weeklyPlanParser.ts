@@ -196,15 +196,47 @@ function splitByDay(text: string): Record<string, WeeklyPlanDayContent> {
   return result;
 }
 
+/**
+ * The Minia school template is a real table whose cells are interleaved by
+ * PDF extraction. Recover its rows from the stable day/date anchors and the
+ * column markers that appear in this template.
+ */
+function parseMiniaTable(text: string): Record<string, WeeklyPlanDayContent> | undefined {
+  if (!/The\s+Weekly\s+Plan/i.test(text) || !/Resources\s*\/\s*Materials/i.test(text)) return undefined;
+  const result: Record<string, WeeklyPlanDayContent> = {};
+  const starts = [...text.matchAll(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday)\b/gi)];
+  starts.forEach((start, index) => {
+    const day = start[1].toLowerCase();
+    const dayKey = DAY_NAMES.find((item) => item.aliases.includes(day))?.ar;
+    if (!dayKey) return;
+    const rowText = text.slice(start.index || 0, starts[index + 1]?.index || text.length);
+    const body = rowText
+      .replace(/^(?:Sunday|Monday|Tuesday|Wednesday|Thursday)\s+/i, '')
+      .replace(/^\d{1,2}\\\d{1,2}\\\d{4}/, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const content: WeeklyPlanDayContent = {};
+    const classwork = body.match(/(Maths?\s*-\s*Grade\s*2[\s\S]*?Sheet\s*1\s*-\s*Main)/i)?.[1];
+    const homework = body.match(/(Page\s+\d+(?:\s+\d+)?(?:\s+Q\.\s*\d+\s+only)?)/i)?.[1];
+    const notes = body.match(/(Please\s+bring[\s\S]*)$/i)?.[1];
+    if (classwork) content.classworkNote = clean(classwork.replace(/\s+/g, ' '));
+    if (homework) content.homeworkNote = clean(homework.replace(/\s+/g, ' '));
+    if (notes) content.tomorrowNote = clean(notes.replace(/\s+/g, ' '));
+    if (content.classworkNote || content.homeworkNote || content.tomorrowNote) result[dayKey] = content;
+  });
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
 export function parseWeeklyPlanText(text: string): WeeklyPlanExtractedContent {
   const normalized = normalize(text);
   const overall = classify(normalized);
+  const tableContent = parseMiniaTable(normalized);
   return {
     extractedText: normalized,
     classworkNote: overall.classworkNote,
     homeworkNote: overall.homeworkNote,
     tomorrowNote: overall.tomorrowNote,
-    dayContent: splitByDay(normalized)
+    dayContent: tableContent || splitByDay(normalized)
   };
 }
 
