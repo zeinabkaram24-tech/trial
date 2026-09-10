@@ -681,7 +681,21 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
         previewSummary: formPreviewSummary.trim() || undefined,
         fileDataUrl: formFileDataUrl
       };
-      onUpdateMaterials([newFile, ...materials]);
+      const newScopeWeek = newFile.weekId || undefined;
+      const placeholderIndex = materials.findIndex((existing) =>
+        !existing.fileDataUrl &&
+        existing.subjectId === newFile.subjectId &&
+        (existing.blockId || 'block1') === (newFile.blockId || 'block1') &&
+        (existing.weekId || undefined) === newScopeWeek &&
+        (existing.materialKind || (existing.weekId ? 'week' : 'main')) === newFile.materialKind
+      );
+      if (placeholderIndex >= 0) {
+        const replaced = [...materials];
+        replaced[placeholderIndex] = newFile;
+        onUpdateMaterials(replaced);
+      } else {
+        onUpdateMaterials([newFile, ...materials]);
+      }
     }
 
     setIsModalOpen(false);
@@ -893,6 +907,19 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                   {/* Row 1: اسم المادة */}
                   <div className="flex items-center justify-between gap-2 mb-2.5">
                     <SubjectBadge subjectId={file.subjectId} size="md" />
+
+                    {currentRole === 'admin' && (
+                      <button
+                        id={`btn-delete-material-${file.id}`}
+                        type="button"
+                        onClick={() => handleDeleteFile(file.id, file.title || file.fileName)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors"
+                        title="حذف هذا الـSheet"
+                        aria-label={`حذف ${file.title || file.fileName}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
 
                   </div>
 
