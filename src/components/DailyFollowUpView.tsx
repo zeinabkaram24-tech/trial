@@ -362,11 +362,103 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   const [voiceHomework, setVoiceHomework] = useState('');
   const [voiceTomorrow, setVoiceTomorrow] = useState('');
   const voiceRecognitionRef = React.useRef<any>(null);
+  const [assistantListening, setAssistantListening] = useState(false);
+  const [assistantStatus, setAssistantStatus] = useState('اضغط تشغيل ثم تحدث بجملة طبيعية');
+  const assistantRestartRef = React.useRef(false);
+
+  const dayAliases: Record<string, string> = {
+    'الأحد': 'الأحد', 'حد': 'الأحد', sunday: 'الأحد',
+    'الإثنين': 'الإثنين', 'الاثنين': 'الإثنين', monday: 'الإثنين',
+    'الثلاثاء': 'الثلاثاء', tuesday: 'الثلاثاء',
+    'الأربعاء': 'الأربعاء', 'الاربعاء': 'الأربعاء', wednesday: 'الأربعاء',
+    'الخميس': 'الخميس', thursday: 'الخميس'
+  };
+  const subjectAliases: Record<string, string> = {
+    english: 'english', 'إنجليزي': 'english', 'انجليزي': 'english',
+    arabic: 'arabic', 'عربي': 'arabic', 'العربية': 'arabic',
+    math: 'math', 'ماث': 'math', 'رياضيات': 'math',
+    science: 'science', 'ساينس': 'science', 'علوم': 'science',
+    social: 'social', 'دراسات': 'social', french: 'french', 'فرنساوي': 'french',
+    ict: 'ict', 'حاسب': 'ict', 'تكنولوجيا': 'ict'
+  };
+
+  const saveAssistantCommand = (spokenText: string) => {
+    if (!onUpdateWeeklyPlans) return;
+    const normalized = spokenText.trim();
+    if (!normalized) return;
+    const fieldPatterns: Array<{ field: 'classwork' | 'homework' | 'tomorrow'; pattern: RegExp }> = [
+      { field: 'classwork', pattern: /class\s*work|classwork|كلاس\s*وورك|class work|عمل\s*الفصل|شرح/i },
+      { field: 'homework', pattern: /home\s*work|homework|هوم\s*وورك|واجب|الواجب/i },
+      { field: 'tomorrow', pattern: /tomorrow|تومورو|غدًا|غدا|بكرة|تحضير/i }
+    ];
+    const matchedFields = fieldPatterns.filter((item) => item.pattern.test(normalized));
+    const targets = matchedFields.length ? matchedFields : [{ field: 'classwork' as const, pattern: /$^/ }];
+    const detectedDay = Object.keys(dayAliases).find((alias) => normalized.toLowerCase().includes(alias.toLowerCase()));
+    const detectedClass = normalized.match(/\b(2\s*[abc])\b/i)?.[1]?.replace(/\s+/g, '').toUpperCase() as SchoolClass | undefined;
+    const detectedSubjectAlias = Object.keys(subjectAliases).find((alias) => normalized.toLowerCase().includes(alias.toLowerCase()));
+    const targetDay = detectedDay ? dayAliases[detectedDay] : selectedFollowUpDay;
+    const targetClass = detectedClass || selectedClass;
+    const targetSubject = detectedSubjectAlias ? subjectAliases[detectedSubjectAlias] : voiceSubject;
+
+    targets.forEach(({ field }, index) => {
+      const currentMarker = fieldPatterns.find((item) => item.field === field)!.pattern;
+      const markerMatch = currentMarker.exec(normalized);
+      const start = markerMatch ? (markerMatch.index || 0) + markerMatch[0].length : 0;
+      const nextMarkerPositions = fieldPatterns
+        .filter((item) => item.field !== field)
+        .map((item) => item.pattern.exec(normalized.slice(start))?.index)
+        .filter((position): position is number => position !== undefined);
+      const end = nextMarkerPositions.length ? start + Math.min(...nextMarkerPositions) : normalized.length;
+      const content = normalized.slice(start, end).replace(/^(في|إلى|الى|for|on)\s+/i, '').trim();
+      if (!content) return;
+      const dayKey = `${targetDay}|${targetSubject}`;
+      const matchingPlan = (weeklyPlans || []).find((item) => item.blockId === selectedBlock && item.weekId === selectedWeek && item.classId === targetClass && item.subjectId === targetSubject);
+      const nextContent = { ...(matchingPlan?.dayContent || {}), [dayKey]: { ...(matchingPlan?.dayContent?.[dayKey] || {}), ...(field === 'classwork' ? { classworkNote: content } : {}), ...(field === 'homework' ? { homeworkNote: content } : {}), ...(field === 'tomorrow' ? { tomorrowNote: content } : {}) } };
+      if (matchingPlan) onUpdateWeeklyPlans((weeklyPlans || []).map((item) => item.id === matchingPlan.id ? { ...item, dayContent: nextContent } : item));
+      else onUpdateWeeklyPlans([...(weeklyPlans || []), { id: `plan-${Date.now()}-${index}`, blockId: selectedBlock, weekId: selectedWeek, classId: targetClass, subjectId: targetSubject, unitOrTheme: `Voice entry - ${targetDay}`, learningObjectives: [], dayContent: nextContent }]);
+    });
+    setAssistantStatus(`تم الحفظ تلقائيًا: ${targets.map((target) => target.field).join(' + ')} • ${targetDay} • Class ${targetClass}`);
+  };
 
   const stopInlineVoice = () => {
     voiceRecognitionRef.current?.stop?.();
     voiceRecognitionRef.current = null;
     setVoiceField(null);
+  };
+
+  const stopVoiceAssistant = () => {
+    assistantRestartRef.current = false;
+    voiceRecognitionRef.current?.stop?.();
+    voiceRecognitionRef.current = null;
+    setAssistantListening(false);
+    setAssistantStatus('تم إيقاف المساعد الصوتي');
+  };
+
+  const startVoiceAssistant = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('المساعد الصوتي يحتاج إلى Google Chrome أو Microsoft Edge.');
+      return;
+    }
+    assistantRestartRef.current = true;
+    const listen = () => {
+      if (!assistantRestartRef.current) return;
+      const recognition = new SpeechRecognition();
+      recognition.lang = voiceLanguage;
+      recognition.interimResults = false;
+      recognition.continuous = false;
+      recognition.onstart = () => { setAssistantListening(true); setAssistantStatus('أستمع... قل مثلًا: ضع في Homework يوم الثلاثاء لفصل 2A مادة Math صفحة 20'); };
+      recognition.onresult = (event: any) => {
+        const text = event.results?.[0]?.[0]?.transcript || '';
+        setAssistantStatus(`سمعت: ${text}`);
+        saveAssistantCommand(text);
+      };
+      recognition.onerror = () => { if (assistantRestartRef.current) setAssistantStatus('لم ألتقط الكلام، حاول مرة أخرى...'); };
+      recognition.onend = () => { voiceRecognitionRef.current = null; if (assistantRestartRef.current) window.setTimeout(listen, 250); else setAssistantListening(false); };
+      voiceRecognitionRef.current = recognition;
+      recognition.start();
+    };
+    listen();
   };
 
   const startInlineVoice = (field: 'classwork' | 'homework' | 'tomorrow') => {
@@ -669,7 +761,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
             <div>
               <h3 className="font-black text-sm flex items-center gap-2"><Mic className="w-4 h-4 text-amber-300" /> إضافة مباشرة لليوم الحالي</h3>
-              <p className="text-[11px] text-slate-300 mt-1">يمكنك الكتابة يدويًا أو التحدث بالعربية أو الإنجليزية، ثم الحفظ لتحديث واجهات الطالب والزائر فورًا.</p>
+              <p className="text-[11px] text-slate-300 mt-1">يمكنك الكتابة يدويًا، أو تشغيل المساعد مرة واحدة والتحدث بجمل طبيعية ليحدد النوع واليوم والفصل والمادة ويحفظ تلقائيًا.</p>
             </div>
             <div className="flex items-center gap-2">
               <select value={voiceLanguage} onChange={(e) => setVoiceLanguage(e.target.value as 'ar-EG' | 'en-US')} className="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-xs font-bold text-white">
@@ -680,6 +772,13 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
                 {SUBJECTS.map((subject) => <option key={subject.id} value={subject.id} className="text-slate-900">{subject.nameEn}</option>)}
               </select>
             </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300/30 bg-amber-300/10 p-3">
+            <button type="button" onClick={assistantListening ? stopVoiceAssistant : startVoiceAssistant} className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black ${assistantListening ? 'bg-red-600 text-white animate-pulse' : 'bg-amber-400 text-slate-950 hover:bg-amber-300'}`}>
+              {assistantListening ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {assistantListening ? 'إيقاف المساعد' : 'تشغيل المساعد الصوتي المستمر'}
+            </button>
+            <span className="text-[11px] text-amber-100">{assistantStatus}</span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {([
