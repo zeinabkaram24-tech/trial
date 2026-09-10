@@ -24,6 +24,8 @@ import { WeeklyPlanItem, SchoolClass, UserRole } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 import { SUBJECTS, BLOCKS, WEEKS } from '../data/initialData';
 import { extractWeeklyPlanText, parseWeeklyPlanText, WEEKLY_PLAN_PARSER_VERSION } from '../lib/weeklyPlanParser';
+import { ExtractedPlan } from '../services/pdfParser';
+import { WeeklyPlanPDFUploader } from './WeeklyPlanPDFUploader';
 
 interface WeeklyPlanViewProps {
   currentRole: UserRole;
@@ -35,6 +37,7 @@ interface WeeklyPlanViewProps {
   weeklyPlans: WeeklyPlanItem[];
   onUpdateWeeklyPlans: (data: WeeklyPlanItem[]) => void;
   onOpenPrint: () => void;
+  onPlanParsed?: (data: ExtractedPlan) => void;
 }
 
 export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
@@ -46,7 +49,8 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
   onSelectWeek,
   weeklyPlans,
   onUpdateWeeklyPlans,
-  onOpenPrint
+  onOpenPrint,
+  onPlanParsed
 }) => {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
 
@@ -445,6 +449,12 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
           </div>
         </div>
 
+        {currentRole === 'admin' && onPlanParsed && (
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <WeeklyPlanPDFUploader onPlanParsed={onPlanParsed} />
+          </div>
+        )}
+
         {/* Block & Week Pickers */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100">
           <div>
@@ -742,11 +752,27 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                     />
                   </div>
                 ) : (
-                  <iframe
-                    src={previewPlanItem.fileDataUrl}
-                    title={previewPlanItem.fileName || 'Weekly Plan PDF'}
-                    className="w-full h-[75vh] rounded-xl border border-slate-200 shadow-sm bg-white"
-                  />
+                  <div className="max-w-3xl mx-auto space-y-4">
+                    <div className="bg-white rounded-2xl border border-indigo-200 shadow-xs p-5">
+                      <div className="text-sm font-black text-indigo-900 mb-2">تم تحليل ملف PDF داخل التطبيق</div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="rounded-xl bg-sky-50 border border-sky-100 p-4">
+                          <div className="text-xs font-black text-sky-800 mb-1">Classwork / الكلاس وورك</div>
+                          <p className="text-sm text-slate-700 whitespace-pre-wrap">{previewPlanItem.classwork || previewPlanItem.classworkNote || 'لا يوجد كلاس وورك مستخرج تلقائياً'}</p>
+                        </div>
+                        <div className="rounded-xl bg-rose-50 border border-rose-100 p-4">
+                          <div className="text-xs font-black text-rose-800 mb-1">Homework / الهوم وورك</div>
+                          <p className="text-sm text-slate-700 whitespace-pre-wrap">{previewPlanItem.homework || previewPlanItem.homeworkNote || 'لم يتم العثور على واجب مستخرج تلقائياً'}</p>
+                        </div>
+                      </div>
+                    </div>
+                    {previewPlanItem.extractedText && (
+                      <details className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5">
+                        <summary className="cursor-pointer text-xs font-bold text-slate-700">عرض النص الخام المستخرج</summary>
+                        <pre className="mt-3 text-xs leading-6 text-slate-600 whitespace-pre-wrap font-sans">{previewPlanItem.extractedText}</pre>
+                      </details>
+                    )}
+                  </div>
                 )
               ) : (
                 <div className="max-w-2xl mx-auto space-y-4 my-2 p-1">

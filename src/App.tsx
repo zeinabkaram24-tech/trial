@@ -39,6 +39,8 @@ import { StudentSpace } from './components/StudentSpace';
 import { AdminPanel } from './components/AdminPanel';
 import { PrintModal } from './components/PrintModal';
 import { extractWeeklyPlanText, parseWeeklyPlanText, WEEKLY_PLAN_PARSER_VERSION } from './lib/weeklyPlanParser';
+import { ExtractedPlan } from './services/pdfParser';
+import { SUBJECTS } from './data/initialData';
 import {
   GraduationCap,
   ShieldCheck,
@@ -198,6 +200,43 @@ export default function App() {
     }));
   };
 
+  const handleWeeklyPlanPdfParsed = (parsed: ExtractedPlan) => {
+    const weekNumber = Number(selectedWeek.replace(/\D/g, '')) || 1;
+    const normalizedSubject = parsed.subject?.toLowerCase().trim();
+    const subjectInfo = SUBJECTS.find((subject) =>
+      [subject.id, subject.nameAr, subject.nameEn].some((value) => value.toLowerCase() === normalizedSubject)
+    ) || SUBJECTS[0];
+    const existingIndex = weeklyPlans.findIndex((plan) =>
+      plan.weekId === selectedWeek && plan.subjectId === subjectInfo.id && (plan.classId === 'all' || plan.classId === selectedClass)
+    );
+    const previous = existingIndex >= 0 ? weeklyPlans[existingIndex] : undefined;
+    const updatedPlan: WeeklyPlanItem = {
+      ...(previous || {
+        id: `wp-pdf-${Date.now()}`,
+        blockId: selectedBlock,
+        weekId: selectedWeek,
+        classId: 'all',
+        subjectId: subjectInfo.id,
+        unitOrTheme: 'Imported PDF Weekly Plan',
+        learningObjectives: ['تم استخراج محتوى الخطة الأسبوعية من ملف PDF']
+      }),
+      weekNumber,
+      day: previous?.day || 'Sunday',
+      subject: parsed.subject || subjectInfo.nameEn,
+      classwork: parsed.classwork,
+      homework: parsed.homework,
+      classworkNote: parsed.classwork,
+      homeworkNote: parsed.homework,
+      extractedText: parsed.rawText,
+      extractionVersion: WEEKLY_PLAN_PARSER_VERSION
+    };
+    const nextPlans = [...weeklyPlans];
+    if (existingIndex >= 0) nextPlans[existingIndex] = updatedPlan;
+    else nextPlans.unshift(updatedPlan);
+    setWeeklyPlans(nextPlans);
+    alert('تم تحليل ملف PDF وتحديث بيانات الـ Classwork والـ Homework بنجاح.');
+  };
+
   // Reset to default
   const handleResetData = () => {
     resetAllDataToDefault();
@@ -272,6 +311,7 @@ export default function App() {
             weeklyPlans={weeklyPlans}
             onUpdateWeeklyPlans={setWeeklyPlans}
             onOpenPrint={() => setIsPrintModalOpen(true)}
+            onPlanParsed={handleWeeklyPlanPdfParsed}
           />
         )}
 
