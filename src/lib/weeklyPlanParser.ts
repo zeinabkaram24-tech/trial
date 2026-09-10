@@ -28,7 +28,9 @@ const DAY_NAMES = [
 const HEADER_PATTERNS = {
   homework: /(?:h\s*o\s*m\s*e\s*w\s*o\s*r\s*k|home\s*work|assignment|واجب(?:ات)?|الواجب(?:ات)?|hw)\s*[:：\-–]?/i,
   tomorrow: /(?:t\s*o\s*m\s*o\s*r\s*r\s*o\s*w|next\s*day|preparation|notes?|materials?\s*(?:needed|required)|ملاحظات|تجهيزات|مستلزمات|غدًا|غدا|اليوم\s*التالي)\s*[:：\-–]?/i,
-  classwork: /(?:c\s*l\s*a\s*s\s*s\s*w\s*o\s*r\s*k|class\s*work|lesson|session|what\s+we\s+learned|تم\s*تدريسه|ما\s*تم\s*تدريسه|الدرس|الحصة|نشاط\s*اليوم)\s*[:：\-–]?/i
+  // Do not match generic words such as "lesson" or "session": they often
+  // occur in the PDF title and caused the title/details to be misclassified.
+  classwork: /(?:c\s*l\s*a\s*s\s*s\s*w\s*o\s*r\s*k|class\s*work|what\s+we\s+learned|تم\s*تدريسه|ما\s*تم\s*تدريسه|نشاط\s*اليوم)\s*[:：\-–]?/i
 };
 
 const ALL_HEADERS = Object.values(HEADER_PATTERNS);
@@ -67,9 +69,9 @@ function classify(text: string): WeeklyPlanDayContent {
     if (content) result[header.kind] = content;
   });
 
-  // Some plans use a single-line label such as "Homework: ...". The logic above
-  // already handles it; this fallback handles files that contain only free text.
-  if (!found.length && text.trim()) result.classworkNote = clean(text);
+  // Never use the entire document as classwork. A PDF commonly starts with a
+  // title such as "Weekly Lesson Plan"; treating that title as the lesson is
+  // precisely the misleading behaviour this parser must avoid.
   return result;
 }
 

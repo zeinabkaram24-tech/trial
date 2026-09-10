@@ -27,6 +27,7 @@ import {
   saveStoredCompletedHw,
   getStoredMaterials,
   saveStoredMaterials,
+  hydrateStoredFiles,
   resetAllDataToDefault
 } from './lib/storage';
 import { Header } from './components/Header';
@@ -37,6 +38,7 @@ import { MaterialsView } from './components/MaterialsView';
 import { StudentSpace } from './components/StudentSpace';
 import { AdminPanel } from './components/AdminPanel';
 import { PrintModal } from './components/PrintModal';
+import { extractWeeklyPlanText, parseWeeklyPlanText, WEEKLY_PLAN_PARSER_VERSION } from './lib/weeklyPlanParser';
 import {
   GraduationCap,
   ShieldCheck,
@@ -71,6 +73,44 @@ export default function App() {
   const [materials, setMaterials] = useState<SchoolMaterialFile[]>(getStoredMaterials);
 
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+
+  // Binary attachments live in IndexedDB so refreshing the app cannot lose
+  // files when localStorage reaches its small quota.
+  useEffect(() => {
+    void Promise.all([
+      hydrateStoredFiles(timetables),
+      hydrateStoredFiles(weeklyPlans),
+      hydrateStoredFiles(materials)
+    ]).then(([storedTimetables, storedWeeklyPlans, storedMaterials]) => {
+      setTimetables(storedTimetables);
+      setWeeklyPlans(storedWeeklyPlans);
+      setMaterials(storedMaterials);
+    });
+    // Hydrate only the initial snapshot; subsequent edits are already in state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const pending = weeklyPlans.filter((plan) =>
+      (plan.fileType === 'pdf' || plan.fileType === 'word' || plan.fileType === 'doc') &&
+      plan.fileDataUrl && plan.extractionVersion !== WEEKLY_PLAN_PARSER_VERSION
+    );
+    if (!pending.length) return;
+    let cancelled = false;
+    void Promise.all(pending.map(async (plan) => {
+      try {
+        const extracted = parseWeeklyPlanText(await extractWeeklyPlanText(plan.fileDataUrl!, plan.fileType));
+        return { ...plan, extractedText: extracted.extractedText, extractionVersion: WEEKLY_PLAN_PARSER_VERSION, classworkNote: extracted.classworkNote, homeworkNote: extracted.homeworkNote, tomorrowNote: extracted.tomorrowNote, dayContent: extracted.dayContent };
+      } catch {
+        return { ...plan, extractionVersion: WEEKLY_PLAN_PARSER_VERSION };
+      }
+    })).then((processed) => {
+      if (cancelled) return;
+      const byId = new Map(processed.map((plan) => [plan.id, plan]));
+      setWeeklyPlans((current) => current.map((plan) => byId.get(plan.id) || plan));
+    });
+    return () => { cancelled = true; };
+  }, [weeklyPlans]);
 
   // Sync to Storage
   useEffect(() => {

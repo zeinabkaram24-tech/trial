@@ -27,6 +27,60 @@ const STORAGE_KEYS = {
   CURRENT_STUDENT: 'nile_minya_cur_student'
 };
 
+const FILE_DB_NAME = 'nile_minya_file_store';
+const FILE_STORE_NAME = 'files';
+const LARGE_FILE_LIMIT = 180_000;
+
+function openFileDb(): Promise<IDBDatabase | null> {
+  if (typeof indexedDB === 'undefined') return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const request = indexedDB.open(FILE_DB_NAME, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(FILE_STORE_NAME);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => resolve(null);
+  });
+}
+
+async function putStoredFile(id: string, dataUrl: string): Promise<void> {
+  const db = await openFileDb();
+  if (!db) return;
+  await new Promise<void>((resolve) => {
+    const tx = db.transaction(FILE_STORE_NAME, 'readwrite');
+    tx.objectStore(FILE_STORE_NAME).put(dataUrl, id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+  db.close();
+}
+
+async function getStoredFile(id: string): Promise<string | undefined> {
+  const db = await openFileDb();
+  if (!db) return undefined;
+  return new Promise((resolve) => {
+    const request = db.transaction(FILE_STORE_NAME, 'readonly').objectStore(FILE_STORE_NAME).get(id);
+    request.onsuccess = () => { db.close(); resolve(request.result as string | undefined); };
+    request.onerror = () => { db.close(); resolve(undefined); };
+  });
+}
+
+async function persistLargeFiles<T extends { fileDataUrl?: string; id?: string; classId?: string }>(items: T[]): Promise<T[]> {
+  return items.map((item) => {
+    if (item.fileDataUrl && item.fileDataUrl.length > LARGE_FILE_LIMIT) {
+      void putStoredFile(item.id || item.classId || 'unknown', item.fileDataUrl);
+      return { ...item, fileDataUrl: undefined };
+    }
+    return item;
+  });
+}
+
+export async function hydrateStoredFiles<T extends { fileDataUrl?: string; id?: string; classId?: string }>(items: T[]): Promise<T[]> {
+  return Promise.all(items.map(async (item) => {
+    if (item.fileDataUrl) return item;
+    const fileDataUrl = await getStoredFile(item.id || item.classId || 'unknown');
+    return fileDataUrl ? { ...item, fileDataUrl } : item;
+  }));
+}
+
 export const getStoredTimetables = (): ClassTimetable[] => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.TIMETABLES);
@@ -39,7 +93,7 @@ export const getStoredTimetables = (): ClassTimetable[] => {
 
 export const saveStoredTimetables = (data: ClassTimetable[]): void => {
   try {
-    localStorage.setItem(STORAGE_KEYS.TIMETABLES, JSON.stringify(data));
+    void persistLargeFiles(data).then((safeData) => localStorage.setItem(STORAGE_KEYS.TIMETABLES, JSON.stringify(safeData)));
   } catch (e) {
     console.error('Failed to save timetables to storage', e);
   }
@@ -57,7 +111,7 @@ export const getStoredWeeklyPlans = (): WeeklyPlanItem[] => {
 
 export const saveStoredWeeklyPlans = (data: WeeklyPlanItem[]): void => {
   try {
-    localStorage.setItem(STORAGE_KEYS.WEEKLY_PLANS, JSON.stringify(data));
+    void persistLargeFiles(data).then((safeData) => localStorage.setItem(STORAGE_KEYS.WEEKLY_PLANS, JSON.stringify(safeData)));
   } catch (e) {
     console.error('Failed to save weekly plans to storage', e);
   }
@@ -130,10 +184,6 @@ export const getStoredMaterials = (): SchoolMaterialFile[] => {
       // And strictly ensure Block 2, 3, 4 are empty unless user actually uploaded a custom file
       const cleanList = list.filter((m) => {
         if (['pe', 'ethics', 'religion', 'art'].includes(m.subjectId)) return false;
-        // User requested: Block 2 and Block 3 must be completely empty until user uploads
-        if (m.blockId === 'block2' || m.blockId === 'block3' || m.blockId === 'block4') {
-          return Boolean(m.fileDataUrl); // Only keep if user manually uploaded a real file
-        }
         return true;
       });
       return cleanList;
@@ -147,7 +197,7 @@ export const getStoredMaterials = (): SchoolMaterialFile[] => {
 
 export const saveStoredMaterials = (data: SchoolMaterialFile[]): void => {
   try {
-    localStorage.setItem(STORAGE_KEYS.MATERIALS, JSON.stringify(data));
+    void persistLargeFiles(data).then((safeData) => localStorage.setItem(STORAGE_KEYS.MATERIALS, JSON.stringify(safeData)));
   } catch (e) {
     console.error('Failed to save materials to storage', e);
   }

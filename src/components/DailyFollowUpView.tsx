@@ -46,6 +46,9 @@ const NEXT_DAY_MAP: Record<string, string> = {
   'الخميس': 'الأحد'
 };
 
+// Activity/session periods are not academic classwork.
+const SESSION_SUBJECTS = new Set(['music', 'art', 'pe']);
+
 const SUBJECT_PACKING_KIT: Record<string, { book: string; notebook: string; tools: string }> = {
   english: {
     book: "كتاب Cambridge Primary English (Learner's Book + Activity Book)",
@@ -251,10 +254,12 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
   }, [activeTimetable, selectedFollowUpDay]);
 
   const todayPeriodsList = todayDaySchedule?.periods || [];
-  // Classwork: one item per subject, preserving the first occurrence in Schedule.
+  // Classwork comes only from explicit plan details or an admin entry. Never
+  // infer it from the weekly-plan title, and never show it for activity sessions.
   const classworkItems = useMemo(() => {
     const seen = new Set<string>();
     return todayPeriodsList.filter((period) => {
+      if (SESSION_SUBJECTS.has(period.subjectId)) return false;
       if (seen.has(period.subjectId)) return false;
       seen.add(period.subjectId);
       return true;
@@ -263,7 +268,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
       const wp = weekPlans.find((p) => p.subjectId === period.subjectId);
       const dayPlan = wp?.dayContent?.[selectedFollowUpDay];
       const existingCw = currentRecord.classwork?.find((c) => c.subjectId === period.subjectId);
-      const lessonTopic = dayPlan?.classworkNote || (!wp?.dayContent ? wp?.classworkNote : '') || wp?.unitOrTheme || '';
+      const lessonTopic = dayPlan?.classworkNote || (!wp?.dayContent ? wp?.classworkNote : '') || existingCw?.lessonTitle || '';
       return {
         id: `${period.id}-${existingCw?.id || 'lesson'}`,
         periodNum: period.periodNum,
@@ -272,7 +277,7 @@ export const DailyFollowUpView: React.FC<DailyFollowUpViewProps> = ({
         lessonTopic,
         existingCw
       };
-    });
+    }).filter((item) => item.lessonTopic.trim().length > 0 || item.existingCw);
   }, [todayPeriodsList, weekPlans, currentRecord.classwork, selectedFollowUpDay]);
 
   // Weekly Plan notes for Tomorrow: resources and assessment notes are both actionable.
