@@ -136,7 +136,7 @@ export const getStoredMaterials = (): SchoolMaterialFile[] => {
         }
         return true;
       });
-      if (cleanList.length > 0) return cleanList;
+      return cleanList;
     }
   } catch (e) {
     console.error('Failed to load materials from storage', e);

@@ -47,7 +47,30 @@ export async function extractTextFromPdf(dataUrl: string): Promise<string> {
     const content = await page.getTextContent();
     pages.push((content.items as Array<{ str?: string }>).map((item) => item.str || '').join(' '));
   }
-  return pages.join('\n');
+  const extracted = pages.join('\n').trim();
+  if (extracted) return extracted;
+
+  // Scanned PDFs have no text layer. Render each page and OCR it so Weekly Plan
+  // files still produce usable Classwork, Homework, and Tomorrow content.
+  const worker = await createWorker('eng+ara');
+  try {
+    const ocrPages: string[] = [];
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 1.8 });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const context = canvas.getContext('2d');
+      if (!context) continue;
+      await page.render({ canvasContext: context, canvas, viewport }).promise;
+      const result = await worker.recognize(canvas);
+      ocrPages.push(result.data.text);
+    }
+    return ocrPages.join('\n').trim();
+  } finally {
+    await worker.terminate();
+  }
 }
 
 function classSection(text: string, classId: SchoolClass): string {

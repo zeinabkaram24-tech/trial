@@ -30,6 +30,7 @@ import {
 import { SchoolMaterialFile, SchoolClass, UserRole } from '../types';
 import { SubjectBadge, getSubjectInfo } from './SubjectBadge';
 import { SUBJECTS, BLOCKS, WEEKS } from '../data/initialData';
+import { saveStoredMaterials } from '../lib/storage';
 
 interface MaterialsViewProps {
   currentRole: UserRole;
@@ -604,6 +605,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
   const handleDeleteFile = (id: string, title: string) => {
     if (!window.confirm(`هل أنت متأكد من حذف الشيت "${title}"؟`)) return;
     const updated = materials.filter((m) => m.id !== id);
+    saveStoredMaterials(updated);
     onUpdateMaterials(updated);
   };
 
