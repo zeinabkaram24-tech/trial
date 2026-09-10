@@ -1202,7 +1202,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </label>
               <label className="text-xs font-bold text-slate-700">اليوم
                 <select value={dailyEntryDay} onChange={(e) => setDailyEntryDay(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => <option key={day}>{day}</option>)}
+                  {(['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'] as const).map((day, index) => <option key={day} value={day}>{['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'][index]}</option>)}
                 </select>
               </label>
               <label className="text-xs font-bold text-slate-700">المادة
@@ -1783,7 +1783,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {/* Days Tabs */}
             <div className="flex items-center gap-2 border-t border-slate-100 pt-3 flex-wrap">
               <span className="text-[11px] font-bold text-slate-500">اختر اليوم:</span>
-              {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((dayName) => {
+              {(['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'] as const).map((dayName, index) => {
                 const daySlotCount =
                   timetables
                     .find((t) => t.classId === timetableClass)
@@ -1800,7 +1800,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200'
                     }`}
                   >
-                    <span>{dayName}</span>
+                    <span>{['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'][index]}</span>
                     <span
                       className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
                         isSelected ? 'bg-indigo-800 text-white' : 'bg-slate-200 text-slate-600'
@@ -2485,11 +2485,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     onChange={(e) => setPeriodDay(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
                   >
-                    <option value="الأحد">الأحد (Sunday)</option>
-                    <option value="الإثنين">الإثنين (Monday)</option>
-                    <option value="الثلاثاء">الثلاثاء (Tuesday)</option>
-                    <option value="الأربعاء">الأربعاء (Wednesday)</option>
-                    <option value="الخميس">الخميس (Thursday)</option>
+                    <option value="الأحد">Sunday</option>
+                    <option value="الإثنين">Monday</option>
+                    <option value="الثلاثاء">Tuesday</option>
+                    <option value="الأربعاء">Wednesday</option>
+                    <option value="الخميس">Thursday</option>
                   </select>
                 </div>
               </div>
