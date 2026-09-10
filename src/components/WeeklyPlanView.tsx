@@ -659,56 +659,7 @@ ${plan.assessmentNote || 'المتابعة اليومية والتقييم ال�
                       </div>
                     </div>
 
-                    {/* Learning Objectives */}
-                    <div>
-                      <span className="text-xs font-bold text-slate-700 block mb-2">
-                        🎯 مخرجات وأهداف التعلم المستهدفة:
-                      </span>
-                      <ul className="space-y-1.5">
-                        {plan.learningObjectives?.map((obj, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-xs text-slate-600">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0"></span>
-                            <span className="leading-relaxed">{obj}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Key Vocabulary */}
-                    {plan.vocabulary && plan.vocabulary.length > 0 && (
-                      <div>
-                        <span className="text-xs font-bold text-slate-700 block mb-1.5">
-                          🔤 الكلمات والمصطلحات الأساسية:
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {plan.vocabulary.map((v, idx) => (
-                            <span
-                              key={idx}
-                              className="bg-slate-100 text-slate-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-md border border-slate-200"
-                            >
-                              {v}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                </div>
-
-                {/* Card Footer: Resources & Assessment */}
-                <div className="p-4 bg-slate-50 border-t border-slate-100 text-xs space-y-1.5">
-                  {plan.resourcesNote && (
-                    <div className="text-slate-600 flex items-start gap-1.5">
-                      <span className="font-bold text-slate-800 shrink-0">📖 الكتب والمصادر:</span>
-                      <span className="leading-relaxed">{plan.resourcesNote}</span>
-                    </div>
-                  )}
-                  {plan.assessmentNote && (
-                    <div className="text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200/60 font-medium flex items-start gap-1.5">
-                      <span className="font-bold shrink-0">📝 التقييم والاختبار:</span>
-                      <span>{plan.assessmentNote}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             );
