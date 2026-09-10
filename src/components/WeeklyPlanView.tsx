@@ -80,7 +80,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    const pending = weeklyPlans.filter((plan) => (plan.fileType === 'pdf' || plan.fileType === 'word' || plan.fileType === 'doc') && plan.fileDataUrl && plan.extractionVersion !== WEEKLY_PLAN_PARSER_VERSION && plan.extractionVersion !== -1);
+    const pending = weeklyPlans.filter((plan) => (plan.fileType === 'pdf' || plan.fileType === 'word' || plan.fileType === 'doc') && plan.fileDataUrl && plan.extractionVersion !== WEEKLY_PLAN_PARSER_VERSION);
     if (!pending.length) return;
     void Promise.all(pending.map(async (plan) => {
       try {
@@ -88,7 +88,7 @@ export const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({
         const extracted = parseWeeklyPlanText(text);
         return { ...plan, extractedText: extracted.extractedText, extractionVersion: WEEKLY_PLAN_PARSER_VERSION, classworkNote: extracted.classworkNote || plan.classworkNote, homeworkNote: extracted.homeworkNote || plan.homeworkNote, tomorrowNote: extracted.tomorrowNote || plan.tomorrowNote, dayContent: extracted.dayContent };
       } catch {
-        return { ...plan, extractionVersion: -1 };
+        return { ...plan, extractionVersion: WEEKLY_PLAN_PARSER_VERSION };
       }
     })).then((processed) => {
       if (cancelled) return;

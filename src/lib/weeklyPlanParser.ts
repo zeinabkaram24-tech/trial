@@ -1,7 +1,7 @@
 import mammoth from 'mammoth';
 import { extractTextFromPdf } from './timetableParser';
 
-export const WEEKLY_PLAN_PARSER_VERSION = 2;
+export const WEEKLY_PLAN_PARSER_VERSION = 4;
 
 export interface WeeklyPlanDayContent {
   classworkNote?: string;
@@ -26,9 +26,9 @@ const DAY_NAMES = [
 ];
 
 const HEADER_PATTERNS = {
-  homework: /(?:home\s*work|homework|assignment|واجب(?:ات)?|الواجب(?:ات)?|hw)\s*[:：\-–]?/i,
-  tomorrow: /(?:tomorrow|next\s*day|preparation|notes?|materials?\s*(?:needed|required)|ملاحظات|تجهيزات|مستلزمات|غدًا|غدا|اليوم\s*التالي)\s*[:：\-–]?/i,
-  classwork: /(?:class\s*work|classwork|lesson|session|what\s+we\s+learned|تم\s*تدريسه|ما\s*تم\s*تدريسه|الدرس|الحصة|نشاط\s*اليوم)\s*[:：\-–]?/i
+  homework: /(?:h\s*o\s*m\s*e\s*w\s*o\s*r\s*k|home\s*work|assignment|واجب(?:ات)?|الواجب(?:ات)?|hw)\s*[:：\-–]?/i,
+  tomorrow: /(?:t\s*o\s*m\s*o\s*r\s*r\s*o\s*w|next\s*day|preparation|notes?|materials?\s*(?:needed|required)|ملاحظات|تجهيزات|مستلزمات|غدًا|غدا|اليوم\s*التالي)\s*[:：\-–]?/i,
+  classwork: /(?:c\s*l\s*a\s*s\s*s\s*w\s*o\s*r\s*k|class\s*work|lesson|session|what\s+we\s+learned|تم\s*تدريسه|ما\s*تم\s*تدريسه|الدرس|الحصة|نشاط\s*اليوم)\s*[:：\-–]?/i
 };
 
 const ALL_HEADERS = Object.values(HEADER_PATTERNS);

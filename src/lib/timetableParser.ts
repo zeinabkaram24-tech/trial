@@ -45,10 +45,10 @@ export async function extractTextFromPdf(dataUrl: string): Promise<string> {
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
-    pages.push((content.items as Array<{ str?: string }>).map((item) => item.str || '').join(' '));
+    pages.push((content.items as Array<{ str?: string }>).map((item) => item.str || '').filter(Boolean).join('\n'));
   }
   const extracted = pages.join('\n').trim();
-  if (extracted) return extracted;
+  if (extracted.length >= 80) return extracted;
 
   // Scanned PDFs have no text layer. Render each page and OCR it so Weekly Plan
   // files still produce usable Classwork, Homework, and Tomorrow content.

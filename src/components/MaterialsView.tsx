@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   FolderOpen,
   Eye,
@@ -58,7 +58,26 @@ export const MaterialsView: React.FC<MaterialsViewProps> = ({
 
   // Preview Modal State (Shows the actual file in a high-definition document viewer)
   const [previewFile, setPreviewFile] = useState<SchoolMaterialFile | null>(null);
+  const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
   const [previewTab, setPreviewTab] = useState<'document' | 'text'>('document');
+
+  useEffect(() => {
+    if (!previewFile?.fileDataUrl) {
+      setPreviewObjectUrl(null);
+      return;
+    }
+    try {
+      const [meta, encoded] = previewFile.fileDataUrl.split(',');
+      const binary = atob(encoded || '');
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      const mime = meta.match(/^data:([^;]+)/)?.[1] || (previewFile.fileType === 'pdf' ? 'application/pdf' : 'application/octet-stream');
+      const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      setPreviewObjectUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } catch {
+      setPreviewObjectUrl(null);
+    }
+  }, [previewFile]);
 
   // Admin Add / Edit Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -270,12 +289,12 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
             <html>
               <head><title>${file.title}</title><style>html,body{margin:0;height:100%;overflow:hidden;background:#333;}</style></head>
               <body>
-                <iframe src="${file.fileDataUrl}" width="100%" height="100%" frameborder="0" style="border:none;"></iframe>
+                <iframe src="${previewObjectUrl || file.fileDataUrl}" width="100%" height="100%" frameborder="0" style="border:none;"></iframe>
               </body>
             </html>
           `);
         } else {
-          win.location.href = file.fileDataUrl;
+          win.location.href = previewObjectUrl || file.fileDataUrl;
         }
         win.document.close();
       }
@@ -371,10 +390,6 @@ ${file.previewSummary || file.description || 'محتوى الشيت والتدر
 
   // Action 1: Preview (معاينة) - Opens the file itself + thumbnail preview
   const handlePreviewFile = (file: SchoolMaterialFile) => {
-    if (file.fileType === 'pdf' && file.fileDataUrl) {
-      const opened = window.open(file.fileDataUrl, '_blank', 'noopener,noreferrer');
-      if (opened) return;
-    }
     setPreviewFile(file);
   };
 
@@ -1085,7 +1100,7 @@ ${file.previewSummary || file.description || 'محتوى الشيت الدراس
                     ) : (
                       /* Actual binary PDF embedded directly in native PDF iframe */
                       <iframe
-                        src={previewFile.fileDataUrl}
+                        src={previewObjectUrl || previewFile.fileDataUrl}
                         title={previewFile.title}
                         className="w-full h-full border-0 bg-white"
                       />
