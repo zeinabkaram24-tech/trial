@@ -31,7 +31,10 @@ import {
   Maximize2,
   Users,
   UserCheck,
-  Activity
+  Activity,
+  Mic,
+  Square,
+  Save
 } from 'lucide-react';
 import {
   SchoolClass,
@@ -134,7 +137,103 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onUpdateMaterials
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [adminTab, setAdminTab] = useState<'timetables' | 'materials' | 'plans' | 'visitors' | 'overview'>('timetables');
+  const [adminTab, setAdminTab] = useState<'timetables' | 'materials' | 'plans' | 'daily' | 'visitors' | 'overview'>('timetables');
+
+  // Daily voice-entry states. Content is stored on WeeklyPlanItem.dayContent so
+  // the existing visitor and student views render it immediately.
+  const [dailyEntryDay, setDailyEntryDay] = useState('الأحد');
+  const [dailyEntrySubject, setDailyEntrySubject] = useState(SUBJECTS[0].id);
+  const [dailyEntryClass, setDailyEntryClass] = useState<SchoolClass | 'all'>(selectedClass);
+  const [dailyEntryBlock, setDailyEntryBlock] = useState(selectedBlock);
+  const [dailyEntryWeek, setDailyEntryWeek] = useState(selectedWeek);
+  const [dailyClasswork, setDailyClasswork] = useState('');
+  const [dailyHomework, setDailyHomework] = useState('');
+  const [dailyTomorrow, setDailyTomorrow] = useState('');
+  const [voiceField, setVoiceField] = useState<'classwork' | 'homework' | 'tomorrow' | null>(null);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const matching = weeklyPlans.find((plan) =>
+      plan.blockId === dailyEntryBlock &&
+      plan.weekId === dailyEntryWeek &&
+      plan.subjectId === dailyEntrySubject &&
+      (plan.classId === dailyEntryClass || plan.classId === 'all' || dailyEntryClass === 'all')
+    );
+    const dayKey = `${dailyEntryDay}|${dailyEntrySubject}`;
+    const dayContent = matching?.dayContent?.[dayKey] || matching?.dayContent?.[dailyEntryDay];
+    setDailyClasswork(dayContent?.classworkNote || '');
+    setDailyHomework(dayContent?.homeworkNote || '');
+    setDailyTomorrow(dayContent?.tomorrowNote || '');
+  }, [weeklyPlans, dailyEntryBlock, dailyEntryWeek, dailyEntrySubject, dailyEntryClass, dailyEntryDay]);
+
+  const stopVoiceEntry = () => {
+    recognitionRef.current?.stop?.();
+    recognitionRef.current = null;
+    setVoiceField(null);
+  };
+
+  const startVoiceEntry = (field: 'classwork' | 'homework' | 'tomorrow') => {
+    if (voiceField) {
+      stopVoiceEntry();
+      return;
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('المتصفح لا يدعم الإدخال الصوتي. استخدم Google Chrome أو Microsoft Edge.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ar-EG';
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event: any) => {
+      const text = event.results?.[0]?.[0]?.transcript?.trim() || '';
+      if (field === 'classwork') setDailyClasswork((value) => `${value}${value ? ' ' : ''}${text}`);
+      if (field === 'homework') setDailyHomework((value) => `${value}${value ? ' ' : ''}${text}`);
+      if (field === 'tomorrow') setDailyTomorrow((value) => `${value}${value ? ' ' : ''}${text}`);
+    };
+    recognition.onerror = () => stopVoiceEntry();
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setVoiceField(null);
+    };
+    recognitionRef.current = recognition;
+    setVoiceField(field);
+    recognition.start();
+  };
+
+  const handleSaveDailyEntry = (e: React.FormEvent) => {
+    e.preventDefault();
+    const dayKey = `${dailyEntryDay}|${dailyEntrySubject}`;
+    const matching = weeklyPlans.find((plan) =>
+      plan.blockId === dailyEntryBlock && plan.weekId === dailyEntryWeek && plan.subjectId === dailyEntrySubject && plan.classId === dailyEntryClass
+    );
+    const existingDayContent = matching?.dayContent || {};
+    const nextDayContent = {
+      ...existingDayContent,
+      [dayKey]: {
+        classworkNote: dailyClasswork.trim() || undefined,
+        homeworkNote: dailyHomework.trim() || undefined,
+        tomorrowNote: dailyTomorrow.trim() || undefined
+      }
+    };
+    if (matching) {
+      onUpdateWeeklyPlans(weeklyPlans.map((plan) => plan.id === matching.id ? { ...plan, dayContent: nextDayContent } : plan));
+    } else {
+      const newPlan: WeeklyPlanItem = {
+        id: `plan-${Date.now()}`,
+        blockId: dailyEntryBlock,
+        weekId: dailyEntryWeek,
+        classId: dailyEntryClass,
+        subjectId: dailyEntrySubject,
+        unitOrTheme: `Daily entry - ${dailyEntryDay}`,
+        learningObjectives: [],
+        dayContent: nextDayContent
+      };
+      onUpdateWeeklyPlans([newPlan, ...weeklyPlans]);
+    }
+    triggerSyncAlert('تم حفظ الـ Classwork والـ Homework وتجهيزات الغد وتحديث واجهتي الطالب والزائر فوراً ✓');
+  };
 
   // Visitor Tracking States (12:00 AM to 12:00 AM)
   const [visitorStats, setVisitorStats] = useState<DailyVisitorStats>(() => getStoredVisitorStats());
@@ -1035,6 +1134,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </button>
 
         <button
+          id="admin-tab-daily"
+          type="button"
+          onClick={() => setAdminTab('daily')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${adminTab === 'daily' ? 'bg-rose-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'}`}
+        >
+          <Mic className="w-4 h-4" />
+          <span>الإضافة اليومية بالصوت</span>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${adminTab === 'daily' ? 'bg-rose-800 text-white' : 'bg-rose-100 text-rose-700'}`}>
+            Homework • Classwork • Tomorrow
+          </span>
+        </button>
+
+        <button
           id="admin-tab-visitors"
           type="button"
           onClick={() => setAdminTab('visitors')}
@@ -1067,6 +1179,74 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           <span>نظرة عامة وإحصائيات سريعة</span>
         </button>
       </div>
+
+      {/* ================= TAB: DAILY VOICE ENTRY ================= */}
+      {adminTab === 'daily' && (
+        <form onSubmit={handleSaveDailyEntry} className="space-y-4">
+          <div className="bg-gradient-to-r from-rose-600 to-orange-500 rounded-3xl p-6 text-white shadow-md">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center shrink-0"><Mic className="w-6 h-6" /></div>
+              <div>
+                <h3 className="text-xl font-black">إضافة Homework و Classwork و Tomorrow بالصوت</h3>
+                <p className="text-xs text-white/90 mt-1">اختر اليوم والمادة، اضغط الميكروفون، وتحدث بالعربية. بعد الحفظ سيظهر النص مباشرة في واجهتي الطالب والزائر.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <label className="text-xs font-bold text-slate-700">الفصل
+                <select value={dailyEntryClass} onChange={(e) => setDailyEntryClass(e.target.value as SchoolClass | 'all')} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <option value="all">كل الفصول</option><option value="2A">2A</option><option value="2B">2B</option><option value="2C">2C</option>
+                </select>
+              </label>
+              <label className="text-xs font-bold text-slate-700">اليوم
+                <select value={dailyEntryDay} onChange={(e) => setDailyEntryDay(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'].map((day) => <option key={day}>{day}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-bold text-slate-700">المادة
+                <select value={dailyEntrySubject} onChange={(e) => setDailyEntrySubject(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  {SUBJECTS.map((subject) => <option key={subject.id} value={subject.id}>{subject.nameEn} - {subject.nameAr}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-bold text-slate-700">البلوك
+                <select value={dailyEntryBlock} onChange={(e) => setDailyEntryBlock(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  {BLOCKS.map((block) => <option key={block.id} value={block.id}>{block.nameAr}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-bold text-slate-700">الأسبوع
+                <select value={dailyEntryWeek} onChange={(e) => setDailyEntryWeek(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  {WEEKS.map((week) => <option key={week.id} value={week.id}>{week.nameAr}</option>)}
+                </select>
+              </label>
+            </div>
+
+            {([
+              ['classwork', 'Classwork / ما تم شرحه', dailyClasswork, setDailyClasswork, 'border-indigo-200 focus:ring-indigo-500'],
+              ['homework', 'Homework / الواجب', dailyHomework, setDailyHomework, 'border-rose-200 focus:ring-rose-500'],
+              ['tomorrow', 'Tomorrow / تجهيزات الغد', dailyTomorrow, setDailyTomorrow, 'border-amber-200 focus:ring-amber-500']
+            ] as const).map(([field, label, value, setter, color]) => (
+              <div key={field}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-black text-slate-800">{label}</label>
+                  <button type="button" onClick={() => startVoiceEntry(field)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-colors ${voiceField === field ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                    {voiceField === field ? <Square className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                    {voiceField === field ? 'إيقاف التسجيل' : 'تحدث صوتياً'}
+                  </button>
+                </div>
+                <textarea value={value} onChange={(e) => setter(e.target.value)} rows={3} placeholder="اكتب هنا أو استخدم الميكروفون..." className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 ${color}`} />
+              </div>
+            ))}
+
+            <div className="flex justify-end pt-2">
+              <button type="submit" className="flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-black text-white hover:bg-slate-800">
+                <Save className="w-4 h-4" /> حفظ وتحديث الواجهتين
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
 
       {/* ================= TAB 1: MATERIALS MANAGEMENT ================= */}
       {adminTab === 'materials' && (
