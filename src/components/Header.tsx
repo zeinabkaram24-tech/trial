@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   GraduationCap,
   ShieldCheck,
@@ -49,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   onChangeTab,
   onOpenPrint
 }) => {
+  const headerRef = useRef<HTMLElement | null>(null);
   const [showAdminLoginModal, setShowAdminLoginModal] = useState(false);
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [adminLoginError, setAdminLoginError] = useState('');
@@ -56,6 +57,20 @@ export const Header: React.FC<HeaderProps> = ({
   const [showStudentLoginModal, setShowStudentLoginModal] = useState(false);
   const [studentNameInput, setStudentNameInput] = useState(studentProfile?.name || '');
   const [studentClassInput, setStudentClassInput] = useState<SchoolClass>(selectedClass);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    const updateHeaderHeight = () => {
+      document.documentElement.style.setProperty('--app-header-height', `${header.offsetHeight}px`);
+    };
+
+    updateHeaderHeight();
+    const observer = new ResizeObserver(updateHeaderHeight);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
 
   const handleAdminLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +100,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <header ref={headerRef} className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       {/* Top Banner with Nile Schools Identity */}
       <div className="bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 text-white px-4 py-2.5">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">

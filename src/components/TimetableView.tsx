@@ -775,11 +775,11 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-center border-collapse min-w-[850px]">
-              <thead>
+              <thead className="sticky top-[var(--app-header-height,0px)] z-20 bg-slate-100/95 shadow-[0_1px_0_rgba(148,163,184,0.35)] backdrop-blur-sm">
                 <tr className="bg-slate-100/80 text-slate-700 text-xs font-bold border-b border-slate-200">
                   <th className="p-4 w-32 border-e border-slate-200">
-                    <span className="block font-black text-slate-900 text-sm">اليوم</span>
-                    <span className="text-[11px] text-slate-400 font-normal font-sans">Day</span>
+                    <span className="block font-black text-slate-900 text-sm">Day</span>
+                    <span className="text-[11px] text-slate-400 font-normal">Weekday</span>
                   </th>
                   {PERIOD_TIMES.map((pt) => (
                     <th
@@ -796,8 +796,8 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                 {currentTimetable.days.map((day) => (
                   <tr key={day.dayNameAr} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4 bg-slate-50 border-e border-slate-200 text-center font-bold">
-                      <div className="text-slate-900 font-black text-base">{day.dayNameAr}</div>
-                      <div className="text-[11px] text-slate-400 font-sans font-medium">{day.dayNameEn}</div>
+                          <div className="text-slate-900 font-black text-base font-sans">{day.dayNameEn}</div>
+                          <div className="text-[11px] text-slate-400 font-medium">{day.dayNameAr}</div>
                     </td>
 
                     {PERIOD_TIMES.map((periodTime) => {
@@ -850,7 +850,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
       {viewMode === 'day' && (
         <div className="space-y-4">
           {/* Day Selector Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div className="sticky top-[var(--app-header-height,0px)] z-20 flex items-center gap-2 overflow-x-auto bg-slate-100/95 py-2 pb-3 backdrop-blur-sm">
             {currentTimetable.days.map((day, idx) => (
               <button
                 key={day.dayNameAr}
@@ -862,7 +862,7 @@ export const TimetableView: React.FC<TimetableViewProps> = ({
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                 }`}
               >
-                {day.dayNameAr} ({day.dayNameEn})
+                {day.dayNameEn}
               </button>
             ))}
           </div>
