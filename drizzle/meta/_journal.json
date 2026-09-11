@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1789086182397,
+      "tag": "0000_bored_shotgun",
+      "breakpoints": true
+    }
+  ]
+}
